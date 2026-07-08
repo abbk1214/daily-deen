@@ -1,7 +1,14 @@
 import type { NextConfig } from "next";
 
-const nextConfig: NextConfig = {
-  /* config options here */
-};
+const withPWA = (require('next-pwa') as (opts: Record<string, unknown>) => (config: NextConfig) => NextConfig)({
+  dest: 'public',
+  register: true,
+  skipWaiting: true,
+  clientsClaim: true,
+})
 
-export default nextConfig;
+const nextConfig: NextConfig = {
+  output: 'export',
+}
+
+export default withPWA(nextConfig)
