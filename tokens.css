@@ -1,0 +1,381 @@
+/* ===========================================================
+   Daily Deen — Design Tokens
+   
+   Complete CSS custom properties for the Daily Deen design system.
+   Import this file BEFORE globals.css / shadcn imports.
+   
+   All colors use OKLCh for perceptual uniformity.
+   See DESIGN.md for the full specification.
+   =========================================================== */
+
+/* ---- Brand Colors (always available, mode-independent) ---- */
+:root {
+  --dd-ink-night: oklch(0.22 0.02 250);
+  --dd-parchment: oklch(0.93 0.02 80);
+  --dd-lantern-gold: oklch(0.76 0.14 85);
+  --dd-dusk-teal: oklch(0.46 0.06 175);
+  --dd-quiet-sage: oklch(0.62 0.06 135);
+
+  /* Brand color aliases for Tailwind @theme */
+  --color-ink-night: var(--dd-ink-night);
+  --color-parchment: var(--dd-parchment);
+  --color-lantern-gold: var(--dd-lantern-gold);
+  --color-dusk-teal: var(--dd-dusk-teal);
+  --color-quiet-sage: var(--dd-quiet-sage);
+}
+
+/* ===========================================================
+   LIGHT MODE — Default
+   =========================================================== */
+:root {
+  /* ---- Background & Foreground ---- */
+  --background: var(--dd-parchment);
+  --foreground: var(--dd-ink-night);
+
+  /* ---- Cards & Popovers ---- */
+  --card: oklch(0.96 0.01 80);
+  --card-foreground: var(--dd-ink-night);
+  --popover: oklch(0.96 0.01 80);
+  --popover-foreground: var(--dd-ink-night);
+
+  /* ---- Primary (Ink Night — default action) ---- */
+  --primary: var(--dd-ink-night);
+  --primary-foreground: var(--dd-parchment);
+
+  /* ---- Achievement (Lantern Gold — prayer completion, milestones) ---- */
+  --achievement: var(--dd-lantern-gold);
+  --achievement-foreground: oklch(0.18 0.02 250);
+
+  /* ---- Secondary (soft parchment) ---- */
+  --secondary: oklch(0.90 0.02 80);
+  --secondary-foreground: var(--dd-ink-night);
+
+  /* ---- Muted (parchment wash) ---- */
+  --muted: oklch(0.90 0.02 80);
+  --muted-foreground: oklch(0.48 0.02 250);
+
+  /* ---- Accent (Dusk Teal) ---- */
+  --accent: var(--dd-dusk-teal);
+  --accent-foreground: oklch(0.96 0.01 175);
+
+  /* ---- Destructive ---- */
+  --destructive: oklch(0.58 0.22 25);
+  --destructive-foreground: oklch(0.98 0 0);
+
+  /* ---- Semantic ---- */
+  --success: var(--dd-quiet-sage);
+  --success-foreground: oklch(0.18 0.02 135);
+  --warning: var(--dd-lantern-gold);
+  --warning-foreground: oklch(0.18 0.02 85);
+  --info: var(--dd-dusk-teal);
+  --info-foreground: oklch(0.96 0.01 175);
+
+  /* ---- Borders & Inputs ---- */
+  --border: oklch(0.85 0.02 80);
+  --input: oklch(0.85 0.02 80);
+  --ring: var(--dd-dusk-teal);
+
+  /* ---- Chart Colors ---- */
+  --chart-1: var(--dd-lantern-gold);
+  --chart-2: var(--dd-dusk-teal);
+  --chart-3: var(--dd-quiet-sage);
+  --chart-4: oklch(0.48 0.02 250);
+  --chart-5: oklch(0.35 0.02 250);
+
+  /* ---- Sidebar ---- */
+  --sidebar: oklch(0.96 0.01 80);
+  --sidebar-foreground: var(--dd-ink-night);
+  --sidebar-primary: var(--dd-ink-night);
+  --sidebar-primary-foreground: var(--dd-parchment);
+  --sidebar-accent: oklch(0.90 0.02 80);
+  --sidebar-accent-foreground: var(--dd-ink-night);
+  --sidebar-border: oklch(0.85 0.02 80);
+  --sidebar-ring: var(--dd-dusk-teal);
+
+  /* ---- Border Radius ---- */
+  --radius: 0.5rem;
+  --radius-sm: calc(var(--radius) * 0.5);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) * 1.25);
+  --radius-full: 9999px;
+
+  /* ---- Typography ---- */
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+
+  /* ---- Type Scale ---- */
+  --text-display: clamp(40px, 6vw, 64px);
+  --text-h1: clamp(32px, 4vw, 48px);
+  --text-h2: clamp(24px, 3vw, 32px);
+  --text-h3: 20px;
+  --text-h4: 18px;
+  --text-body: 16px;
+  --text-body-sm: 14px;
+  --text-caption: 12px;
+  --text-mono: 14px;
+  --text-mono-sm: 12px;
+
+  /* ---- Line Heights ---- */
+  --leading-display: 1.05;
+  --leading-h1: 1.1;
+  --leading-h2: 1.2;
+  --leading-h3: 1.3;
+  --leading-h4: 1.4;
+  --leading-body: 1.6;
+  --leading-tight: 1.2;
+  --leading-snug: 1.375;
+
+  /* ---- Letter Spacing ---- */
+  --tracking-display: -0.025em;
+  --tracking-h1: -0.02em;
+  --tracking-h2: -0.015em;
+  --tracking-h3: -0.01em;
+  --tracking-body: 0em;
+  --tracking-wide: 0.02em;
+  --tracking-caps: 0.06em;
+
+  /* ---- Font Weights ---- */
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* ---- Spacing Scale (8px base) ---- */
+  --space-0: 0;
+  --space-px: 1px;
+  --space-0-5: 2px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+
+  /* ---- Shadows (Light Mode — editorial, barely visible) ---- */
+  --shadow-none: none;
+  --shadow-xs: 0 1px 2px oklch(0 0 0 / 0.03);
+  --shadow-sm: 0 1px 3px oklch(0 0 0 / 0.04);
+  --shadow-md: 0 2px 6px oklch(0 0 0 / 0.04);
+  --shadow-lg: 0 4px 12px oklch(0 0 0 / 0.05);
+  --shadow-xl: 0 8px 24px oklch(0 0 0 / 0.06);
+
+  /* ---- Elevation Z-Index ---- */
+  --z-base: 0;
+  --z-raised: 10;
+  --z-floating: 20;
+  --z-overlay: 30;
+  --z-modal: 40;
+  --z-toast: 50;
+
+  /* ---- Motion (fade + translate only, 150–200ms) ---- */
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+  --duration-fast: 150ms;
+  --duration-normal: 200ms;
+
+  /* ---- Grid ---- */
+  --grid-columns: 12;
+  --grid-gutter: var(--space-6);
+  --grid-margin: var(--space-8);
+  --grid-max-width: 1200px;
+
+  /* ---- Icon Sizes ---- */
+  --icon-sm: 16px;
+  --icon-md: 20px;
+  --icon-lg: 24px;
+  --icon-xl: 32px;
+
+  /* ---- Content Widths ---- */
+  --content-narrow: 480px;
+  --content-reading: 720px;
+  --content-wide: 960px;
+  --content-max: var(--grid-max-width);
+
+  /* ---- Focus Ring ---- */
+  --focus-ring: 0 0 0 2px var(--background), 0 0 0 4px var(--ring);
+}
+
+/* ===========================================================
+   DARK MODE
+   =========================================================== */
+.dark {
+  /* ---- Background & Foreground ---- */
+  --background: oklch(0.16 0.02 250);
+  --foreground: oklch(0.93 0.01 80);
+
+  /* ---- Cards & Popovers ---- */
+  --card: oklch(0.20 0.02 250);
+  --card-foreground: oklch(0.93 0.01 80);
+  --popover: oklch(0.20 0.02 250);
+  --popover-foreground: oklch(0.93 0.01 80);
+
+  /* ---- Primary (Parchment — default action on dark bg) ---- */
+  --primary: var(--dd-parchment);
+  --primary-foreground: var(--dd-ink-night);
+
+  /* ---- Achievement (Lantern Gold — prayer completion, milestones) ---- */
+  --achievement: var(--dd-lantern-gold);
+  --achievement-foreground: oklch(0.16 0.02 250);
+
+  /* ---- Secondary ---- */
+  --secondary: oklch(0.24 0.02 250);
+  --secondary-foreground: oklch(0.93 0.01 80);
+
+  /* ---- Muted ---- */
+  --muted: oklch(0.24 0.02 250);
+  --muted-foreground: oklch(0.62 0.02 250);
+
+  /* ---- Accent (Dusk Teal, brighter for dark) ---- */
+  --accent: oklch(0.52 0.08 175);
+  --accent-foreground: oklch(0.96 0.01 175);
+
+  /* ---- Destructive ---- */
+  --destructive: oklch(0.65 0.20 25);
+  --destructive-foreground: oklch(0.98 0 0);
+
+  /* ---- Semantic ---- */
+  --success: var(--dd-quiet-sage);
+  --success-foreground: oklch(0.93 0.01 135);
+  --warning: var(--dd-lantern-gold);
+  --warning-foreground: oklch(0.16 0.02 85);
+  --info: oklch(0.52 0.08 175);
+  --info-foreground: oklch(0.96 0.01 175);
+
+  /* ---- Borders & Inputs (semi-transparent white) ---- */
+  --border: oklch(1 0 0 / 8%);
+  --input: oklch(1 0 0 / 12%);
+  --ring: var(--dd-dusk-teal);
+
+  /* ---- Chart Colors ---- */
+  --chart-1: var(--dd-lantern-gold);
+  --chart-2: oklch(0.52 0.08 175);
+  --chart-3: var(--dd-quiet-sage);
+  --chart-4: oklch(0.62 0.02 250);
+  --chart-5: oklch(0.45 0.02 250);
+
+  /* ---- Sidebar ---- */
+  --sidebar: oklch(0.20 0.02 250);
+  --sidebar-foreground: oklch(0.93 0.01 80);
+  --sidebar-primary: var(--dd-parchment);
+  --sidebar-primary-foreground: var(--dd-ink-night);
+  --sidebar-accent: oklch(0.24 0.02 250);
+  --sidebar-accent-foreground: oklch(0.93 0.01 80);
+  --sidebar-border: oklch(1 0 0 / 8%);
+  --sidebar-ring: var(--dd-dusk-teal);
+
+  /* ---- Shadows (Dark Mode — editorial) ---- */
+  --shadow-xs: 0 1px 2px oklch(0 0 0 / 0.15);
+  --shadow-sm: 0 1px 3px oklch(0 0 0 / 0.2);
+  --shadow-md: 0 2px 6px oklch(0 0 0 / 0.25);
+  --shadow-lg: 0 4px 12px oklch(0 0 0 / 0.3);
+  --shadow-xl: 0 8px 24px oklch(0 0 0 / 0.35);
+}
+
+/* ===========================================================
+   BASE STYLES
+   =========================================================== */
+@layer base {
+  *,
+  *::before,
+  *::after {
+    border-color: var(--border);
+  }
+
+  html {
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-size: var(--text-body);
+    line-height: var(--leading-body);
+  }
+
+  /* Focus styles */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* ===========================================================
+   UTILITY CLASSES
+   =========================================================== */
+
+/* Paper texture overlay — opt-in, subtle, never reduces readability */
+.paper-texture {
+  position: relative;
+}
+.paper-texture::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.02;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+  mix-blend-mode: multiply;
+}
+
+/* Dark mode paper texture — even subtler */
+.dark .paper-texture::before {
+  opacity: 0.015;
+}
+
+/* Typography utilities */
+.font-display {
+  font-family: var(--font-display);
+}
+.font-body {
+  font-family: var(--font-body);
+}
+.font-mono-custom {
+  font-family: var(--font-mono);
+}
+
+/* Letter spacing utilities */
+.tracking-display {
+  letter-spacing: var(--tracking-display);
+}
+.tracking-caps {
+  letter-spacing: var(--tracking-caps);
+}
+.tracking-wide {
+  letter-spacing: var(--tracking-wide);
+}
+
+/* Content width utilities */
+.content-narrow {
+  max-width: var(--content-narrow);
+}
+.content-reading {
+  max-width: var(--content-reading);
+}
+.content-wide {
+  max-width: var(--content-wide);
+}
