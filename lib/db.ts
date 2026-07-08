@@ -2,6 +2,7 @@ import Dexie, { type Table } from 'dexie'
 
 export interface Prayer {
   id?: number
+  /** ISO date string e.g. "2026-07-08" */
   date: string
   fajr: string
   dhuhr: string
@@ -28,6 +29,7 @@ export interface Habit {
 export interface HabitLog {
   id?: number
   habitId: number
+  /** ISO date string e.g. "2026-07-08" */
   date: string
   value: number
   timestamp: number
@@ -35,6 +37,7 @@ export interface HabitLog {
 
 export interface JournalEntry {
   id?: number
+  /** ISO date string e.g. "2026-07-08" */
   date: string
   mood: string
   text: string
@@ -59,6 +62,7 @@ class DailyDeenDB extends Dexie {
 
   constructor() {
     super('DailyDeenDB')
+
     this.version(1).stores({
       prayers: '++id, date',
       habits: '++id, name, type',
@@ -66,10 +70,46 @@ class DailyDeenDB extends Dexie {
       journal: '++id, date',
       settings: '++id',
     })
+
+    this.version(2).stores({
+      prayers: '++id, &date',
+      habits: '++id, &name, type',
+      habitLogs: '++id, &[habitId+date]',
+      journal: '++id, &date',
+      settings: '++id',
+    })
   }
 }
 
 const db = new DailyDeenDB()
+
+export async function getSettings(): Promise<AppSettings | undefined> {
+  return db.settings.toCollection().first()
+}
+
+export async function saveSettings(
+  data: Omit<AppSettings, 'id'>,
+): Promise<AppSettings> {
+  const existing = await db.settings.toCollection().first()
+  if (existing?.id != null) {
+    await db.settings.update(existing.id, data)
+    return { ...data, id: existing.id }
+  }
+  const id = await db.settings.add(data as AppSettings)
+  return { ...data, id }
+}
+
+export function settingsNeedRecalc(
+  prev: AppSettings | undefined,
+  next: AppSettings,
+): boolean {
+  if (!prev) return true
+  return (
+    prev.latitude !== next.latitude ||
+    prev.longitude !== next.longitude ||
+    prev.calculationMethod !== next.calculationMethod
+  )
+}
 
 export async function seedDefaults() {
   const count = await db.habits.count()
