@@ -12,9 +12,9 @@
 :root {
   --dd-ink-night: oklch(0.22 0.02 250);
   --dd-parchment: oklch(0.93 0.02 80);
-  --dd-lantern-gold: oklch(0.76 0.14 85);
+  --dd-lantern-gold: oklch(0.55 0.14 85);
   --dd-dusk-teal: oklch(0.46 0.06 175);
-  --dd-quiet-sage: oklch(0.62 0.06 135);
+  --dd-quiet-sage: oklch(0.42 0.08 135);
 
   /* Brand color aliases for Tailwind @theme */
   --color-ink-night: var(--dd-ink-night);
@@ -154,6 +154,7 @@
   --space-8: 32px;
   --space-10: 40px;
   --space-12: 48px;
+  --space-14: 56px;
   --space-16: 64px;
   --space-20: 80px;
   --space-24: 96px;
@@ -252,7 +253,7 @@
   /* ---- Borders & Inputs (semi-transparent white) ---- */
   --border: oklch(1 0 0 / 8%);
   --input: oklch(1 0 0 / 12%);
-  --ring: var(--dd-dusk-teal);
+  --ring: oklch(0.62 0.08 175);
 
   /* ---- Chart Colors ---- */
   --chart-1: var(--dd-lantern-gold);
@@ -353,29 +354,4 @@
 }
 .font-body {
   font-family: var(--font-body);
-}
-.font-mono-custom {
-  font-family: var(--font-mono);
-}
-
-/* Letter spacing utilities */
-.tracking-display {
-  letter-spacing: var(--tracking-display);
-}
-.tracking-caps {
-  letter-spacing: var(--tracking-caps);
-}
-.tracking-wide {
-  letter-spacing: var(--tracking-wide);
-}
-
-/* Content width utilities */
-.content-narrow {
-  max-width: var(--content-narrow);
-}
-.content-reading {
-  max-width: var(--content-reading);
-}
-.content-wide {
-  max-width: var(--content-wide);
 }

@@ -47,7 +47,7 @@ const config: NextConfig = {
   output: "standalone",
   experimental: {
     ppr: false,
-    optimizePackageImports: ["@base-ui/react"],
+    optimizePackageImports: ["lucide-react"],
   },
   transpilePackages: ["workbox-sw"],
   turbopack: {},

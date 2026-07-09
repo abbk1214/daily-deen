@@ -2,18 +2,37 @@
 
 export default function OfflinePage() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-zinc-50 font-sans dark:bg-black">
-      <div className="flex flex-col items-center gap-6 text-center max-w-md px-8">
-        <h1 className="text-4xl font-bold text-black dark:text-zinc-50">
+    <div className="flex min-h-dvh flex-col items-center justify-center bg-background px-8 text-center font-sans">
+      <div className="flex flex-col items-center gap-6 max-w-md">
+        <h1
+          className="font-display text-foreground"
+          style={{
+            fontFamily: "var(--font-display)",
+            fontSize: "clamp(32px, 4vw, 48px)",
+            fontWeight: 600,
+            lineHeight: 1.1,
+          }}
+        >
           You&apos;re Offline
         </h1>
-        <p className="text-lg text-zinc-600 dark:text-zinc-400">
-          The Daily Deen app is not available in your current network connection. 
-          Please check your internet connection and try again.
+        <p
+          className="text-muted-foreground"
+          style={{
+            fontSize: "var(--text-body)",
+            lineHeight: "var(--leading-body)",
+          }}
+        >
+          Daily Deen is not available without an internet connection. Please
+          check your connection and try again.
         </p>
         <button
           onClick={() => window.location.reload()}
-          className="px-6 py-3 bg-zinc-900 text-white rounded-full hover:bg-zinc-800 transition-colors"
+          className="flex h-12 items-center justify-center rounded-lg bg-primary px-6 font-medium text-primary-foreground transition-opacity hover:opacity-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+          style={{
+            fontSize: "var(--text-body)",
+            fontWeight: 500,
+            letterSpacing: "var(--tracking-wide)",
+          }}
         >
           Retry Connection
         </button>

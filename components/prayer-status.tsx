@@ -1,0 +1,231 @@
+"use client";
+
+import { memo, useEffect, useState } from "react";
+import { timeToMinutes, formatTimeFromMinutes } from "@/lib/utils";
+import type { Prayer } from "@/lib/db";
+
+interface PrayerStatusProps {
+  prayers: Prayer | undefined;
+  loading: boolean;
+}
+
+function formatTimeUntil(targetMinutes: number, nowMinutes: number): string {
+  const diff = targetMinutes - nowMinutes;
+  if (diff <= 0) return "";
+  const hours = Math.floor(diff / 60);
+  const mins = diff % 60;
+  if (hours === 0) return `in ${mins}m`;
+  if (mins === 0) return `in ${hours}h`;
+  return `in ${hours}h ${mins}m`;
+}
+
+const PRAYER_KEYS = ["fajr", "dhuhr", "asr", "maghrib", "isha"] as const;
+const PRAYER_NAMES: Record<(typeof PRAYER_KEYS)[number], string> = {
+  fajr: "Fajr",
+  dhuhr: "Dhuhr",
+  asr: "Asr",
+  maghrib: "Maghrib",
+  isha: "Isha",
+};
+
+export const PrayerStatus = memo(function PrayerStatus({ prayers, loading }: PrayerStatusProps) {
+  const [nowMinutes, setNowMinutes] = useState(() => {
+    const d = new Date();
+    return d.getHours() * 60 + d.getMinutes();
+  });
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const d = new Date();
+      setNowMinutes(d.getHours() * 60 + d.getMinutes());
+    }, 60_000);
+    return () => clearInterval(interval);
+  }, []);
+
+  if (loading) {
+    return (
+      <section
+        role="region"
+        aria-label="Prayer status"
+        className="rounded-lg border border-border bg-card"
+        style={{ padding: "var(--space-6)", boxShadow: "var(--shadow-xs)" }}
+        aria-busy="true"
+      >
+        <div className="flex flex-col gap-3">
+          <div className="h-6 w-32 animate-pulse rounded bg-muted" />
+          <div className="h-4 w-48 animate-pulse rounded bg-muted" />
+          <div className="h-1.5 w-full animate-pulse rounded-full bg-muted" />
+          <div className="h-4 w-20 animate-pulse rounded bg-muted" />
+          <div className="h-5 w-28 animate-pulse rounded bg-muted" />
+          <div className="h-4 w-36 animate-pulse rounded bg-muted" />
+        </div>
+      </section>
+    );
+  }
+
+  if (!prayers) {
+    return (
+      <section
+        role="region"
+        aria-label="Prayer status"
+        className="rounded-lg border border-border bg-card"
+        style={{ padding: "var(--space-6)", boxShadow: "var(--shadow-xs)" }}
+      >
+        <p
+          className="text-muted-foreground"
+          style={{ fontSize: "var(--text-body-sm)" }}
+        >
+          No prayer times set. Add your location to get started.
+        </p>
+      </section>
+    );
+  }
+
+  const times = PRAYER_KEYS.map((key) => ({
+    key,
+    name: PRAYER_NAMES[key],
+    minutes: timeToMinutes(prayers[key]),
+    completed: prayers.completed[key],
+  }));
+
+  let currentIdx = 0;
+  for (let i = times.length - 1; i >= 0; i--) {
+    if (nowMinutes >= times[i].minutes) {
+      currentIdx = i;
+      break;
+    }
+  }
+
+  const current = times[currentIdx];
+  const nextIdx = (currentIdx + 1) % times.length;
+  const next = times[nextIdx];
+
+  const completedCount = times.filter((t) => t.completed).length;
+  const totalPrayers = times.length;
+  const progressPercent = (completedCount / totalPrayers) * 100;
+
+  const allCompleted = completedCount === totalPrayers;
+
+  return (
+    <section
+      role="region"
+      aria-label="Prayer status"
+      className="rounded-lg border border-border bg-card"
+      style={{
+        padding: "var(--space-6)",
+        boxShadow: "var(--shadow-xs)",
+        borderLeftWidth: current.completed ? "3px" : "1px",
+        borderLeftColor: current.completed
+          ? "var(--dd-lantern-gold)"
+          : undefined,
+      }}
+      aria-live="polite"
+    >
+      <div className="flex flex-col gap-3">
+        <span
+          className="font-medium tracking-wide text-dusk-teal"
+          style={{
+            fontSize: "var(--text-caption)",
+            fontWeight: 500,
+            letterSpacing: "var(--tracking-wide)",
+          }}
+        >
+          NOW
+        </span>
+
+        <h3
+          className="font-display text-foreground"
+          style={{
+            fontFamily: "var(--font-display)",
+            fontSize: "var(--text-h3)",
+            fontWeight: 600,
+          }}
+        >
+          {current.name}
+        </h3>
+
+        <span
+          className="font-mono text-muted-foreground"
+          style={{
+            fontFamily: "var(--font-mono)",
+            fontSize: "var(--text-body-sm)",
+          }}
+        >
+          {formatTimeFromMinutes(current.minutes)} –{" "}
+          {formatTimeFromMinutes(next.minutes)}
+        </span>
+
+        <div
+          role="progressbar"
+          aria-valuenow={progressPercent}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label={`${completedCount} of ${totalPrayers} prayers completed`}
+          className="h-1.5 w-full overflow-hidden rounded-full bg-muted"
+        >
+          <div
+            className="h-full rounded-full transition-all"
+            style={{
+              width: `${progressPercent}%`,
+              backgroundColor: "var(--dd-dusk-teal)",
+              transitionDuration: "var(--duration-normal)",
+              transitionTimingFunction: "var(--ease-out)",
+            }}
+          />
+        </div>
+
+        <span
+          className="font-mono text-dusk-teal"
+          style={{
+            fontFamily: "var(--font-mono)",
+            fontSize: "var(--text-body-sm)",
+            fontWeight: 500,
+          }}
+        >
+          {completedCount}/{totalPrayers} complete
+        </span>
+
+        {allCompleted ? (
+          <p
+            className="font-medium text-quiet-sage"
+            style={{ fontSize: "var(--text-body-sm)" }}
+            role="status"
+          >
+            All prayers completed for today. MashaAllah.
+          </p>
+        ) : (
+          <>
+            <div className="mt-2 flex flex-col gap-1">
+              <span
+                className="text-muted-foreground"
+                style={{
+                  fontSize: "var(--text-caption)",
+                  fontWeight: 500,
+                  letterSpacing: "var(--tracking-wide)",
+                }}
+              >
+                NEXT
+              </span>
+              <span
+                className="font-medium text-foreground"
+                style={{ fontSize: "var(--text-body)", fontWeight: 500 }}
+              >
+                {next.name}
+              </span>
+              <span
+                className="font-mono text-muted-foreground"
+                style={{
+                  fontFamily: "var(--font-mono)",
+                  fontSize: "var(--text-body-sm)",
+                }}
+              >
+                {formatTimeFromMinutes(next.minutes)} —{" "}
+                {formatTimeUntil(next.minutes, nowMinutes)}
+              </span>
+            </div>
+          </>
+        )}
+      </div>
+    </section>
+  );
+})

@@ -136,6 +136,7 @@ All colors are specified in OKLCh for perceptual uniformity. Hex equivalents are
 - Body (`Inter`) is for all running text, UI labels, navigation, buttons.
 - Mono (`IBM Plex Mono`) is for timestamps, prayer times, code, metadata, tabular data.
 - Never use `system-ui` alone on a heading — always pair with Fraunces.
+- **Section headings**: H3-sized text (20px) at the top of content sections (e.g., "Previous Entries", "Prayer status") may use Fraunces at H3 size for editorial hierarchy. This is a documented exception — the type scale defines H3 as Inter 600, but section headings on content pages use Fraunces for visual distinction.
 
 ### 3.2 Type Scale
 
@@ -200,6 +201,7 @@ Base unit: **8px**. All spacing is a multiple of 8, with 4px used for tight inte
 | `--space-8` | `32px` | Section spacing |
 | `--space-10` | `40px` | Large section spacing |
 | `--space-12` | `48px` | Major section break |
+| `--space-14` | `56px` | Bottom navigation height |
 | `--space-16` | `64px` | Hero spacing, page margins |
 | `--space-20` | `80px` | Extra large whitespace |
 | `--space-24` | `96px` | Maximum whitespace |

@@ -24,6 +24,7 @@ export interface Habit {
   type: 'exercise' | 'walk' | 'hydration' | 'custom'
   target: number
   unit: string
+  increment: number
 }
 
 export interface HabitLog {
@@ -51,6 +52,39 @@ export interface AppSettings {
   calculationMethod: string
   notificationsEnabled: boolean
   onboardingComplete: boolean
+  name: string
+  language: string
+  school: string
+  reminderOffset: number
+  adhanSound: boolean
+  vibrate: boolean
+  theme: string
+  paperTexture: boolean
+  textSize: string
+  waterTarget: number
+  exerciseTarget: number
+  walkingTarget: number
+}
+
+/** Default settings used during onboarding and as fallback values. */
+export const DEFAULT_SETTINGS: Omit<AppSettings, "id"> = {
+  latitude: 0,
+  longitude: 0,
+  calculationMethod: "MuslimWorldLeague",
+  notificationsEnabled: true,
+  onboardingComplete: true,
+  name: "",
+  language: "English",
+  school: "Shafi'i",
+  reminderOffset: 10,
+  adhanSound: false,
+  vibrate: true,
+  theme: "system",
+  paperTexture: false,
+  textSize: "default",
+  waterTarget: 8,
+  exerciseTarget: 30,
+  walkingTarget: 8000,
 }
 
 class DailyDeenDB extends Dexie {
@@ -97,29 +131,6 @@ export async function saveSettings(
   }
   const id = await db.settings.add(data as AppSettings)
   return { ...data, id }
-}
-
-export function settingsNeedRecalc(
-  prev: AppSettings | undefined,
-  next: AppSettings,
-): boolean {
-  if (!prev) return true
-  return (
-    prev.latitude !== next.latitude ||
-    prev.longitude !== next.longitude ||
-    prev.calculationMethod !== next.calculationMethod
-  )
-}
-
-export async function seedDefaults() {
-  const count = await db.habits.count()
-  if (count > 0) return
-
-  await db.habits.bulkAdd([
-    { name: 'Exercise', type: 'exercise', target: 30, unit: 'min' },
-    { name: 'Walk', type: 'walk', target: 10000, unit: 'steps' },
-    { name: 'Hydration', type: 'hydration', target: 8, unit: 'glasses' },
-  ])
 }
 
 export default db
