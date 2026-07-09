@@ -1,8 +1,11 @@
 import Dexie, { type Table } from 'dexie'
 
+/* ──────────────────────────────────────────────
+   Schema types
+   ────────────────────────────────────────────── */
+
 export interface Prayer {
   id?: number
-  /** ISO date string e.g. "2026-07-08" */
   date: string
   fajr: string
   dhuhr: string
@@ -30,7 +33,6 @@ export interface Habit {
 export interface HabitLog {
   id?: number
   habitId: number
-  /** ISO date string e.g. "2026-07-08" */
   date: string
   value: number
   timestamp: number
@@ -38,15 +40,23 @@ export interface HabitLog {
 
 export interface JournalEntry {
   id?: number
-  /** ISO date string e.g. "2026-07-08" */
   date: string
   mood: string
   text: string
   tags: string[]
 }
 
+export interface PrayerAdjustments {
+  fajr: number
+  sunrise: number
+  dhuhr: number
+  asr: number
+  maghrib: number
+  isha: number
+}
+
 export interface AppSettings {
-  id?: number
+  id: number
   latitude: number
   longitude: number
   calculationMethod: string
@@ -64,10 +74,20 @@ export interface AppSettings {
   waterTarget: number
   exerciseTarget: number
   walkingTarget: number
+  prayerAdjustments: PrayerAdjustments
 }
 
-/** Default settings used during onboarding and as fallback values. */
-export const DEFAULT_SETTINGS: Omit<AppSettings, "id"> = {
+export const DEFAULT_ADJUSTMENTS: PrayerAdjustments = {
+  fajr: 0,
+  sunrise: 0,
+  dhuhr: 0,
+  asr: 0,
+  maghrib: 0,
+  isha: 0,
+}
+
+export const DEFAULT_SETTINGS: AppSettings = {
+  id: 1,
   latitude: 0,
   longitude: 0,
   calculationMethod: "MuslimWorldLeague",
@@ -85,7 +105,12 @@ export const DEFAULT_SETTINGS: Omit<AppSettings, "id"> = {
   waterTarget: 8,
   exerciseTarget: 30,
   walkingTarget: 8000,
+  prayerAdjustments: { ...DEFAULT_ADJUSTMENTS },
 }
+
+/* ──────────────────────────────────────────────
+   Database class
+   ────────────────────────────────────────────── */
 
 class DailyDeenDB extends Dexie {
   prayers!: Table<Prayer, number>
@@ -117,20 +142,103 @@ class DailyDeenDB extends Dexie {
 
 const db = new DailyDeenDB()
 
-export async function getSettings(): Promise<AppSettings | undefined> {
-  return db.settings.toCollection().first()
+export default db
+
+/* ──────────────────────────────────────────────
+   Settings CRUD — single row, id = 1
+   ────────────────────────────────────────────── */
+
+export async function getSettings(): Promise<AppSettings> {
+  const existing = await db.settings.get(1)
+  if (existing) return existing
+  await db.settings.put({ ...DEFAULT_SETTINGS, id: 1 })
+  return { ...DEFAULT_SETTINGS, id: 1 }
 }
 
 export async function saveSettings(
-  data: Omit<AppSettings, 'id'>,
+  partial: Partial<Omit<AppSettings, 'id'>>,
 ): Promise<AppSettings> {
-  const existing = await db.settings.toCollection().first()
-  if (existing?.id != null) {
-    await db.settings.update(existing.id, data)
-    return { ...data, id: existing.id }
-  }
-  const id = await db.settings.add(data as AppSettings)
-  return { ...data, id }
+  const current = await getSettings()
+  const next = { ...current, ...partial, id: 1 }
+  await db.settings.put(next)
+  return next
 }
 
-export default db
+export async function resetSettings(): Promise<AppSettings> {
+  const reset = { ...DEFAULT_SETTINGS, id: 1 }
+  await db.settings.put(reset)
+  return reset
+}
+
+/* ──────────────────────────────────────────────
+   Full database export / import / clear
+   ────────────────────────────────────────────── */
+
+export interface DatabaseExport {
+  version: 1
+  exportedAt: string
+  prayers: Prayer[]
+  habits: Habit[]
+  habitLogs: HabitLog[]
+  journal: JournalEntry[]
+  settings: AppSettings
+}
+
+export async function exportDatabase(): Promise<DatabaseExport> {
+  const [prayers, habits, habitLogs, journal, settings] = await Promise.all([
+    db.prayers.toArray(),
+    db.habits.toArray(),
+    db.habitLogs.toArray(),
+    db.journal.toArray(),
+    getSettings(),
+  ])
+  return {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    prayers,
+    habits,
+    habitLogs,
+    journal,
+    settings,
+  }
+}
+
+export async function importDatabase(data: DatabaseExport): Promise<void> {
+  await db.transaction(
+    'rw',
+    [db.prayers, db.habits, db.habitLogs, db.journal, db.settings],
+    async () => {
+      await Promise.all([
+        db.prayers.clear(),
+        db.habits.clear(),
+        db.habitLogs.clear(),
+        db.journal.clear(),
+        db.settings.clear(),
+      ])
+      await Promise.all([
+        db.prayers.bulkAdd(data.prayers),
+        db.habits.bulkAdd(data.habits),
+        db.habitLogs.bulkAdd(data.habitLogs),
+        db.journal.bulkAdd(data.journal),
+        db.settings.put({ ...data.settings, id: 1 }),
+      ])
+    },
+  )
+}
+
+export async function clearAllData(): Promise<void> {
+  await db.transaction(
+    'rw',
+    [db.prayers, db.habits, db.habitLogs, db.journal, db.settings],
+    async () => {
+      await Promise.all([
+        db.prayers.clear(),
+        db.habits.clear(),
+        db.habitLogs.clear(),
+        db.journal.clear(),
+        db.settings.clear(),
+      ])
+      await db.settings.put({ ...DEFAULT_SETTINGS, id: 1 })
+    },
+  )
+}

@@ -1,11 +1,21 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowLeft, ChevronDown, ChevronRight, WifiOff } from "lucide-react";
+import { useCallback, useRef, useState } from "react";
+import {
+  ArrowLeft,
+  ChevronDown,
+  ChevronRight,
+  Download,
+  Upload,
+  MapPin,
+  WifiOff,
+} from "lucide-react";
 import Link from "next/link";
-import db, { getSettings, saveSettings, DEFAULT_SETTINGS } from "@/lib/db";
+import { useSettings } from "@/hooks/use-settings";
 import { useOnlineStatus } from "@/hooks/use-online-status";
-import type { AppSettings } from "@/lib/db";
+import type { PrayerAdjustments } from "@/lib/db";
+
+/* ─── Constants ─── */
 
 const CALCULATION_METHODS: { label: string; value: string }[] = [
   { label: "Muslim World League", value: "MuslimWorldLeague" },
@@ -26,38 +36,7 @@ const SCHOOLS = ["Shafi'i", "Hanafi"] as const;
 const REMINDER_OFFSETS = [5, 10, 15, 20, 30] as const;
 const THEMES = ["system", "light", "dark"] as const;
 const TEXT_SIZES = ["small", "default", "large"] as const;
-const PRAYERS = ["fajr", "sunrise", "dhuhr", "asr", "maghrib", "isha"] as const;
-
-function applyTheme(theme: string) {
-  const root = document.documentElement;
-  if (theme === "dark") {
-    root.classList.add("dark");
-  } else if (theme === "light") {
-    root.classList.remove("dark");
-  } else {
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    if (prefersDark) {
-      root.classList.add("dark");
-    } else {
-      root.classList.remove("dark");
-    }
-  }
-}
-
-function applyTextSize(size: string) {
-  const root = document.documentElement;
-  if (size === "small") {
-    root.style.fontSize = "14px";
-  } else if (size === "large") {
-    root.style.fontSize = "18px";
-  } else {
-    root.style.fontSize = "";
-  }
-}
-
-function applyPaperTexture(enabled: boolean) {
-  document.body.classList.toggle("paper-texture", enabled);
-}
+const PRAYER_KEYS = ["fajr", "sunrise", "dhuhr", "asr", "maghrib", "isha"] as const;
 
 /* ─── Reusable Controls ─── */
 
@@ -112,7 +91,15 @@ function SectionHeading({ id, children }: { id: string; children: React.ReactNod
   );
 }
 
-function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
+function Toggle({
+  checked,
+  onChange,
+  label,
+}: {
+  checked: boolean;
+  onChange: (v: boolean) => void;
+  label: string;
+}) {
   return (
     <button
       type="button"
@@ -159,7 +146,11 @@ function Select({
         {options.map((opt) => {
           const val = typeof opt === "string" ? opt : opt.value;
           const lbl = typeof opt === "string" ? opt : opt.label;
-          return <option key={val} value={val}>{lbl}</option>;
+          return (
+            <option key={val} value={val}>
+              {lbl}
+            </option>
+          );
         })}
       </select>
       <ChevronDown
@@ -225,7 +216,17 @@ function TextInput({
   );
 }
 
-function LinkRow({ label, onClick, destructive }: { label: string; onClick: () => void; destructive?: boolean }) {
+function LinkRow({
+  label,
+  onClick,
+  destructive,
+  icon,
+}: {
+  label: string;
+  onClick: () => void;
+  destructive?: boolean;
+  icon?: React.ReactNode;
+}) {
   return (
     <button
       type="button"
@@ -239,7 +240,7 @@ function LinkRow({ label, onClick, destructive }: { label: string; onClick: () =
       >
         {label}
       </span>
-      <ChevronRight size={16} strokeWidth={1.5} className="text-muted-foreground" />
+      {icon ?? <ChevronRight size={16} strokeWidth={1.5} className="text-muted-foreground" />}
     </button>
   );
 }
@@ -255,7 +256,10 @@ function PrayerAdjustor({
 }) {
   return (
     <div className="flex items-center justify-between" style={{ minHeight: "32px" }}>
-      <span className="text-foreground capitalize" style={{ fontSize: "var(--text-body-sm)", fontWeight: 500, minWidth: "80px" }}>
+      <span
+        className="text-foreground capitalize"
+        style={{ fontSize: "var(--text-body-sm)", fontWeight: 500, minWidth: "80px" }}
+      >
         {prayer}
       </span>
       <div className="flex items-center gap-1">
@@ -293,97 +297,120 @@ function PrayerAdjustor({
 /* ─── Main Settings Page ─── */
 
 export default function SettingsPage() {
-  const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
-  const [loading, setLoading] = useState(true);
+  const {
+    settings,
+    loading,
+    update,
+    updateImmediate,
+    exportData,
+    importData,
+    clearAll,
+    locationLabel,
+  } = useSettings();
+
   const [showClearConfirm, setShowClearConfirm] = useState(false);
-  const mountedRef = useRef(true);
+  const [toast, setToast] = useState<string | null>(null);
+  const [geoLoading, setGeoLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isOnline = useOnlineStatus();
 
-  // Load settings
-  useEffect(() => {
-    mountedRef.current = true;
-
-    async function load() {
-      try {
-        const saved = await getSettings();
-        if (!mountedRef.current) return;
-        if (saved) {
-          setSettings((prev) => ({ ...prev, ...saved }));
-        }
-        setLoading(false);
-      } catch (err) {
-        console.error("Failed to load settings:", err);
-        if (mountedRef.current) setLoading(false);
-      }
-    }
-
-    load();
-    return () => { mountedRef.current = false; };
+  const showToast = useCallback((msg: string) => {
+    setToast(msg);
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = setTimeout(() => setToast(null), 3000);
   }, []);
 
-  // Apply theme on change
-  useEffect(() => {
-    applyTheme(settings.theme);
-  }, [settings.theme]);
+  /* ── Geolocation ── */
+  const handleGeolocation = useCallback(() => {
+    if (!navigator.geolocation) {
+      showToast("Geolocation not available on this device");
+      return;
+    }
+    setGeoLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        update({
+          latitude: pos.coords.latitude,
+          longitude: pos.coords.longitude,
+        });
+        setGeoLoading(false);
+        showToast("Location updated");
+      },
+      (err) => {
+        setGeoLoading(false);
+        if (err.code === 1) {
+          showToast("Location permission denied");
+        } else {
+          showToast("Could not detect location");
+        }
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 },
+    );
+  }, [update, showToast]);
 
-  // Apply text size on change
-  useEffect(() => {
-    applyTextSize(settings.textSize);
-  }, [settings.textSize]);
+  /* ── Export ── */
+  const handleExport = useCallback(async () => {
+    try {
+      const data = await exportData();
+      const json = JSON.stringify(data, null, 2);
+      const blob = new Blob([json], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `daily-deen-backup-${new Date().toISOString().split("T")[0]}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast("Data exported");
+    } catch {
+      showToast("Export failed");
+    }
+  }, [exportData, showToast]);
 
-  // Apply paper texture on change
-  useEffect(() => {
-    applyPaperTexture(settings.paperTexture);
-  }, [settings.paperTexture]);
+  /* ── Import ── */
+  const handleImport = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
 
-  const update = useCallback(
-    (partial: Partial<AppSettings>) => {
-      setSettings((prev) => {
-        const next = { ...prev, ...partial };
-        saveSettings({
-          latitude: next.latitude,
-          longitude: next.longitude,
-          calculationMethod: next.calculationMethod,
-          notificationsEnabled: next.notificationsEnabled,
-          onboardingComplete: next.onboardingComplete,
-          name: next.name,
-          language: next.language,
-          school: next.school,
-          reminderOffset: next.reminderOffset,
-          adhanSound: next.adhanSound,
-          vibrate: next.vibrate,
-          theme: next.theme,
-          paperTexture: next.paperTexture,
-          textSize: next.textSize,
-          waterTarget: next.waterTarget,
-          exerciseTarget: next.exerciseTarget,
-          walkingTarget: next.walkingTarget,
-        }).catch(console.error);
-        return next;
-      });
+  const handleFileChange = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const data = JSON.parse(text);
+        if (!data.version || !data.prayers || !data.habits || !data.settings) {
+          showToast("Invalid backup file");
+          return;
+        }
+        await importData(data);
+        showToast("Data imported successfully");
+      } catch {
+        showToast("Failed to import — invalid file");
+      }
+      if (fileInputRef.current) fileInputRef.current.value = "";
     },
-    [],
+    [importData, showToast],
   );
 
-  const handleClearData = useCallback(async () => {
-    try {
-      await db.delete();
-      window.location.reload();
-    } catch (err) {
-      console.error("Failed to clear data:", err);
-    }
-  }, []);
+  /* ── Clear ── */
+  const handleClear = useCallback(async () => {
+    await clearAll();
+    setShowClearConfirm(false);
+    showToast("All data cleared");
+  }, [clearAll, showToast]);
 
-  const handleExportData = useCallback(() => {
-    const data = JSON.stringify(settings, null, 2);
-    const blob = new Blob([data], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `daily-deen-backup-${new Date().toISOString().split("T")[0]}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }, [settings]);
+  /* ── Prayer adjustments ── */
+  const adjustments = settings.prayerAdjustments;
+
+  const updateAdjustment = useCallback(
+    (prayer: keyof PrayerAdjustments, value: number) => {
+      updateImmediate({
+        prayerAdjustments: { ...adjustments, [prayer]: value },
+      });
+    },
+    [adjustments, updateImmediate],
+  );
 
   if (loading) {
     return (
@@ -392,10 +419,16 @@ export default function SettingsPage() {
           className="sticky top-0 z-30 flex items-center border-b border-border bg-background/90 backdrop-blur-md"
           style={{ height: "var(--space-12)", padding: "var(--space-3) var(--space-5)" }}
         >
-          <Link href="/" aria-label="Back to home" className="flex h-11 w-11 items-center justify-center rounded-md text-foreground transition-colors hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
+          <Link
+            href="/"
+            aria-label="Back to home"
+            className="flex h-11 w-11 items-center justify-center rounded-md text-foreground transition-colors hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+          >
             <ArrowLeft size={20} strokeWidth={1.5} />
           </Link>
-          <span className="ml-3 text-foreground" style={{ fontSize: "var(--text-body)", fontWeight: 500 }}>Settings</span>
+          <span className="ml-3 text-foreground" style={{ fontSize: "var(--text-body)", fontWeight: 500 }}>
+            Settings
+          </span>
         </header>
         <main className="flex flex-1 items-center justify-center pb-24 lg:pb-8" style={{ maxWidth: "var(--content-narrow)", margin: "0 auto", width: "100%" }}>
           <div className="animate-pulse rounded-lg" style={{ width: "100%", height: "200px", background: "var(--muted)" }} aria-busy="true" aria-label="Loading settings" />
@@ -403,157 +436,6 @@ export default function SettingsPage() {
       </div>
     );
   }
-
-  const content = (
-    <>
-      {/* General */}
-      <section aria-labelledby="section-general" style={{ marginBottom: "var(--space-12)" }}>
-        <SectionHeading id="section-general">General</SectionHeading>
-        <SettingRow label="Your name" description="Used in greetings and journal prompts">
-          <TextInput value={settings.name} onChange={(name) => update({ name })} placeholder="Enter your name" label="Your name" />
-        </SettingRow>
-        <Divider />
-        <SettingRow label="Language" description="Interface language">
-          <Select value={settings.language} onChange={(language) => update({ language })} options={["English", "Arabic", "Urdu"]} label="Language" />
-        </SettingRow>
-        <Divider />
-        <LinkRow label="Export data" onClick={handleExportData} />
-        <Divider />
-        <LinkRow label="Clear all data" onClick={() => setShowClearConfirm(true)} destructive />
-      </section>
-
-      {/* Prayer Calculation */}
-      <section aria-labelledby="section-prayer" style={{ marginBottom: "var(--space-12)" }}>
-        <SectionHeading id="section-prayer">Prayer Calculation</SectionHeading>
-        <SettingRow label="Calculation method" description="Determines prayer time benchmarks">
-          <Select value={settings.calculationMethod} onChange={(calculationMethod) => update({ calculationMethod })} options={CALCULATION_METHODS} label="Calculation method" />
-        </SettingRow>
-        <Divider />
-        <SettingRow label="School of jurisprudence" description="Affects Asr calculation">
-          <div role="radiogroup" aria-label="School of jurisprudence" className="flex gap-3">
-            {SCHOOLS.map((s) => (
-              <label key={s} className="flex items-center gap-2 cursor-pointer" style={{ fontSize: "var(--text-body-sm)", fontWeight: 500 }}>
-                <input type="radio" name="school" value={s} checked={settings.school === s} onChange={() => update({ school: s })} className="accent-[var(--dd-dusk-teal)]" style={{ width: "16px", height: "16px" }} />
-                <span>{s}</span>
-              </label>
-            ))}
-          </div>
-        </SettingRow>
-        <Divider />
-        <div style={{ padding: "var(--space-4) 0" }}>
-          <div className="text-muted-foreground" style={{ fontSize: "var(--text-caption)", fontWeight: 500, letterSpacing: "var(--tracking-wide)", marginBottom: "var(--space-2)" }}>
-            Adjustments
-          </div>
-          <div className="flex flex-col" style={{ gap: "var(--space-2)" }}>
-            {PRAYERS.map((prayer) => (
-              <PrayerAdjustor
-                key={prayer}
-                prayer={prayer}
-                value={0}
-                onChange={() => {}}
-              />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Location */}
-      <section aria-labelledby="section-location" style={{ marginBottom: "var(--space-12)" }}>
-        <SectionHeading id="section-location">Location</SectionHeading>
-        <SettingRow label="Current location" description="Your city for prayer time calculation">
-          <span className="text-muted-foreground" style={{ fontSize: "var(--text-body)" }}>
-            {settings.latitude !== 0 || settings.longitude !== 0
-              ? `${settings.latitude.toFixed(4)}, ${settings.longitude.toFixed(4)}`
-              : "Not set"}
-          </span>
-        </SettingRow>
-        <Divider />
-        <SettingRow label="Manual location" description="Enter coordinates manually">
-          <TextInput value={settings.latitude ? `${settings.latitude}` : ""} onChange={(v) => update({ latitude: Number(v) || 0 })} placeholder="Latitude" label="Latitude" />
-        </SettingRow>
-      </section>
-
-      {/* Notifications */}
-      <section aria-labelledby="section-notifications" style={{ marginBottom: "var(--space-12)" }}>
-        <SectionHeading id="section-notifications">Notifications</SectionHeading>
-        <SettingRow label="Prayer reminders" description="Get notified before each prayer">
-          <Toggle checked={settings.notificationsEnabled} onChange={(notificationsEnabled) => update({ notificationsEnabled })} label="Prayer reminders" />
-        </SettingRow>
-        <Divider />
-        <SettingRow label="Reminder offset" description="Minutes before prayer to notify">
-          <Select value={String(settings.reminderOffset)} onChange={(v) => update({ reminderOffset: Number(v) })} options={REMINDER_OFFSETS.map(String)} label="Reminder offset" />
-        </SettingRow>
-        <Divider />
-        <SettingRow label="Adhan sound" description="Play the call to prayer">
-          <Toggle checked={settings.adhanSound} onChange={(adhanSound) => update({ adhanSound })} label="Adhan sound" />
-        </SettingRow>
-        <Divider />
-        <SettingRow label="Vibrate" description="Vibrate with notification">
-          <Toggle checked={settings.vibrate} onChange={(vibrate) => update({ vibrate })} label="Vibrate" />
-        </SettingRow>
-      </section>
-
-      {/* Daily Targets */}
-      <section aria-labelledby="section-targets" style={{ marginBottom: "var(--space-12)" }}>
-        <SectionHeading id="section-targets">Daily Targets</SectionHeading>
-        <SettingRow label="Water" description="Glasses of water per day">
-          <div className="flex items-center gap-2">
-            <NumberInput value={settings.waterTarget} onChange={(waterTarget) => update({ waterTarget })} min={1} max={20} label="Water target" />
-            <span className="text-muted-foreground" style={{ fontFamily: "var(--font-mono)", fontSize: "var(--text-mono-sm)" }}>cups</span>
-          </div>
-        </SettingRow>
-        <Divider />
-        <SettingRow label="Exercise" description="Minutes of physical activity">
-          <div className="flex items-center gap-2">
-            <NumberInput value={settings.exerciseTarget} onChange={(exerciseTarget) => update({ exerciseTarget })} min={5} max={180} label="Exercise target" />
-            <span className="text-muted-foreground" style={{ fontFamily: "var(--font-mono)", fontSize: "var(--text-mono-sm)" }}>min</span>
-          </div>
-        </SettingRow>
-        <Divider />
-        <SettingRow label="Walking" description="Daily step count">
-          <div className="flex items-center gap-2">
-            <NumberInput value={settings.walkingTarget} onChange={(walkingTarget) => update({ walkingTarget })} min={1000} max={30000} label="Walking target" />
-            <span className="text-muted-foreground" style={{ fontFamily: "var(--font-mono)", fontSize: "var(--text-mono-sm)" }}>steps</span>
-          </div>
-        </SettingRow>
-      </section>
-
-      {/* Appearance */}
-      <section aria-labelledby="section-appearance" style={{ marginBottom: "var(--space-12)" }}>
-        <SectionHeading id="section-appearance">Appearance</SectionHeading>
-        <SettingRow label="Theme" description="Light or dark mode">
-          <div role="radiogroup" aria-label="Theme" className="flex gap-3">
-            {THEMES.map((t) => (
-              <label key={t} className="flex items-center gap-2 cursor-pointer" style={{ fontSize: "var(--text-body-sm)", fontWeight: 500 }}>
-                <input type="radio" name="theme" value={t} checked={settings.theme === t} onChange={() => update({ theme: t })} className="accent-[var(--dd-dusk-teal)]" style={{ width: "16px", height: "16px" }} />
-                <span className="capitalize">{t}</span>
-              </label>
-            ))}
-          </div>
-        </SettingRow>
-        <Divider />
-        <SettingRow label="Paper texture" description="Subtle grain overlay on backgrounds">
-          <Toggle checked={settings.paperTexture} onChange={(paperTexture) => update({ paperTexture })} label="Paper texture" />
-        </SettingRow>
-        <Divider />
-        <SettingRow label="Text size" description="Base font size adjustment">
-          <Select value={settings.textSize} onChange={(textSize) => update({ textSize })} options={TEXT_SIZES} label="Text size" />
-        </SettingRow>
-      </section>
-
-      {/* About */}
-      <section aria-labelledby="section-about" style={{ marginBottom: "var(--space-12)" }}>
-        <SectionHeading id="section-about">About</SectionHeading>
-        <SettingRow label="Version">
-          <span className="text-muted-foreground" style={{ fontFamily: "var(--font-mono)", fontSize: "var(--text-mono)" }}>1.0.0</span>
-        </SettingRow>
-        <Divider />
-        <SettingRow label="Build">
-          <span className="text-muted-foreground" style={{ fontFamily: "var(--font-mono)", fontSize: "var(--text-mono-sm)" }}>2026.07.09</span>
-        </SettingRow>
-      </section>
-    </>
-  );
 
   return (
     <div className="flex min-h-dvh flex-col paper-texture">
@@ -563,6 +445,29 @@ export default function SettingsPage() {
       >
         Skip to settings
       </a>
+
+      {/* Hidden file input for import */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".json"
+        onChange={handleFileChange}
+        className="sr-only"
+        aria-label="Import backup file"
+        tabIndex={-1}
+      />
+
+      {/* Toast */}
+      {toast && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed bottom-24 left-1/2 z-50 -translate-x-1/2 rounded-lg bg-foreground px-4 py-2 text-background shadow-lg"
+          style={{ fontSize: "var(--text-body-sm)", fontWeight: 500 }}
+        >
+          {toast}
+        </div>
+      )}
 
       {/* Offline banner */}
       {!isOnline && (
@@ -577,7 +482,9 @@ export default function SettingsPage() {
         <Link href="/" aria-label="Back to home" className="flex h-11 w-11 items-center justify-center rounded-md text-foreground transition-colors hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
           <ArrowLeft size={20} strokeWidth={1.5} />
         </Link>
-        <h1 className="ml-3 text-foreground" style={{ fontSize: "var(--text-body)", fontWeight: 500 }}>Settings</h1>
+        <h1 className="ml-3 text-foreground" style={{ fontSize: "var(--text-body)", fontWeight: 500 }}>
+          Settings
+        </h1>
       </header>
 
       {/* Main content */}
@@ -593,16 +500,239 @@ export default function SettingsPage() {
           width: "100%",
         }}
       >
-        {content}
+        {/* ─── General ─── */}
+        <section aria-labelledby="section-general" style={{ marginBottom: "var(--space-12)" }}>
+          <SectionHeading id="section-general">General</SectionHeading>
+          <SettingRow label="Your name" description="Used in greetings and journal prompts">
+            <TextInput value={settings.name} onChange={(name) => update({ name })} placeholder="Enter your name" label="Your name" />
+          </SettingRow>
+          <Divider />
+          <SettingRow label="Language" description="Interface language">
+            <Select value={settings.language} onChange={(language) => update({ language })} options={["English", "Arabic", "Urdu"]} label="Language" />
+          </SettingRow>
+          <Divider />
+          <LinkRow label="Export data" onClick={handleExport} icon={<Download size={16} strokeWidth={1.5} className="text-muted-foreground" />} />
+          <Divider />
+          <LinkRow label="Import backup" onClick={handleImport} icon={<Upload size={16} strokeWidth={1.5} className="text-muted-foreground" />} />
+          <Divider />
+          <LinkRow label="Clear all data" onClick={() => setShowClearConfirm(true)} destructive />
+        </section>
+
+        {/* ─── Prayer Calculation ─── */}
+        <section aria-labelledby="section-prayer" style={{ marginBottom: "var(--space-12)" }}>
+          <SectionHeading id="section-prayer">Prayer Calculation</SectionHeading>
+          <SettingRow label="Calculation method" description="Determines prayer time benchmarks">
+            <Select value={settings.calculationMethod} onChange={(calculationMethod) => update({ calculationMethod })} options={CALCULATION_METHODS} label="Calculation method" />
+          </SettingRow>
+          <Divider />
+          <SettingRow label="School of jurisprudence" description="Affects Asr calculation">
+            <div role="radiogroup" aria-label="School of jurisprudence" className="flex gap-3">
+              {SCHOOLS.map((s) => (
+                <label key={s} className="flex cursor-pointer items-center gap-2" style={{ fontSize: "var(--text-body-sm)", fontWeight: 500 }}>
+                  <input
+                    type="radio"
+                    name="school"
+                    value={s}
+                    checked={settings.school === s}
+                    onChange={() => updateImmediate({ school: s })}
+                    className="accent-[var(--dd-dusk-teal)]"
+                    style={{ width: "16px", height: "16px" }}
+                  />
+                  <span>{s}</span>
+                </label>
+              ))}
+            </div>
+          </SettingRow>
+          <Divider />
+          <div style={{ padding: "var(--space-4) 0" }}>
+            <div
+              className="text-muted-foreground"
+              style={{ fontSize: "var(--text-caption)", fontWeight: 500, letterSpacing: "var(--tracking-wide)", marginBottom: "var(--space-2)" }}
+            >
+              Adjustments
+            </div>
+            <div className="flex flex-col" style={{ gap: "var(--space-2)" }}>
+              {PRAYER_KEYS.map((prayer) => (
+                <PrayerAdjustor
+                  key={prayer}
+                  prayer={prayer}
+                  value={adjustments[prayer]}
+                  onChange={(v) => updateAdjustment(prayer, v)}
+                />
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ─── Location ─── */}
+        <section aria-labelledby="section-location" style={{ marginBottom: "var(--space-12)" }}>
+          <SectionHeading id="section-location">Location</SectionHeading>
+
+          {/* Current location display */}
+          <SettingRow label="Current location" description="Your city for prayer time calculation">
+            <span className="text-muted-foreground" style={{ fontSize: "var(--text-body-sm)", textAlign: "right", maxWidth: "160px" }}>
+              {settings.latitude === 0 && settings.longitude === 0
+                ? "Not set"
+                : locationLabel || `${settings.latitude.toFixed(4)}, ${settings.longitude.toFixed(4)}`}
+            </span>
+          </SettingRow>
+          <Divider />
+
+          {/* Latitude */}
+          <SettingRow label="Latitude" description="-90 to 90">
+            <input
+              type="number"
+              value={settings.latitude || ""}
+              onChange={(e) => {
+                const v = Number(e.target.value);
+                if (!isNaN(v)) update({ latitude: Math.max(-90, Math.min(90, v)) });
+              }}
+              min={-90}
+              max={90}
+              step="any"
+              aria-label="Latitude"
+              placeholder="0.0000"
+              className="rounded-lg border border-input bg-background px-3 text-foreground text-center outline-none transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)] focus:border-ring focus:shadow-[var(--focus-ring)]"
+              style={{ height: "var(--space-10)", width: "100px", fontSize: "var(--text-body)", fontFamily: "var(--font-mono)" }}
+            />
+          </SettingRow>
+          <Divider />
+
+          {/* Longitude */}
+          <SettingRow label="Longitude" description="-180 to 180">
+            <input
+              type="number"
+              value={settings.longitude || ""}
+              onChange={(e) => {
+                const v = Number(e.target.value);
+                if (!isNaN(v)) update({ longitude: Math.max(-180, Math.min(180, v)) });
+              }}
+              min={-180}
+              max={180}
+              step="any"
+              aria-label="Longitude"
+              placeholder="0.0000"
+              className="rounded-lg border border-input bg-background px-3 text-foreground text-center outline-none transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)] focus:border-ring focus:shadow-[var(--focus-ring)]"
+              style={{ height: "var(--space-10)", width: "100px", fontSize: "var(--text-body)", fontFamily: "var(--font-mono)" }}
+            />
+          </SettingRow>
+          <Divider />
+
+          {/* Use current location */}
+          <SettingRow label="Use current location" description="Detect via GPS">
+            <button
+              type="button"
+              onClick={handleGeolocation}
+              disabled={geoLoading}
+              className="flex items-center gap-2 rounded-lg border border-input bg-background px-3 text-foreground transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)] hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50"
+              style={{ height: "var(--space-10)", fontSize: "var(--text-body-sm)", fontWeight: 500 }}
+            >
+              <MapPin size={16} strokeWidth={1.5} />
+              {geoLoading ? "Detecting..." : "Use GPS"}
+            </button>
+          </SettingRow>
+        </section>
+
+        {/* ─── Notifications ─── */}
+        <section aria-labelledby="section-notifications" style={{ marginBottom: "var(--space-12)" }}>
+          <SectionHeading id="section-notifications">Notifications</SectionHeading>
+          <SettingRow label="Prayer reminders" description="Get notified before each prayer">
+            <Toggle checked={settings.notificationsEnabled} onChange={(notificationsEnabled) => updateImmediate({ notificationsEnabled })} label="Prayer reminders" />
+          </SettingRow>
+          <Divider />
+          <SettingRow label="Reminder offset" description="Minutes before prayer to notify">
+            <Select value={String(settings.reminderOffset)} onChange={(v) => updateImmediate({ reminderOffset: Number(v) })} options={REMINDER_OFFSETS.map(String)} label="Reminder offset" />
+          </SettingRow>
+          <Divider />
+          <SettingRow label="Adhan sound" description="Play the call to prayer">
+            <Toggle checked={settings.adhanSound} onChange={(adhanSound) => updateImmediate({ adhanSound })} label="Adhan sound" />
+          </SettingRow>
+          <Divider />
+          <SettingRow label="Vibrate" description="Vibrate with notification">
+            <Toggle checked={settings.vibrate} onChange={(vibrate) => updateImmediate({ vibrate })} label="Vibrate" />
+          </SettingRow>
+        </section>
+
+        {/* ─── Daily Targets ─── */}
+        <section aria-labelledby="section-targets" style={{ marginBottom: "var(--space-12)" }}>
+          <SectionHeading id="section-targets">Daily Targets</SectionHeading>
+          <SettingRow label="Water" description="Glasses of water per day">
+            <div className="flex items-center gap-2">
+              <NumberInput value={settings.waterTarget} onChange={(waterTarget) => update({ waterTarget })} min={1} max={20} label="Water target" />
+              <span className="text-muted-foreground" style={{ fontFamily: "var(--font-mono)", fontSize: "var(--text-mono-sm)" }}>cups</span>
+            </div>
+          </SettingRow>
+          <Divider />
+          <SettingRow label="Exercise" description="Minutes of physical activity">
+            <div className="flex items-center gap-2">
+              <NumberInput value={settings.exerciseTarget} onChange={(exerciseTarget) => update({ exerciseTarget })} min={5} max={180} label="Exercise target" />
+              <span className="text-muted-foreground" style={{ fontFamily: "var(--font-mono)", fontSize: "var(--text-mono-sm)" }}>min</span>
+            </div>
+          </SettingRow>
+          <Divider />
+          <SettingRow label="Walking" description="Daily step count">
+            <div className="flex items-center gap-2">
+              <NumberInput value={settings.walkingTarget} onChange={(walkingTarget) => update({ walkingTarget })} min={1000} max={30000} label="Walking target" />
+              <span className="text-muted-foreground" style={{ fontFamily: "var(--font-mono)", fontSize: "var(--text-mono-sm)" }}>steps</span>
+            </div>
+          </SettingRow>
+        </section>
+
+        {/* ─── Appearance ─── */}
+        <section aria-labelledby="section-appearance" style={{ marginBottom: "var(--space-12)" }}>
+          <SectionHeading id="section-appearance">Appearance</SectionHeading>
+          <SettingRow label="Theme" description="Light or dark mode">
+            <div role="radiogroup" aria-label="Theme" className="flex gap-3">
+              {THEMES.map((t) => (
+                <label key={t} className="flex cursor-pointer items-center gap-2" style={{ fontSize: "var(--text-body-sm)", fontWeight: 500 }}>
+                  <input
+                    type="radio"
+                    name="theme"
+                    value={t}
+                    checked={settings.theme === t}
+                    onChange={() => updateImmediate({ theme: t })}
+                    className="accent-[var(--dd-dusk-teal)]"
+                    style={{ width: "16px", height: "16px" }}
+                  />
+                  <span className="capitalize">{t}</span>
+                </label>
+              ))}
+            </div>
+          </SettingRow>
+          <Divider />
+          <SettingRow label="Paper texture" description="Subtle grain overlay on backgrounds">
+            <Toggle checked={settings.paperTexture} onChange={(paperTexture) => updateImmediate({ paperTexture })} label="Paper texture" />
+          </SettingRow>
+          <Divider />
+          <SettingRow label="Text size" description="Base font size adjustment">
+            <Select value={settings.textSize} onChange={(textSize) => updateImmediate({ textSize })} options={TEXT_SIZES} label="Text size" />
+          </SettingRow>
+        </section>
+
+        {/* ─── About ─── */}
+        <section aria-labelledby="section-about" style={{ marginBottom: "var(--space-12)" }}>
+          <SectionHeading id="section-about">About</SectionHeading>
+          <SettingRow label="Version">
+            <span className="text-muted-foreground" style={{ fontFamily: "var(--font-mono)", fontSize: "var(--text-mono)" }}>1.0.0</span>
+          </SettingRow>
+          <Divider />
+          <SettingRow label="Build">
+            <span className="text-muted-foreground" style={{ fontFamily: "var(--font-mono)", fontSize: "var(--text-mono-sm)" }}>2026.07.09</span>
+          </SettingRow>
+        </section>
       </main>
 
-      {/* Clear data confirmation modal */}
+      {/* ─── Clear data confirmation modal ─── */}
       {showClearConfirm && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center"
           style={{ background: "rgba(0,0,0,0.5)" }}
-          onClick={(e) => { if (e.target === e.currentTarget) setShowClearConfirm(false); }}
-          onKeyDown={(e) => { if (e.key === "Escape") setShowClearConfirm(false); }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowClearConfirm(false);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") setShowClearConfirm(false);
+          }}
         >
           <div
             role="dialog"
@@ -611,7 +741,11 @@ export default function SettingsPage() {
             className="rounded-lg bg-background p-6"
             style={{ boxShadow: "var(--shadow-lg)", maxWidth: "400px", width: "90%" }}
           >
-            <h3 id="clear-dialog-title" className="text-foreground" style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-h3)", fontWeight: 600, marginBottom: "var(--space-2)" }}>
+            <h3
+              id="clear-dialog-title"
+              className="text-foreground"
+              style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-h3)", fontWeight: 600, marginBottom: "var(--space-2)" }}
+            >
               Clear all data?
             </h3>
             <p className="text-muted-foreground" style={{ fontSize: "var(--text-body-sm)", marginBottom: "var(--space-6)" }}>
@@ -628,7 +762,7 @@ export default function SettingsPage() {
               </button>
               <button
                 type="button"
-                onClick={handleClearData}
+                onClick={handleClear}
                 className="flex-1 rounded-lg bg-destructive px-4 text-destructive-foreground transition-all duration-[var(--duration-fast)] ease-[var(--ease-out)] hover:bg-destructive/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring active:bg-destructive/80"
                 style={{ height: "var(--space-10)", fontSize: "var(--text-body-sm)", fontWeight: 500 }}
               >

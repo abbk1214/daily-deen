@@ -1,115 +1,31 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { AlertCircle, ArrowLeft, ListChecks, WifiOff } from "lucide-react";
 import Link from "next/link";
 import { WeekStrip } from "@/components/week-strip";
 import { HabitRow } from "@/components/habit-row";
 import { AddHabitForm } from "@/components/add-habit-form";
-import {
-  getHabits,
-  addHabit,
-  getHabitLogsForDate,
-  incrementHabitLog,
-  decrementHabitLog,
-} from "@/lib/habit-actions";
+import { useHabits } from "@/hooks/use-habits";
 import { useOnlineStatus } from "@/hooks/use-online-status";
-import type { Habit, HabitLog } from "@/lib/db";
 
 export default function HabitsPage() {
-  const [habits, setHabits] = useState<Habit[]>([]);
-  const [habitLogs, setHabitLogs] = useState<HabitLog[]>([]);
   const [selectedDate, setSelectedDate] = useState(
     () => new Date().toISOString().split("T")[0],
   );
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const isOnline = useOnlineStatus();
 
-  const mountedRef = useRef(true);
-
-  const loadHabits = useCallback(async () => {
-    mountedRef.current = true;
-
-    try {
-      const [habitsData, logsData] = await Promise.all([
-        getHabits(),
-        getHabitLogsForDate(selectedDate),
-      ]);
-
-      if (!mountedRef.current) return;
-      setHabits(habitsData);
-      setHabitLogs(logsData);
-      setError(false);
-      setLoading(false);
-    } catch (err) {
-      console.error("Failed to load habits:", err);
-      if (mountedRef.current) {
-        setLoading(false);
-        setError(true);
-      }
-    }
-  }, [selectedDate]);
-
-  useEffect(() => {
-    async function init() {
-      await loadHabits();
-    }
-    init();
-    return () => { mountedRef.current = false; };
-  }, [loadHabits]);
-
-  const handleIncrement = useCallback(
-    async (habitId: number, step: number) => {
-      try {
-        const updatedLog = await incrementHabitLog(habitId, selectedDate, step);
-
-        setHabitLogs((prev) => {
-          const idx = prev.findIndex(
-            (l) => l.habitId === habitId && l.date === selectedDate,
-          );
-          if (idx >= 0) {
-            const next = [...prev];
-            next[idx] = updatedLog;
-            return next;
-          }
-          return [...prev, updatedLog];
-        });
-      } catch (err) {
-        console.error("Failed to save habit log:", err);
-      }
-    },
-    [selectedDate],
-  );
-
-  const handleDecrement = useCallback(
-    async (habitId: number, step: number) => {
-      try {
-        const updatedLog = await decrementHabitLog(habitId, selectedDate, step);
-
-        setHabitLogs((prev) => {
-          const idx = prev.findIndex(
-            (l) => l.habitId === habitId && l.date === selectedDate,
-          );
-          if (idx >= 0) {
-            if (!updatedLog) {
-              const next = [...prev];
-              next.splice(idx, 1);
-              return next;
-            }
-            const next = [...prev];
-            next[idx] = updatedLog;
-            return next;
-          }
-          return prev;
-        });
-      } catch (err) {
-        console.error("Failed to save habit log:", err);
-      }
-    },
-    [selectedDate],
-  );
+  const {
+    habits,
+    loading,
+    error,
+    increment,
+    decrement,
+    addHabit,
+    refresh,
+    logFor,
+  } = useHabits(selectedDate);
 
   const handleAddHabit = useCallback(
     async (habit: {
@@ -119,24 +35,23 @@ export default function HabitsPage() {
       unit: string;
       increment: number;
     }) => {
-      try {
-        const newHabit = await addHabit(habit);
-        setHabits((prev) => [...prev, newHabit]);
-        setShowAddForm(false);
-      } catch (err) {
-        console.error("Failed to add habit:", err);
-      }
+      await addHabit(habit);
+      setShowAddForm(false);
     },
-    [],
+    [addHabit],
   );
 
   const handleCancelAdd = useCallback(() => setShowAddForm(false), []);
 
-  const today = useMemo(() => new Date(selectedDate + "T00:00:00").toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-  }), [selectedDate]);
+  const today = useMemo(
+    () =>
+      new Date(selectedDate + "T00:00:00").toLocaleDateString("en-US", {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+      }),
+    [selectedDate],
+  );
 
   return (
     <div className="flex min-h-dvh flex-col paper-texture">
@@ -196,7 +111,8 @@ export default function HabitsPage() {
         className="flex flex-1 flex-col pb-24 lg:pb-8"
         style={{
           padding: "var(--space-5)",
-          paddingBottom: "calc(var(--space-14) + env(safe-area-inset-bottom, 0px) + var(--space-5))",
+          paddingBottom:
+            "calc(var(--space-14) + env(safe-area-inset-bottom, 0px) + var(--space-5))",
           maxWidth: "var(--content-reading)",
           marginLeft: "auto",
           marginRight: "auto",
@@ -221,7 +137,10 @@ export default function HabitsPage() {
           <div className="flex flex-col">
             {[1, 2, 3].map((i) => (
               <div key={i}>
-                <div className="flex flex-col gap-2" style={{ padding: "var(--space-4) 0" }}>
+                <div
+                  className="flex flex-col gap-2"
+                  style={{ padding: "var(--space-4) 0" }}
+                >
                   <div className="flex justify-between">
                     <div
                       className="animate-pulse rounded"
@@ -267,11 +186,7 @@ export default function HabitsPage() {
                     />
                   </div>
                 </div>
-                {i < 3 && (
-                  <div
-                    className="border-t border-border"
-                  />
-                )}
+                {i < 3 && <div className="border-t border-border" />}
               </div>
             ))}
           </div>
@@ -308,7 +223,7 @@ export default function HabitsPage() {
             </p>
             <button
               type="button"
-              onClick={loadHabits}
+              onClick={refresh}
               className="text-dusk-teal transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)] hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
               style={{
                 fontSize: "var(--text-body)",
@@ -352,7 +267,8 @@ export default function HabitsPage() {
                 marginBottom: "var(--space-8)",
               }}
             >
-              Add habits to track your spiritual and physical well-being each day.
+              Add habits to track your spiritual and physical well-being each
+              day.
             </p>
             <button
               type="button"
@@ -373,31 +289,23 @@ export default function HabitsPage() {
           </div>
         ) : (
           /* Habit rows */
-          <ul
-            aria-label="Daily habits"
-            className="flex flex-col"
-          >
-            {habits.map((habit, index) => {
-              const log = habitLogs.find(
-                (l) => l.habitId === habit.id && l.date === selectedDate,
-              );
-              return (
-                <div key={habit.id}>
-                  <HabitRow
-                    habit={habit}
-                    log={log}
-                    onIncrement={handleIncrement}
-                    onDecrement={handleDecrement}
+          <ul aria-label="Daily habits" className="flex flex-col">
+            {habits.map((habit, index) => (
+              <div key={habit.id}>
+                <HabitRow
+                  habit={habit}
+                  log={logFor(habit.id!)}
+                  onIncrement={increment}
+                  onDecrement={decrement}
+                />
+                {index < habits.length - 1 && (
+                  <div
+                    className="border-t border-border"
+                    style={{ margin: "var(--space-4) 0" }}
                   />
-                  {index < habits.length - 1 && (
-                    <div
-                      className="border-t border-border"
-                      style={{ margin: "var(--space-4) 0" }}
-                    />
-                  )}
-                </div>
-              );
-            })}
+                )}
+              </div>
+            ))}
 
             <div
               className="border-t border-border"

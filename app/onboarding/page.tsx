@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { saveSettings, DEFAULT_SETTINGS } from "@/lib/db";
+import { saveSettings } from "@/lib/db";
 
 type Screen = "welcome" | "location" | "goals";
 
@@ -99,10 +99,10 @@ export default function OnboardingPage() {
     const g = goalsOverride ?? goals;
     try {
       await saveSettings({
-        ...DEFAULT_SETTINGS,
         waterTarget: g.water,
         exerciseTarget: g.exercise,
         walkingTarget: g.walking,
+        onboardingComplete: true,
       });
     } catch (err) {
       console.error("Failed to save onboarding:", err);
@@ -133,12 +133,8 @@ export default function OnboardingPage() {
       if (!mountedRef.current) return;
 
       await saveSettings({
-        ...DEFAULT_SETTINGS,
         latitude: position.coords.latitude,
         longitude: position.coords.longitude,
-        waterTarget: goals.water,
-        exerciseTarget: goals.exercise,
-        walkingTarget: goals.walking,
       });
 
       announce("Location access granted");
@@ -155,7 +151,7 @@ export default function OnboardingPage() {
       setLocationError(msg);
       announce(msg);
     }
-  }, [goals, transitionTo, announce]);
+  }, [transitionTo, announce]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === "Escape" && screen !== "welcome") {
