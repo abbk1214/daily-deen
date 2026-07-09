@@ -82,7 +82,7 @@ export function Dashboard() {
 
       <main
         id="main"
-        className="flex flex-1 flex-col gap-8 pb-24 lg:ml-50 lg:pb-8"
+        className="flex flex-1 flex-col gap-8 pb-24 lg:pb-8"
         style={{
           padding: "var(--space-5)",
           paddingBottom: "calc(var(--space-14) + env(safe-area-inset-bottom, 0px) + var(--space-5))",
