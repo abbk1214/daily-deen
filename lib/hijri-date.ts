@@ -13,35 +13,7 @@ const HIJRI_MONTHS = [
   "Dhul Hijjah",
 ];
 
-const HIJRI_MONTHS_SHORT = [
-  "Muh",
-  "Saf",
-  "Rb I",
-  "Rb II",
-  "Jm I",
-  "Jm II",
-  "Raj",
-  "Sha",
-  "Ram",
-  "Shaw",
-  "Dh Q",
-  "Dh H",
-];
-
-interface HijriDate {
-  day: number;
-  month: number;
-  year: number;
-  monthName: string;
-  monthNameShort: string;
-}
-
-/**
- * Convert a Gregorian date (ISO string "YYYY-MM-DD") to Hijri date
- * using the tabular Islamic calendar algorithm (Type II).
- * Accuracy: ±1 day from observed dates.
- */
-export function gregorianToHijri(isoDate: string): HijriDate {
+function gregorianToHijri(isoDate: string): { day: number; month: number; year: number; monthName: string } {
   const [y, m, d] = isoDate.split("-").map(Number);
 
   // Julian Day Number from Gregorian date
@@ -66,7 +38,7 @@ function gregorianToJD(year: number, month: number, day: number): number {
   );
 }
 
-function jdToHijri(jd: number): HijriDate {
+function jdToHijri(jd: number): { day: number; month: number; year: number; monthName: string } {
   const l = jd - 1948440 + 10632;
   const n = Math.floor((l - 1) / 10631);
   const remainder = l - 10631 * n + 354;
@@ -92,7 +64,6 @@ function jdToHijri(jd: number): HijriDate {
     month,
     year,
     monthName: HIJRI_MONTHS[month - 1] ?? "",
-    monthNameShort: HIJRI_MONTHS_SHORT[month - 1] ?? "",
   };
 }
 
@@ -105,11 +76,4 @@ export function formatHijriDate(isoDate: string): string {
   return `${h.day} ${h.monthName} ${h.year}`;
 }
 
-/**
- * Format a Hijri date short for compact display.
- * Example: "14 Ram 1447"
- */
-export function formatHijriDateShort(isoDate: string): string {
-  const h = gregorianToHijri(isoDate);
-  return `${h.day} ${h.monthNameShort} ${h.year}`;
-}
+

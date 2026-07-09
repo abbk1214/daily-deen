@@ -55,17 +55,5 @@ export function useSidebarState() {
     });
   }, []);
 
-  const collapse = useCallback(() => {
-    setIsCollapsed(true);
-    setStoredState(true);
-  }, []);
-
-  const expand = useCallback(() => {
-    setIsCollapsed(false);
-    setStoredState(false);
-  }, []);
-
-  const sidebarWidth = isDesktop ? (isCollapsed ? 64 : 200) : 0;
-
-  return { isCollapsed, isDesktop, sidebarWidth, toggle, collapse, expand };
+  return { isCollapsed, isDesktop, toggle };
 }
