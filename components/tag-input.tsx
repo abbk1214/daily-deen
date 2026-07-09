@@ -77,7 +77,7 @@ export function TagInput({
       ref={containerRef}
       role="group"
       aria-label="Tags"
-      className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-card p-2 transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)] focus-within:border-ring focus-within:shadow-[var(--focus-ring)]"
+      className="flex flex-wrap items-center gap-1 rounded-lg border border-border bg-card p-2 transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)] focus-within:border-ring focus-within:shadow-[var(--focus-ring)]"
     >
       {tags.map((tag, index) => (
         <span
@@ -97,13 +97,13 @@ export function TagInput({
             onClick={() => removeTag(index)}
             className="flex shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)] hover:text-foreground"
             style={{
-              width: "28px",
-              height: "28px",
-              minWidth: "28px",
-              minHeight: "28px",
+              width: "24px",
+              height: "24px",
+              minWidth: "24px",
+              minHeight: "24px",
             }}
           >
-            <X size={12} strokeWidth={1.5} />
+            <X size={16} strokeWidth={1.5} />
           </button>
         </span>
       ))}

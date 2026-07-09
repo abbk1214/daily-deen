@@ -191,7 +191,7 @@ export function MoodSelector({ value, onChange }: MoodSelectorProps) {
         ref={groupRef}
         role="radiogroup"
         aria-label="Mood selector"
-        className="flex flex-wrap gap-4"
+        className="flex flex-wrap gap-6"
         onKeyDown={handleKeyDown}
       >
         {MOODS.map((mood) => {

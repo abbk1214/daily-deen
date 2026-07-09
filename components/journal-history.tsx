@@ -1,6 +1,7 @@
 import { memo, useCallback } from "react";
 import { BookOpen } from "lucide-react";
 import type { JournalEntry } from "@/lib/db";
+import { formatHijriDate } from "@/lib/hijri-date";
 
 interface JournalHistoryProps {
   entries: JournalEntry[];
@@ -25,6 +26,47 @@ function formatDate(dateStr: string): string {
   });
 }
 
+function formatHijri(dateStr: string): string {
+  return formatHijriDate(dateStr);
+}
+
+const MOOD_ICONS: Record<string, React.ReactNode> = {
+  grateful: (
+    <svg width="16" height="16" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M8 16 C8 12, 12 10, 16 10 C20 10, 24 12, 24 16" />
+      <path d="M10 16 L10 18 C10 20, 12 22, 16 22 C20 22, 22 20, 22 18 L22 16" />
+      <path d="M16 10 L16 8" />
+    </svg>
+  ),
+  peaceful: (
+    <svg width="16" height="16" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M20 6 C14 8, 10 14, 10 20 C10 26, 14 30, 20 30 C15 26, 13 18, 16 10 C17 8, 18 7, 20 6 Z" />
+    </svg>
+  ),
+  reflective: (
+    <svg width="16" height="16" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M16 8 L6 10 L6 24 L16 22 L26 24 L26 10 L16 8 Z" />
+      <path d="M16 8 L16 22" />
+    </svg>
+  ),
+  hopeful: (
+    <svg width="16" height="16" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M6 22 L26 22" />
+      <path d="M10 22 A6 6 0 0 1 22 22" />
+      <path d="M16 16 L16 12" />
+      <path d="M10 18 L8 15" />
+      <path d="M22 18 L24 15" />
+    </svg>
+  ),
+  seeking: (
+    <svg width="16" height="16" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="16" cy="16" r="10" />
+      <path d="M16 6 L16 26" />
+      <path d="M14 8 L16 4 L18 8" />
+    </svg>
+  ),
+};
+
 const EntryCard = memo(function EntryCard({ entry }: { entry: JournalEntry }) {
   const preview = entry.text.length > 120
     ? entry.text.slice(0, 120) + "..."
@@ -48,24 +90,37 @@ const EntryCard = memo(function EntryCard({ entry }: { entry: JournalEntry }) {
       onKeyDown={handleKeyDown}
     >
       <div className="flex items-start justify-between" style={{ marginBottom: "var(--space-2)" }}>
-        <time
-          dateTime={entry.date}
-          className="text-muted-foreground"
-          style={{
-            fontFamily: "var(--font-mono)",
-            fontSize: "var(--text-body-sm)",
-          }}
-        >
-          {formatDate(entry.date)}
-        </time>
+        <div>
+          <time
+            dateTime={entry.date}
+            className="text-foreground"
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: "var(--text-body-sm)",
+            }}
+          >
+            {formatHijri(entry.date)}
+          </time>
+          <time
+            dateTime={entry.date}
+            className="text-muted-foreground block"
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: "var(--text-caption)",
+            }}
+          >
+            {formatDate(entry.date)}
+          </time>
+        </div>
         {entry.mood && (
           <span
-            className="text-dusk-teal"
+            className="flex items-center gap-1 text-dusk-teal"
             style={{
               fontSize: "var(--text-caption)",
               fontWeight: 500,
             }}
           >
+            {MOOD_ICONS[entry.mood]}
             {MOOD_LABELS[entry.mood] ?? entry.mood}
           </span>
         )}

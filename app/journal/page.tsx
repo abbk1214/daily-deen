@@ -304,6 +304,7 @@ export default function JournalPage() {
                 fontSize: "var(--text-body)",
                 fontWeight: 500,
                 letterSpacing: "var(--tracking-wide)",
+                color: saveStatus === "saved" ? "var(--dd-quiet-sage)" : undefined,
               }}
             >
               {saveStatus === "saving"
