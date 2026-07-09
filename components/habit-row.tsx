@@ -12,14 +12,20 @@ interface HabitRowProps {
   onDecrement: (habitId: number, step: number) => Promise<void>;
 }
 
+function truncateName(name: string, maxLen = 24): string {
+  if (name.length <= maxLen) return name;
+  return name.slice(0, maxLen - 1) + "\u2026";
+}
+
 export const HabitRow = memo(function HabitRow({ habit, log, onIncrement, onDecrement }: HabitRowProps) {
   const currentValue = log?.value ?? 0;
   const isComplete = currentValue >= habit.target;
-  const step = getIncrementStep(habit);
+  const baseStep = getIncrementStep(habit);
   const percentage = Math.min(100, (currentValue / habit.target) * 100);
   const habitId = habit.id!;
 
   const [isPressed, setIsPressed] = useState<"inc" | "dec" | null>(null);
+  const [isAccelerated, setIsAccelerated] = useState(false);
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const intervalTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -32,18 +38,20 @@ export const HabitRow = memo(function HabitRow({ habit, log, onIncrement, onDecr
       clearInterval(intervalTimerRef.current);
       intervalTimerRef.current = null;
     }
+    setIsAccelerated(false);
   }, []);
 
   const handleIncrementStart = useCallback(() => {
     setIsPressed("inc");
-    onIncrement(habitId, step);
+    onIncrement(habitId, baseStep);
 
     longPressTimerRef.current = setTimeout(() => {
+      setIsAccelerated(true);
       intervalTimerRef.current = setInterval(() => {
-        onIncrement(habitId, step);
+        onIncrement(habitId, baseStep);
       }, 100);
     }, 500);
-  }, [habitId, step, onIncrement]);
+  }, [habitId, baseStep, onIncrement]);
 
   const handleIncrementEnd = useCallback(() => {
     setIsPressed(null);
@@ -52,19 +60,33 @@ export const HabitRow = memo(function HabitRow({ habit, log, onIncrement, onDecr
 
   const handleDecrementStart = useCallback(() => {
     setIsPressed("dec");
-    onDecrement(habitId, step);
+    onDecrement(habitId, baseStep);
 
     longPressTimerRef.current = setTimeout(() => {
+      setIsAccelerated(true);
       intervalTimerRef.current = setInterval(() => {
-        onDecrement(habitId, step);
+        onDecrement(habitId, baseStep);
       }, 100);
     }, 500);
-  }, [habitId, step, onDecrement]);
+  }, [habitId, baseStep, onDecrement]);
 
   const handleDecrementEnd = useCallback(() => {
     setIsPressed(null);
     clearAllTimers();
   }, [clearAllTimers]);
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === "+" || (e.key === "=" && e.shiftKey)) {
+        e.preventDefault();
+        onIncrement(habitId, baseStep);
+      } else if (e.key === "-" || (e.key === "-" && !e.shiftKey)) {
+        e.preventDefault();
+        onDecrement(habitId, baseStep);
+      }
+    },
+    [habitId, baseStep, onIncrement, onDecrement],
+  );
 
   const progressLabel = `${formatValue(currentValue, habit.unit)} / ${formatValue(habit.target, habit.unit)} ${habit.unit}`;
 
@@ -73,6 +95,7 @@ export const HabitRow = memo(function HabitRow({ habit, log, onIncrement, onDecr
       className="flex flex-col"
       role="listitem"
       aria-label={`${habit.name}: ${progressLabel}`}
+      onKeyDown={handleKeyDown}
     >
       {/* Title + Progress label */}
       <div
@@ -81,14 +104,17 @@ export const HabitRow = memo(function HabitRow({ habit, log, onIncrement, onDecr
       >
         <div className="flex items-center gap-2">
           <span
-            className="text-foreground truncate"
+            className="text-foreground"
             style={{
               fontSize: "var(--text-body)",
               fontWeight: 500,
               maxWidth: "200px",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
             }}
           >
-            {habit.name}
+            {truncateName(habit.name)}
           </span>
           {isComplete && (
             <Check
@@ -140,7 +166,6 @@ export const HabitRow = memo(function HabitRow({ habit, log, onIncrement, onDecr
           type="button"
           aria-label={`Decrement ${habit.name}`}
           disabled={currentValue <= 0}
-          onClick={handleDecrementStart}
           onMouseDown={handleDecrementStart}
           onMouseUp={handleDecrementEnd}
           onMouseLeave={handleDecrementEnd}
@@ -154,6 +179,7 @@ export const HabitRow = memo(function HabitRow({ habit, log, onIncrement, onDecr
             fontFamily: "var(--font-mono)",
             color: isPressed === "dec" ? "var(--foreground)" : "var(--muted-foreground)",
             background: isPressed === "dec" ? "var(--secondary)" : "transparent",
+            opacity: isAccelerated && isPressed === "dec" ? 0.8 : 1,
           }}
         >
           −
@@ -176,7 +202,6 @@ export const HabitRow = memo(function HabitRow({ habit, log, onIncrement, onDecr
           type="button"
           aria-label={`Increment ${habit.name}`}
           disabled={currentValue >= habit.target}
-          onClick={handleIncrementStart}
           onMouseDown={handleIncrementStart}
           onMouseUp={handleIncrementEnd}
           onMouseLeave={handleIncrementEnd}
@@ -190,6 +215,7 @@ export const HabitRow = memo(function HabitRow({ habit, log, onIncrement, onDecr
             fontFamily: "var(--font-mono)",
             color: isPressed === "inc" ? "var(--foreground)" : "var(--muted-foreground)",
             background: isPressed === "inc" ? "var(--secondary)" : "transparent",
+            opacity: isAccelerated && isPressed === "inc" ? 0.8 : 1,
           }}
         >
           +

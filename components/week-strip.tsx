@@ -1,4 +1,6 @@
-import { memo, useMemo } from "react";
+"use client";
+
+import { memo, useCallback, useMemo, useRef } from "react";
 
 interface WeekStripProps {
   selectedDate: string;
@@ -25,26 +27,78 @@ const DAY_LABELS = ["S", "M", "T", "W", "T", "F", "S"];
 export const WeekStrip = memo(function WeekStrip({ selectedDate, onSelectDate }: WeekStripProps) {
   const weekDates = useMemo(() => getWeekDates(), []);
   const today = useMemo(() => new Date().toISOString().split("T")[0], []);
+  const tabsRef = useRef<HTMLButtonElement[]>([]);
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      const currentIndex = weekDates.indexOf(selectedDate);
+      let nextIndex: number | null = null;
+
+      switch (e.key) {
+        case "ArrowRight": {
+          e.preventDefault();
+          nextIndex = (currentIndex + 1) % 7;
+          break;
+        }
+        case "ArrowLeft": {
+          e.preventDefault();
+          nextIndex = (currentIndex - 1 + 7) % 7;
+          break;
+        }
+        case "Home": {
+          e.preventDefault();
+          nextIndex = 0;
+          break;
+        }
+        case "End": {
+          e.preventDefault();
+          nextIndex = 6;
+          break;
+        }
+        case "Enter":
+        case " ": {
+          e.preventDefault();
+          onSelectDate(weekDates[currentIndex]);
+          return;
+        }
+        default:
+          return;
+      }
+
+      if (nextIndex !== null) {
+        onSelectDate(weekDates[nextIndex]);
+        tabsRef.current[nextIndex]?.focus();
+      }
+    },
+    [weekDates, selectedDate, onSelectDate],
+  );
 
   return (
-    <nav aria-label="Week selector" className="flex items-center justify-between">
+    <nav aria-label="Week selector">
       <div
-        className="flex items-center justify-between flex-1"
-        role="radiogroup"
+        role="tablist"
         aria-label="Days of the week"
+        className="flex items-center justify-between"
+        onKeyDown={handleKeyDown}
       >
         {weekDates.map((date, index) => {
           const isSelected = date === selectedDate;
           const isToday = date === today;
           const dayNum = new Date(date + "T00:00:00").getDate();
+          const dateLabel = new Date(date + "T00:00:00").toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+          });
 
           return (
             <button
               key={date}
+              ref={(el) => { tabsRef.current[index] = el!; }}
               type="button"
-              role="radio"
-              aria-checked={isSelected}
-              aria-label={`${DAY_LABELS[index]}, ${new Date(date + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}${isToday ? " (today)" : ""}`}
+              role="tab"
+              aria-selected={isSelected}
+              aria-label={`${DAY_LABELS[index]}, ${dateLabel}${isToday ? " (today)" : ""}`}
+              tabIndex={isSelected ? 0 : -1}
               onClick={() => onSelectDate(date)}
               className="flex flex-col items-center justify-center rounded-full transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)] hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
               style={{
@@ -64,7 +118,7 @@ export const WeekStrip = memo(function WeekStrip({ selectedDate, onSelectDate }:
                 {DAY_LABELS[index]}
               </span>
               <span
-                className="flex items-center justify-center rounded-full"
+                className="relative flex items-center justify-center rounded-full"
                 style={{
                   width: "24px",
                   height: "24px",
@@ -81,6 +135,17 @@ export const WeekStrip = memo(function WeekStrip({ selectedDate, onSelectDate }:
                 }}
               >
                 {dayNum}
+                {isToday && !isSelected && (
+                  <span
+                    className="absolute bottom-0 left-1/2 -translate-x-1/2"
+                    style={{
+                      width: "4px",
+                      height: "4px",
+                      borderRadius: "var(--radius-full)",
+                      background: "var(--dd-dusk-teal)",
+                    }}
+                  />
+                )}
               </span>
             </button>
           );

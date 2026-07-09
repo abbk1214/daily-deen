@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, ListChecks, WifiOff } from "lucide-react";
+import { AlertCircle, ArrowLeft, ListChecks, WifiOff } from "lucide-react";
 import Link from "next/link";
 import { WeekStrip } from "@/components/week-strip";
 import { HabitRow } from "@/components/habit-row";
@@ -23,40 +23,42 @@ export default function HabitsPage() {
     () => new Date().toISOString().split("T")[0],
   );
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const isOnline = useOnlineStatus();
 
   const mountedRef = useRef(true);
 
-  // Load habits and logs
-  useEffect(() => {
+  const loadHabits = useCallback(async () => {
     mountedRef.current = true;
 
-    async function load() {
-      try {
-        const [habitsData, logsData] = await Promise.all([
-          getHabits(),
-          getHabitLogsForDate(selectedDate),
-        ]);
+    try {
+      const [habitsData, logsData] = await Promise.all([
+        getHabits(),
+        getHabitLogsForDate(selectedDate),
+      ]);
 
-        if (!mountedRef.current) return;
-        setHabits(habitsData);
-        setHabitLogs(logsData);
+      if (!mountedRef.current) return;
+      setHabits(habitsData);
+      setHabitLogs(logsData);
+      setError(false);
+      setLoading(false);
+    } catch (err) {
+      console.error("Failed to load habits:", err);
+      if (mountedRef.current) {
         setLoading(false);
-      } catch (error) {
-        console.error("Failed to load habits:", error);
-        if (mountedRef.current) {
-          setLoading(false);
-        }
+        setError(true);
       }
     }
-
-    load();
-
-    return () => {
-      mountedRef.current = false;
-    };
   }, [selectedDate]);
+
+  useEffect(() => {
+    async function init() {
+      await loadHabits();
+    }
+    init();
+    return () => { mountedRef.current = false; };
+  }, [loadHabits]);
 
   const handleIncrement = useCallback(
     async (habitId: number, step: number) => {
@@ -74,8 +76,8 @@ export default function HabitsPage() {
           }
           return [...prev, updatedLog];
         });
-      } catch (error) {
-        console.error("Failed to save habit log:", error);
+      } catch (err) {
+        console.error("Failed to save habit log:", err);
       }
     },
     [selectedDate],
@@ -102,8 +104,8 @@ export default function HabitsPage() {
           }
           return prev;
         });
-      } catch (error) {
-        console.error("Failed to save habit log:", error);
+      } catch (err) {
+        console.error("Failed to save habit log:", err);
       }
     },
     [selectedDate],
@@ -121,8 +123,8 @@ export default function HabitsPage() {
         const newHabit = await addHabit(habit);
         setHabits((prev) => [...prev, newHabit]);
         setShowAddForm(false);
-      } catch (error) {
-        console.error("Failed to add habit:", error);
+      } catch (err) {
+        console.error("Failed to add habit:", err);
       }
     },
     [],
@@ -216,55 +218,110 @@ export default function HabitsPage() {
 
         {/* Habits list */}
         {loading ? (
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="flex flex-col gap-2">
-                <div className="flex justify-between">
-                  <div
-                    className="animate-pulse rounded"
-                    style={{
-                      width: "100px",
-                      height: "16px",
-                      background: "var(--muted)",
-                    }}
-                  />
-                  <div
-                    className="animate-pulse rounded"
-                    style={{
-                      width: "80px",
-                      height: "12px",
-                      background: "var(--muted)",
-                    }}
-                  />
-                </div>
-                <div
-                  className="animate-pulse rounded-full"
-                  style={{
-                    width: "100%",
-                    height: "4px",
-                    background: "var(--muted)",
-                  }}
-                />
-                <div className="flex justify-between">
+              <div key={i}>
+                <div className="flex flex-col gap-2" style={{ padding: "var(--space-4) 0" }}>
+                  <div className="flex justify-between">
+                    <div
+                      className="animate-pulse rounded"
+                      style={{
+                        width: "100px",
+                        height: "16px",
+                        background: "var(--muted)",
+                      }}
+                    />
+                    <div
+                      className="animate-pulse rounded"
+                      style={{
+                        width: "80px",
+                        height: "12px",
+                        background: "var(--muted)",
+                      }}
+                    />
+                  </div>
                   <div
                     className="animate-pulse rounded-full"
                     style={{
-                      width: "44px",
-                      height: "44px",
+                      width: "100%",
+                      height: "4px",
                       background: "var(--muted)",
                     }}
                   />
-                  <div
-                    className="animate-pulse rounded-full"
-                    style={{
-                      width: "44px",
-                      height: "44px",
-                      background: "var(--muted)",
-                    }}
-                  />
+                  <div className="flex justify-between">
+                    <div
+                      className="animate-pulse rounded-full"
+                      style={{
+                        width: "44px",
+                        height: "44px",
+                        background: "var(--muted)",
+                      }}
+                    />
+                    <div
+                      className="animate-pulse rounded-full"
+                      style={{
+                        width: "44px",
+                        height: "44px",
+                        background: "var(--muted)",
+                      }}
+                    />
+                  </div>
                 </div>
+                {i < 3 && (
+                  <div
+                    className="border-t border-border"
+                  />
+                )}
               </div>
             ))}
+          </div>
+        ) : error ? (
+          /* Error state */
+          <div className="flex flex-col items-center py-24 text-center">
+            <AlertCircle
+              size={32}
+              strokeWidth={1.5}
+              className="text-destructive"
+              style={{ marginBottom: "var(--space-4)" }}
+            />
+            <h2
+              className="text-foreground"
+              style={{
+                fontFamily: "var(--font-display)",
+                fontSize: "var(--text-h3)",
+                fontWeight: 600,
+                letterSpacing: "var(--tracking-h3)",
+                marginBottom: "var(--space-2)",
+              }}
+            >
+              Couldn&apos;t load habits
+            </h2>
+            <p
+              className="text-muted-foreground"
+              style={{
+                fontSize: "var(--text-body-sm)",
+                maxWidth: "30ch",
+                marginBottom: "var(--space-8)",
+              }}
+            >
+              Something went wrong. Tap to retry.
+            </p>
+            <button
+              type="button"
+              onClick={loadHabits}
+              className="text-dusk-teal transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)] hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+              style={{
+                fontSize: "var(--text-body)",
+                fontWeight: 500,
+                letterSpacing: "var(--tracking-wide)",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                padding: "var(--space-4) var(--space-5)",
+              }}
+            >
+              Retry
+            </button>
           </div>
         ) : habits.length === 0 ? (
           /* Empty state */

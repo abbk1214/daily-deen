@@ -27,6 +27,11 @@ export function AddHabitForm({ onAdd, onCancel }: AddHabitFormProps) {
   const [increment, setIncrement] = useState("1");
   const [errors, setErrors] = useState<FormErrors>({});
   const nameInputRef = useRef<HTMLInputElement>(null);
+  const unitInputRef = useRef<HTMLInputElement>(null);
+  const targetInputRef = useRef<HTMLInputElement>(null);
+  const incrementInputRef = useRef<HTMLInputElement>(null);
+  const cancelButtonRef = useRef<HTMLButtonElement>(null);
+  const addButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     nameInputRef.current?.focus();
@@ -79,6 +84,34 @@ export function AddHabitForm({ onAdd, onCancel }: AddHabitFormProps) {
     [onCancel],
   );
 
+  const handleNameKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      unitInputRef.current?.focus();
+    }
+  }, []);
+
+  const handleUnitKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      targetInputRef.current?.focus();
+    }
+  }, []);
+
+  const handleTargetKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      incrementInputRef.current?.focus();
+    }
+  }, []);
+
+  const handleIncrementKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      addButtonRef.current?.click();
+    }
+  }, []);
+
   return (
     <form
       onSubmit={handleSubmit}
@@ -108,6 +141,7 @@ export function AddHabitForm({ onAdd, onCancel }: AddHabitFormProps) {
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
+          onKeyDown={handleNameKeyDown}
           aria-required="true"
           aria-describedby={errors.name ? "habit-name-error" : undefined}
           autoComplete="off"
@@ -194,9 +228,11 @@ export function AddHabitForm({ onAdd, onCancel }: AddHabitFormProps) {
           </label>
           <input
             id="habit-unit"
+            ref={unitInputRef}
             type="text"
             value={unit}
             onChange={(e) => setUnit(e.target.value)}
+            onKeyDown={handleUnitKeyDown}
             aria-describedby={errors.unit ? "habit-unit-error" : undefined}
             className="w-full rounded-lg border border-input bg-background px-3 text-foreground placeholder:text-muted-foreground outline-none transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)] focus:border-ring focus:shadow-[var(--focus-ring)]"
             style={{
@@ -238,9 +274,11 @@ export function AddHabitForm({ onAdd, onCancel }: AddHabitFormProps) {
         </label>
         <input
           id="habit-target"
+          ref={targetInputRef}
           type="number"
           value={target}
           onChange={(e) => setTarget(e.target.value)}
+          onKeyDown={handleTargetKeyDown}
           min={1}
           max={999}
           aria-required="true"
@@ -284,9 +322,11 @@ export function AddHabitForm({ onAdd, onCancel }: AddHabitFormProps) {
         </label>
         <input
           id="habit-increment"
+          ref={incrementInputRef}
           type="number"
           value={increment}
           onChange={(e) => setIncrement(e.target.value)}
+          onKeyDown={handleIncrementKeyDown}
           min={1}
           max={999}
           className="w-full rounded-lg border border-input bg-background px-3 text-foreground placeholder:text-muted-foreground outline-none transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)] focus:border-ring focus:shadow-[var(--focus-ring)]"
@@ -302,6 +342,7 @@ export function AddHabitForm({ onAdd, onCancel }: AddHabitFormProps) {
       <div className="flex gap-3">
         <button
           type="button"
+          ref={cancelButtonRef}
           onClick={onCancel}
           className="flex-1 rounded-lg border border-border bg-transparent px-4 text-foreground transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)] hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           style={{
@@ -314,6 +355,7 @@ export function AddHabitForm({ onAdd, onCancel }: AddHabitFormProps) {
         </button>
         <button
           type="submit"
+          ref={addButtonRef}
           className="flex-1 rounded-lg bg-primary px-4 text-primary-foreground transition-all duration-[var(--duration-fast)] ease-[var(--ease-out)] hover:bg-primary/95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring active:bg-primary/90"
           style={{
             height: "var(--space-10)",
