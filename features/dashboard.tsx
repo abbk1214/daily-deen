@@ -1,8 +1,9 @@
 "use client";
 
 import { useMemo } from "react";
-import { Bell } from "lucide-react";
+import { Bell, WifiOff } from "lucide-react";
 import { useDashboardData } from "@/hooks/use-dashboard-data";
+import { useOnlineStatus } from "@/hooks/use-online-status";
 import { DayArc } from "@/components/day-arc";
 import { ProgressTracker } from "@/components/progress-tracker";
 import { PrayerStatus } from "@/components/prayer-status";
@@ -31,6 +32,22 @@ function getGreeting(): string {
   return "Good evening";
 }
 
+const fadeInStyle = `
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .dd-fade-in { animation: fadeInUp 200ms var(--ease-out) both; }
+  .dd-fade-in-1 { animation-delay: 0ms; }
+  .dd-fade-in-2 { animation-delay: 50ms; }
+  .dd-fade-in-3 { animation-delay: 100ms; }
+  .dd-fade-in-4 { animation-delay: 150ms; }
+  .dd-fade-in-5 { animation-delay: 200ms; }
+  @media (prefers-reduced-motion: reduce) {
+    .dd-fade-in { animation: none; opacity: 1; transform: none; }
+  }
+`;
+
 export function Dashboard() {
   const {
     prayers,
@@ -40,14 +57,17 @@ export function Dashboard() {
     incrementHabit,
     decrementHabit,
   } = useDashboardData();
+  const isOnline = useOnlineStatus();
 
   const affirmation = useMemo(() => getTodayAffirmation(), []);
   const greeting = useMemo(() => getGreeting(), []);
 
   return (
     <>
+      <style dangerouslySetInnerHTML={{ __html: fadeInStyle }} />
+
       <header
-        className="sticky top-0 z-30 flex items-center border-b border-border bg-background/90 backdrop-blur-md"
+        className="sticky top-0 z-30 flex items-center border-b border-border bg-background/90 backdrop-blur-md dd-fade-in dd-fade-in-1"
         style={{
           height: "var(--space-12)",
           padding: "var(--space-3) var(--space-5)",
@@ -80,9 +100,25 @@ export function Dashboard() {
         </div>
       </header>
 
+      {!isOnline && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="flex items-center justify-center gap-2 bg-dusk-teal text-accent-foreground"
+          style={{
+            height: "var(--space-10)",
+            fontSize: "var(--text-body-sm)",
+            fontWeight: 500,
+          }}
+        >
+          <WifiOff size={16} strokeWidth={1.5} />
+          Offline — showing saved data
+        </div>
+      )}
+
       <main
         id="main"
-        className="flex flex-1 flex-col gap-8 pb-24 lg:pb-8"
+        className="flex flex-1 flex-col pb-24 lg:pb-8 dd-fade-in dd-fade-in-2"
         style={{
           padding: "var(--space-5)",
           paddingBottom: "calc(var(--space-14) + env(safe-area-inset-bottom, 0px) + var(--space-5))",
@@ -90,25 +126,38 @@ export function Dashboard() {
           marginLeft: "auto",
           marginRight: "auto",
           width: "100%",
+          gap: "var(--space-8)",
         }}
       >
-        <div style={{ marginLeft: "calc(-1 * var(--space-5))", marginRight: "calc(-1 * var(--space-5))", paddingLeft: "var(--space-5)", paddingRight: "var(--space-5)" }}>
+        <div
+          className="dd-fade-in dd-fade-in-2"
+          style={{
+            marginLeft: "calc(-1 * var(--space-5))",
+            marginRight: "calc(-1 * var(--space-5))",
+            paddingLeft: "var(--space-5)",
+            paddingRight: "var(--space-5)",
+          }}
+        >
           <DayArc prayers={prayers} loading={loading} />
         </div>
 
-        <ProgressTracker
-          habits={habits}
-          habitLogs={habitLogs}
-          onIncrement={incrementHabit}
-          onDecrement={decrementHabit}
-          loading={loading}
-        />
+        <div className="dd-fade-in dd-fade-in-3">
+          <ProgressTracker
+            habits={habits}
+            habitLogs={habitLogs}
+            onIncrement={incrementHabit}
+            onDecrement={decrementHabit}
+            loading={loading}
+          />
+        </div>
 
-        <PrayerStatus prayers={prayers} loading={loading} />
+        <div className="dd-fade-in dd-fade-in-4">
+          <PrayerStatus prayers={prayers} loading={loading} />
+        </div>
 
         <aside
           aria-label="Daily affirmation"
-          className="flex flex-col items-center py-12 text-center"
+          className="flex flex-col items-center py-12 text-center dd-fade-in dd-fade-in-5"
           style={{ maxWidth: "65ch", marginInline: "auto" }}
         >
           <p
