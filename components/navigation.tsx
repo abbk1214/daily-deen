@@ -1,194 +1,108 @@
 "use client";
 
-import { useRef, useCallback } from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import {
-  Home,
-  ListChecks,
-  BookOpen,
-  Settings,
-  PanelLeftOpen,
-  PanelLeftClose,
-} from "lucide-react";
-import { useSidebarState } from "@/hooks/use-sidebar-state";
-import { useNavigationLoading } from "@/hooks/use-navigation-loading";
+import { PanelLeftOpen, PanelLeftClose } from "lucide-react";
+import { useNavigation } from "@/hooks/use-navigation";
+import { NAV_ITEMS } from "@/constants/navigation";
+import { NavigationList } from "@/components/navigation-list";
 import { LoadingBar } from "@/components/loading-bar";
 import { Tooltip } from "@/components/tooltip";
 
-const NAV_ITEMS = [
-  { href: "/", label: "Home", icon: Home },
-  { href: "/habits", label: "Habits", icon: ListChecks },
-  { href: "/journal", label: "Journal", icon: BookOpen },
-  { href: "/settings", label: "Settings", icon: Settings },
-] as const;
-
 function BottomNav({
-  pathname,
+  activeIndex,
   onNavigate,
+  onKeyDown,
+  tabRefs,
 }: {
-  pathname: string;
+  activeIndex: number;
   onNavigate: () => void;
+  onKeyDown: (e: React.KeyboardEvent) => void;
+  tabRefs: React.MutableRefObject<(HTMLElement | null)[]>;
 }) {
-  const tabRefs = useRef<(HTMLAnchorElement | null)[]>([]);
-
-  const moveFocus = useCallback(
-    (index: number) => {
-      tabRefs.current[index]?.focus();
-    },
-    [],
-  );
-
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      const currentIndex = NAV_ITEMS.findIndex((item) => item.href === pathname);
-      let nextIndex = currentIndex;
-
-      switch (e.key) {
-        case "ArrowRight":
-          e.preventDefault();
-          nextIndex = (currentIndex + 1) % NAV_ITEMS.length;
-          break;
-        case "ArrowLeft":
-          e.preventDefault();
-          nextIndex = (currentIndex - 1 + NAV_ITEMS.length) % NAV_ITEMS.length;
-          break;
-        case "Home":
-          e.preventDefault();
-          nextIndex = 0;
-          break;
-        case "End":
-          e.preventDefault();
-          nextIndex = NAV_ITEMS.length - 1;
-          break;
-        default:
-          return;
-      }
-
-      moveFocus(nextIndex);
-    },
-    [pathname, moveFocus],
-  );
-
   return (
     <nav
       aria-label="Primary navigation"
       className="fixed bottom-0 inset-x-0 z-30 border-t border-border bg-background"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
-      <div
-        className="flex items-stretch"
-        onKeyDown={handleKeyDown}
-      >
-        {NAV_ITEMS.map((item, index) => {
-          const isActive = pathname === item.href;
+      <NavigationList
+        items={NAV_ITEMS}
+        activeIndex={activeIndex}
+        onNavigate={onNavigate}
+        onKeyDown={onKeyDown}
+        tabRefs={tabRefs}
+        orientation="horizontal"
+        ariaLabel="Primary navigation"
+        renderItem={(item, _index, isActive) => {
           const Icon = item.icon;
           return (
-            <Link
-              key={item.href}
-              ref={(el) => { tabRefs.current[index] = el; }}
-              href={item.href}
-              aria-current={isActive ? "page" : undefined}
-              tabIndex={isActive ? 0 : -1}
-              onClick={onNavigate}
-              className="flex flex-1 flex-col items-center justify-center gap-1 text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-              style={{
-                minHeight: "var(--space-14)",
-                paddingTop: "var(--space-2)",
-                paddingBottom: "var(--space-2)",
-              }}
-            >
-              <Icon
-                size={20}
-                strokeWidth={1.5}
-                className={isActive ? "text-dusk-teal" : ""}
-              />
-              <span
-                className="max-w-16 truncate"
+            <>
+              <div
+                className="flex flex-1 flex-col items-center justify-center gap-1"
                 style={{
-                  fontSize: "var(--text-caption)",
-                  fontWeight: 500,
-                  letterSpacing: "var(--tracking-wide)",
-                  color: isActive ? "var(--dd-dusk-teal)" : undefined,
+                  minHeight: "var(--space-14)",
+                  paddingTop: "var(--space-2)",
+                  paddingBottom: "var(--space-2)",
                 }}
               >
-                {item.label}
-              </span>
-              {isActive && (
-                <span
-                  className="rounded-full bg-dusk-teal"
-                  style={{
-                    width: "4px",
-                    height: "4px",
-                    marginTop: "var(--space-0-5)",
-                  }}
-                  aria-hidden="true"
+                <Icon
+                  size={20}
+                  strokeWidth={1.5}
+                  className={isActive ? "text-dusk-teal" : ""}
                 />
-              )}
-            </Link>
+                <span
+                  className="max-w-16 truncate"
+                  style={{
+                    fontSize: "var(--text-caption)",
+                    fontWeight: 500,
+                    letterSpacing: "var(--tracking-wide)",
+                    color: isActive ? "var(--dd-dusk-teal)" : undefined,
+                  }}
+                >
+                  {item.label}
+                </span>
+                {isActive && (
+                  <span
+                    className="rounded-full bg-dusk-teal"
+                    style={{
+                      width: "4px",
+                      height: "4px",
+                      marginTop: "var(--space-0-5)",
+                    }}
+                    aria-hidden="true"
+                  />
+                )}
+              </div>
+            </>
           );
-        })}
-      </div>
+        }}
+      />
     </nav>
   );
 }
 
 function Sidebar({
-  pathname,
   isCollapsed,
+  activeIndex,
   onToggle,
   onNavigate,
+  onKeyDown,
+  tabRefs,
 }: {
-  pathname: string;
   isCollapsed: boolean;
+  activeIndex: number;
   onToggle: () => void;
   onNavigate: () => void;
+  onKeyDown: (e: React.KeyboardEvent) => void;
+  tabRefs: React.MutableRefObject<(HTMLElement | null)[]>;
 }) {
-  const linkRefs = useRef<(HTMLAnchorElement | null)[]>([]);
-
-  const moveFocus = useCallback(
-    (index: number) => {
-      linkRefs.current[index]?.focus();
-    },
-    [],
-  );
-
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        onToggle();
-        return;
-      }
-
-      const currentIndex = NAV_ITEMS.findIndex((item) => item.href === pathname);
-      let nextIndex = currentIndex;
-
-      switch (e.key) {
-        case "ArrowDown":
-          e.preventDefault();
-          nextIndex = (currentIndex + 1) % NAV_ITEMS.length;
-          break;
-        case "ArrowUp":
-          e.preventDefault();
-          nextIndex = (currentIndex - 1 + NAV_ITEMS.length) % NAV_ITEMS.length;
-          break;
-        case "Home":
-          e.preventDefault();
-          nextIndex = 0;
-          break;
-        case "End":
-          e.preventDefault();
-          nextIndex = NAV_ITEMS.length - 1;
-          break;
-        default:
-          return;
-      }
-
-      moveFocus(nextIndex);
-    },
-    [pathname, onToggle, moveFocus],
-  );
+  const handleSidebarKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Escape") {
+      e.preventDefault();
+      onToggle();
+      return;
+    }
+    onKeyDown(e);
+  };
 
   return (
     <nav
@@ -199,22 +113,24 @@ function Sidebar({
         padding: "var(--space-6)",
         transition: "none",
       }}
-      onKeyDown={handleKeyDown}
     >
       <div className="flex flex-1 flex-col">
         {/* Toggle button */}
-        <div className="flex items-center" style={{ height: "36px", marginBottom: "var(--space-6)" }}>
-          <Tooltip content={isCollapsed ? "Expand sidebar" : "Collapse sidebar"} disabled={!isCollapsed}>
+        <div
+          className="flex items-center"
+          style={{ height: "36px", marginBottom: "var(--space-6)" }}
+        >
+          <Tooltip
+            content={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            disabled={!isCollapsed}
+          >
             <button
               type="button"
               onClick={onToggle}
               aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
               aria-expanded={!isCollapsed}
               className="flex items-center justify-center rounded-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-              style={{
-                width: "44px",
-                height: "44px",
-              }}
+              style={{ width: "44px", height: "44px" }}
             >
               {isCollapsed ? (
                 <PanelLeftOpen size={20} strokeWidth={1.5} />
@@ -242,23 +158,34 @@ function Sidebar({
         )}
 
         {/* Divider */}
-        <div className="border-t border-border" style={{ marginBottom: "var(--space-6)" }} />
+        <div
+          className="border-t border-border"
+          style={{ marginBottom: "var(--space-6)" }}
+        />
 
         {/* Navigation links */}
-        <div className="flex flex-col" style={{ gap: "var(--space-1)" }}>
-          {NAV_ITEMS.map((item, index) => {
-            const isActive = pathname === item.href;
+        <NavigationList
+          items={NAV_ITEMS}
+          activeIndex={activeIndex}
+          onNavigate={onNavigate}
+          onKeyDown={handleSidebarKeyDown}
+          tabRefs={tabRefs}
+          orientation="vertical"
+          ariaLabel="Sidebar navigation"
+          wrapItem={
+            isCollapsed
+              ? (item, children) => (
+                  <Tooltip key={item.href} content={item.label}>
+                    {children}
+                  </Tooltip>
+                )
+              : undefined
+          }
+          renderItem={(item, _index, isActive) => {
             const Icon = item.icon;
-
-            const linkContent = (
-              <Link
-                key={item.href}
-                ref={(el) => { linkRefs.current[index] = el; }}
-                href={item.href}
-                aria-current={isActive ? "page" : undefined}
-                tabIndex={isActive ? 0 : -1}
-                onClick={onNavigate}
-                className="flex items-center rounded-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            return (
+              <div
+                className="flex items-center"
                 style={{
                   gap: isCollapsed ? 0 : "var(--space-3)",
                   padding: isCollapsed
@@ -289,25 +216,18 @@ function Sidebar({
                     {item.label}
                   </span>
                 )}
-              </Link>
+              </div>
             );
-
-            if (isCollapsed) {
-              return (
-                <Tooltip key={item.href} content={item.label} disabled={!isCollapsed}>
-                  {linkContent}
-                </Tooltip>
-              );
-            }
-
-            return <div key={item.href}>{linkContent}</div>;
-          })}
-        </div>
+          }}
+        />
       </div>
 
       {/* Version footer */}
       <div style={{ marginTop: "var(--space-8)" }}>
-        <div className="border-t border-border" style={{ marginBottom: "var(--space-6)" }} />
+        <div
+          className="border-t border-border"
+          style={{ marginBottom: "var(--space-6)" }}
+        />
         <span
           className="text-muted-foreground"
           style={{
@@ -325,9 +245,17 @@ function Sidebar({
 }
 
 export function Navigation() {
-  const pathname = usePathname();
-  const { isCollapsed, isDesktop, toggle } = useSidebarState();
-  const { isLoading, startLoading } = useNavigationLoading();
+  const {
+    isCollapsed,
+    isDesktop,
+    isLoading,
+    activeIndex,
+    tabRefs,
+    toggleSidebar,
+    startLoading,
+    handleHorizontalKeyDown,
+    handleVerticalKeyDown,
+  } = useNavigation();
 
   return (
     <>
@@ -335,16 +263,23 @@ export function Navigation() {
 
       {/* Mobile bottom nav */}
       {!isDesktop && (
-        <BottomNav pathname={pathname} onNavigate={startLoading} />
+        <BottomNav
+          activeIndex={activeIndex}
+          onNavigate={startLoading}
+          onKeyDown={handleHorizontalKeyDown}
+          tabRefs={tabRefs}
+        />
       )}
 
       {/* Desktop sidebar */}
       {isDesktop && (
         <Sidebar
-          pathname={pathname}
           isCollapsed={isCollapsed}
-          onToggle={toggle}
+          activeIndex={activeIndex}
+          onToggle={toggleSidebar}
           onNavigate={startLoading}
+          onKeyDown={handleVerticalKeyDown}
+          tabRefs={tabRefs}
         />
       )}
 

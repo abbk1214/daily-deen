@@ -4,12 +4,14 @@ import { useEffect, useState } from "react";
 
 /** Tracks browser online/offline status via window events. */
 export function useOnlineStatus(): boolean {
-  const [isOnline, setIsOnline] = useState(() => {
-    if (typeof window !== "undefined") return navigator.onLine;
-    return true;
-  });
+  const [isOnline, setIsOnline] = useState(true);
 
   useEffect(() => {
+    // Defer initial read to avoid synchronous setState in effect
+    requestAnimationFrame(() => {
+      setIsOnline(navigator.onLine);
+    });
+
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
 

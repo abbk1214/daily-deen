@@ -2,13 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-
-const SHORTCUT_MAP: Record<string, string> = {
-  h: "/",
-  b: "/habits",
-  j: "/journal",
-  s: "/settings",
-};
+import { SHORTCUT_MAP } from "@/constants/navigation";
 
 const RESET_DELAY = 500;
 

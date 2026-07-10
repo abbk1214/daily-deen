@@ -8,6 +8,7 @@ import {
   exportDatabase,
   importDatabase,
   clearAllData,
+  DEFAULT_SETTINGS,
   type AppSettings,
   type DatabaseExport,
 } from "@/lib/db";
@@ -43,30 +44,6 @@ function applyPaperTexture(enabled: boolean) {
   document.body.classList.toggle("paper-texture", enabled);
 }
 
-function reverseGeocode(
-  lat: number,
-  lng: number,
-  signal?: AbortSignal,
-): Promise<string | null> {
-  return fetch(
-    `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10`,
-    {
-      signal,
-      headers: { "User-Agent": "DailyDeen/1.0" },
-    },
-  )
-    .then((r) => r.json())
-    .then((data: { address?: { city?: string; town?: string; village?: string; state?: string; country?: string } }) => {
-      const city =
-        data.address?.city ?? data.address?.town ?? data.address?.village ?? "";
-      const country = data.address?.country ?? "";
-      if (city && country) return `${city}, ${country}`;
-      if (country) return country;
-      return null;
-    })
-    .catch(() => null);
-}
-
 /* ─── Hook return type ─── */
 
 export interface UseSettingsReturn {
@@ -79,7 +56,6 @@ export interface UseSettingsReturn {
   exportData: () => Promise<DatabaseExport>;
   importData: (data: DatabaseExport) => Promise<void>;
   clearAll: () => Promise<void>;
-  locationLabel: string;
 }
 
 /* ─── Hook ─── */
@@ -87,14 +63,11 @@ export interface UseSettingsReturn {
 export function useSettings(): UseSettingsReturn {
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
   const [loading, setLoading] = useState(true);
-  const [locationLabel, setLocationLabel] = useState("");
 
   const mountedRef = useRef(true);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingRef = useRef<Partial<Omit<AppSettings, "id">> | null>(null);
-  const geocodeAbortRef = useRef<AbortController | null>(null);
   const pendingWriteRef = useRef<AppSettings | null>(null);
-  const prevLocationRef = useRef<{ lat: number; lng: number }>({ lat: 0, lng: 0 });
 
   /* ── Load on mount ── */
   useEffect(() => {
@@ -140,46 +113,10 @@ export function useSettings(): UseSettingsReturn {
     applyPaperTexture(settings.paperTexture);
   }, [settings.paperTexture]);
 
-  /* ── Reverse geocode when location changes ── */
-  useEffect(() => {
-    geocodeAbortRef.current?.abort();
-
-    const prev = prevLocationRef.current;
-    const changed =
-      prev.lat !== settings.latitude || prev.lng !== settings.longitude;
-    prevLocationRef.current = { lat: settings.latitude, lng: settings.longitude };
-
-    if (settings.latitude === 0 && settings.longitude === 0) {
-      if (changed) setLocationLabel("");
-      return;
-    }
-
-    // Clear label immediately when location changes to indicate loading
-    if (changed) setLocationLabel("");
-
-    const controller = new AbortController();
-    geocodeAbortRef.current = controller;
-
-    reverseGeocode(settings.latitude, settings.longitude, controller.signal)
-      .then((label) => {
-        if (!mountedRef.current || controller.signal.aborted) return;
-        setLocationLabel(label ?? "");
-      })
-      .catch(() => {
-        if (!mountedRef.current || controller.signal.aborted) return;
-        setLocationLabel("");
-      });
-
-    return () => {
-      controller.abort();
-    };
-  }, [settings.latitude, settings.longitude]);
-
-  /* ── Cleanup timers and abort on unmount ── */
+  /* ── Cleanup timers on unmount ── */
   useEffect(() => {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
-      geocodeAbortRef.current?.abort();
     };
   }, []);
 
@@ -292,28 +229,5 @@ export function useSettings(): UseSettingsReturn {
     exportData,
     importData,
     clearAll,
-    locationLabel,
   };
 }
-
-const DEFAULT_SETTINGS = {
-  id: 1,
-  latitude: 0,
-  longitude: 0,
-  calculationMethod: "MuslimWorldLeague",
-  notificationsEnabled: true,
-  onboardingComplete: true,
-  name: "",
-  language: "English",
-  school: "Shafi'i",
-  reminderOffset: 10,
-  adhanSound: false,
-  vibrate: true,
-  theme: "system",
-  paperTexture: false,
-  textSize: "default",
-  waterTarget: 8,
-  exerciseTarget: 30,
-  walkingTarget: 8000,
-  prayerAdjustments: { fajr: 0, sunrise: 0, dhuhr: 0, asr: 0, maghrib: 0, isha: 0 },
-} satisfies AppSettings;

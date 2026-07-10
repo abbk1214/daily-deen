@@ -46,6 +46,25 @@ export interface JournalEntry {
   tags: string[]
 }
 
+export type PrayerStatus = 'completed' | 'missed' | 'qaza' | 'jamaah' | 'pending'
+
+export interface PrayerLog {
+  id?: number
+  date: string
+  prayer: string
+  scheduledTime: string
+  completedAt: string | null
+  status: PrayerStatus
+  completed: boolean
+  late: boolean
+  missed: boolean
+  jamaah: boolean
+  qaza: boolean
+  notes: string
+  createdAt: number
+  updatedAt: number
+}
+
 export interface PrayerAdjustments {
   fajr: number
   sunrise: number
@@ -59,6 +78,11 @@ export interface AppSettings {
   id: number
   latitude: number
   longitude: number
+  city: string
+  country: string
+  timezone: string
+  locationUpdatedAt: number
+  accuracy: number
   calculationMethod: string
   notificationsEnabled: boolean
   onboardingComplete: boolean
@@ -75,6 +99,9 @@ export interface AppSettings {
   exerciseTarget: number
   walkingTarget: number
   prayerAdjustments: PrayerAdjustments
+  compassShowDegrees: boolean
+  compassAutoCalibration: boolean
+  compassSmoothing: number
 }
 
 export const DEFAULT_ADJUSTMENTS: PrayerAdjustments = {
@@ -90,6 +117,11 @@ export const DEFAULT_SETTINGS: AppSettings = {
   id: 1,
   latitude: 0,
   longitude: 0,
+  city: '',
+  country: '',
+  timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+  locationUpdatedAt: 0,
+  accuracy: 0,
   calculationMethod: "MuslimWorldLeague",
   notificationsEnabled: true,
   onboardingComplete: true,
@@ -106,6 +138,9 @@ export const DEFAULT_SETTINGS: AppSettings = {
   exerciseTarget: 30,
   walkingTarget: 8000,
   prayerAdjustments: { ...DEFAULT_ADJUSTMENTS },
+  compassShowDegrees: true,
+  compassAutoCalibration: true,
+  compassSmoothing: 0.3,
 }
 
 /* ──────────────────────────────────────────────
@@ -118,6 +153,7 @@ class DailyDeenDB extends Dexie {
   habitLogs!: Table<HabitLog, number>
   journal!: Table<JournalEntry, number>
   settings!: Table<AppSettings, number>
+  prayerLogs!: Table<PrayerLog, number>
 
   constructor() {
     super('DailyDeenDB')
@@ -137,6 +173,23 @@ class DailyDeenDB extends Dexie {
       journal: '++id, &date',
       settings: '++id',
     })
+
+    this.version(3).stores({
+      prayers: '++id, &date',
+      habits: '++id, &name, type',
+      habitLogs: '++id, date, &[habitId+date]',
+      journal: '++id, &date',
+      settings: '++id',
+    });
+
+    this.version(4).stores({
+      prayers: '++id, &date',
+      habits: '++id, &name, type',
+      habitLogs: '++id, date, &[habitId+date]',
+      journal: '++id, &date',
+      settings: '++id',
+      prayerLogs: '++id, &[date+prayer], date, prayer, status',
+    });
   }
 }
 
@@ -148,9 +201,21 @@ export default db
    Settings CRUD — single row, id = 1
    ────────────────────────────────────────────── */
 
+function mergeWithDefaults(saved: AppSettings): AppSettings {
+  return {
+    ...DEFAULT_SETTINGS,
+    ...saved,
+    id: 1,
+    prayerAdjustments: {
+      ...DEFAULT_ADJUSTMENTS,
+      ...(saved.prayerAdjustments ?? {}),
+    },
+  }
+}
+
 export async function getSettings(): Promise<AppSettings> {
   const existing = await db.settings.get(1)
-  if (existing) return existing
+  if (existing) return mergeWithDefaults(existing)
   await db.settings.put({ ...DEFAULT_SETTINGS, id: 1 })
   return { ...DEFAULT_SETTINGS, id: 1 }
 }
@@ -159,7 +224,15 @@ export async function saveSettings(
   partial: Partial<Omit<AppSettings, 'id'>>,
 ): Promise<AppSettings> {
   const current = await getSettings()
-  const next = { ...current, ...partial, id: 1 }
+  const next: AppSettings = {
+    ...current,
+    ...partial,
+    id: 1,
+    prayerAdjustments: {
+      ...current.prayerAdjustments,
+      ...(partial.prayerAdjustments ?? {}),
+    },
+  }
   await db.settings.put(next)
   return next
 }
@@ -182,15 +255,17 @@ export interface DatabaseExport {
   habitLogs: HabitLog[]
   journal: JournalEntry[]
   settings: AppSettings
+  prayerLogs: PrayerLog[]
 }
 
 export async function exportDatabase(): Promise<DatabaseExport> {
-  const [prayers, habits, habitLogs, journal, settings] = await Promise.all([
+  const [prayers, habits, habitLogs, journal, settings, prayerLogs] = await Promise.all([
     db.prayers.toArray(),
     db.habits.toArray(),
     db.habitLogs.toArray(),
     db.journal.toArray(),
     getSettings(),
+    db.prayerLogs.toArray(),
   ])
   return {
     version: 1,
@@ -200,13 +275,14 @@ export async function exportDatabase(): Promise<DatabaseExport> {
     habitLogs,
     journal,
     settings,
+    prayerLogs,
   }
 }
 
 export async function importDatabase(data: DatabaseExport): Promise<void> {
   await db.transaction(
     'rw',
-    [db.prayers, db.habits, db.habitLogs, db.journal, db.settings],
+    [db.prayers, db.habits, db.habitLogs, db.journal, db.settings, db.prayerLogs],
     async () => {
       await Promise.all([
         db.prayers.clear(),
@@ -214,6 +290,7 @@ export async function importDatabase(data: DatabaseExport): Promise<void> {
         db.habitLogs.clear(),
         db.journal.clear(),
         db.settings.clear(),
+        db.prayerLogs.clear(),
       ])
       await Promise.all([
         db.prayers.bulkAdd(data.prayers),
@@ -221,6 +298,7 @@ export async function importDatabase(data: DatabaseExport): Promise<void> {
         db.habitLogs.bulkAdd(data.habitLogs),
         db.journal.bulkAdd(data.journal),
         db.settings.put({ ...data.settings, id: 1 }),
+        data.prayerLogs.length > 0 ? db.prayerLogs.bulkAdd(data.prayerLogs) : Promise.resolve(),
       ])
     },
   )
@@ -229,7 +307,7 @@ export async function importDatabase(data: DatabaseExport): Promise<void> {
 export async function clearAllData(): Promise<void> {
   await db.transaction(
     'rw',
-    [db.prayers, db.habits, db.habitLogs, db.journal, db.settings],
+    [db.prayers, db.habits, db.habitLogs, db.journal, db.settings, db.prayerLogs],
     async () => {
       await Promise.all([
         db.prayers.clear(),
@@ -237,6 +315,7 @@ export async function clearAllData(): Promise<void> {
         db.habitLogs.clear(),
         db.journal.clear(),
         db.settings.clear(),
+        db.prayerLogs.clear(),
       ])
       await db.settings.put({ ...DEFAULT_SETTINGS, id: 1 })
     },

@@ -1,25 +1,30 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   type Prayer,
   type Habit,
   type HabitLog,
 } from "@/lib/db";
-import { getTodaysPrayers } from "@/lib/prayer-actions";
+import { getTodaysPrayers, seedTodaysPrayers } from "@/lib/prayer-actions";
 import { useHabits } from "@/hooks/use-habits";
-import { getToday } from "@/lib/utils";
+import { usePrayerTimes } from "@/hooks/use-prayer-times";
+import { getToday, formatTimeFromMinutes } from "@/lib/utils";
+import type { PrayerTimes } from "@/lib/prayer";
 
 interface DashboardData {
   prayers: Prayer | undefined;
+  computedTimes: PrayerTimes | null;
   habits: Habit[];
   habitLogs: HabitLog[];
   loading: boolean;
+  nextPrayer: { name: string; minutesUntil: number } | null;
 }
 
 export function useDashboardData(): DashboardData & {
   incrementHabit: (habitId: number, step: number) => Promise<void>;
   decrementHabit: (habitId: number, step: number) => Promise<void>;
+  refreshPrayers: () => void;
 } {
   const today = getToday();
 
@@ -30,8 +35,14 @@ export function useDashboardData(): DashboardData & {
     decrement,
   } = useHabits(today);
 
+  const {
+    times: computedTimes,
+    loading: prayerLoading,
+    nextPrayer,
+    refresh: refreshPrayers,
+  } = usePrayerTimes();
+
   const [prayers, setPrayers] = useState<Prayer | undefined>(undefined);
-  const [loading, setLoading] = useState(true);
   const mountedRef = useRef(true);
 
   useEffect(() => {
@@ -41,14 +52,10 @@ export function useDashboardData(): DashboardData & {
       .then((data) => {
         if (mountedRef.current) {
           setPrayers(data);
-          setLoading(false);
         }
       })
       .catch((error) => {
         console.error("Failed to load prayer data:", error);
-        if (mountedRef.current) {
-          setLoading(false);
-        }
       });
 
     return () => {
@@ -56,12 +63,38 @@ export function useDashboardData(): DashboardData & {
     };
   }, []);
 
+  const mergedPrayers = prayers && computedTimes
+    ? {
+        ...prayers,
+        fajr: formatTimeFromMinutes(computedTimes.fajr),
+        dhuhr: formatTimeFromMinutes(computedTimes.dhuhr),
+        asr: formatTimeFromMinutes(computedTimes.asr),
+        maghrib: formatTimeFromMinutes(computedTimes.maghrib),
+        isha: formatTimeFromMinutes(computedTimes.isha),
+      }
+    : prayers;
+
+  // Seed computed prayer times to IndexedDB for offline persistence
+  useEffect(() => {
+    if (!computedTimes) return;
+    seedTodaysPrayers({
+      fajr: formatTimeFromMinutes(computedTimes.fajr),
+      dhuhr: formatTimeFromMinutes(computedTimes.dhuhr),
+      asr: formatTimeFromMinutes(computedTimes.asr),
+      maghrib: formatTimeFromMinutes(computedTimes.maghrib),
+      isha: formatTimeFromMinutes(computedTimes.isha),
+    }).catch(() => {});
+  }, [computedTimes]);
+
   return {
-    prayers,
+    prayers: mergedPrayers,
+    computedTimes,
     habits,
     habitLogs,
-    loading,
+    loading: prayerLoading && !prayers,
+    nextPrayer,
     incrementHabit: increment,
     decrementHabit: decrement,
+    refreshPrayers,
   };
 }

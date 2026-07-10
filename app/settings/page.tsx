@@ -9,10 +9,14 @@ import {
   Upload,
   MapPin,
   WifiOff,
+  Search,
+  RefreshCw,
 } from "lucide-react";
 import Link from "next/link";
 import { useSettings } from "@/hooks/use-settings";
 import { useOnlineStatus } from "@/hooks/use-online-status";
+import { useLocation } from "@/hooks/use-location";
+import { generateFullCSV, downloadCSV, downloadJSON } from "@/lib/export-utils";
 import type { PrayerAdjustments } from "@/lib/db";
 
 /* ─── Constants ─── */
@@ -305,12 +309,22 @@ export default function SettingsPage() {
     exportData,
     importData,
     clearAll,
-    locationLabel,
   } = useSettings();
+
+  const {
+    loading: locationLoading,
+    error: locationError,
+    city,
+    country,
+    latitude,
+    longitude,
+    detectLocation,
+    searchCity,
+  } = useLocation();
 
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
-  const [geoLoading, setGeoLoading] = useState(false);
+  const [citySearch, setCitySearch] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isOnline = useOnlineStatus();
@@ -322,50 +336,37 @@ export default function SettingsPage() {
   }, []);
 
   /* ── Geolocation ── */
-  const handleGeolocation = useCallback(() => {
-    if (!navigator.geolocation) {
-      showToast("Geolocation not available on this device");
-      return;
-    }
-    setGeoLoading(true);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        update({
-          latitude: pos.coords.latitude,
-          longitude: pos.coords.longitude,
-        });
-        setGeoLoading(false);
-        showToast("Location updated");
-      },
-      (err) => {
-        setGeoLoading(false);
-        if (err.code === 1) {
-          showToast("Location permission denied");
-        } else {
-          showToast("Could not detect location");
-        }
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 },
-    );
-  }, [update, showToast]);
+  const handleGeolocation = useCallback(async () => {
+    await detectLocation();
+    showToast("Location updated");
+  }, [detectLocation, showToast]);
+
+  /* ── City search ── */
+  const handleCitySearch = useCallback(async () => {
+    if (!citySearch.trim()) return;
+    await searchCity(citySearch.trim());
+    setCitySearch("");
+    showToast("Location updated");
+  }, [citySearch, searchCity, showToast]);
 
   /* ── Export ── */
+  const [exportFormat, setExportFormat] = useState<'json' | 'csv'>('json');
+
   const handleExport = useCallback(async () => {
     try {
       const data = await exportData();
-      const json = JSON.stringify(data, null, 2);
-      const blob = new Blob([json], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `daily-deen-backup-${new Date().toISOString().split("T")[0]}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-      showToast("Data exported");
+      const dateStr = new Date().toISOString().split("T")[0];
+      if (exportFormat === 'csv') {
+        const csv = generateFullCSV(data);
+        downloadCSV(csv, `daily-deen-backup-${dateStr}.csv`);
+      } else {
+        downloadJSON(data, `daily-deen-backup-${dateStr}.json`);
+      }
+      showToast(`Data exported as ${exportFormat.toUpperCase()}`);
     } catch {
       showToast("Export failed");
     }
-  }, [exportData, showToast]);
+  }, [exportData, showToast, exportFormat]);
 
   /* ── Import ── */
   const handleImport = useCallback(() => {
@@ -511,7 +512,30 @@ export default function SettingsPage() {
             <Select value={settings.language} onChange={(language) => update({ language })} options={["English", "Arabic", "Urdu"]} label="Language" />
           </SettingRow>
           <Divider />
-          <LinkRow label="Export data" onClick={handleExport} icon={<Download size={16} strokeWidth={1.5} className="text-muted-foreground" />} />
+          <div style={{ padding: "var(--space-4) 0" }}>
+            <div className="text-muted-foreground" style={{ fontSize: "var(--text-caption)", fontWeight: 500, letterSpacing: "var(--tracking-wide)", marginBottom: "var(--space-2)" }}>
+              Export format
+            </div>
+            <div className="flex gap-2">
+              {(["json", "csv"] as const).map((fmt) => (
+                <button
+                  key={fmt}
+                  type="button"
+                  onClick={() => setExportFormat(fmt)}
+                  className="rounded-full border px-3 py-1 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                  style={{
+                    borderColor: exportFormat === fmt ? "var(--dd-dusk-teal)" : "var(--border)",
+                    backgroundColor: exportFormat === fmt ? "var(--dd-dusk-teal)" : "transparent",
+                    color: exportFormat === fmt ? "var(--primary-foreground)" : "var(--foreground)",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  {fmt}
+                </button>
+              ))}
+            </div>
+          </div>
+          <LinkRow label={`Export data (${exportFormat.toUpperCase()})`} onClick={handleExport} icon={<Download size={16} strokeWidth={1.5} className="text-muted-foreground" />} />
           <Divider />
           <LinkRow label="Import backup" onClick={handleImport} icon={<Upload size={16} strokeWidth={1.5} className="text-muted-foreground" />} />
           <Divider />
@@ -571,66 +595,109 @@ export default function SettingsPage() {
           {/* Current location display */}
           <SettingRow label="Current location" description="Your city for prayer time calculation">
             <span className="text-muted-foreground" style={{ fontSize: "var(--text-body-sm)", textAlign: "right", maxWidth: "160px" }}>
-              {settings.latitude === 0 && settings.longitude === 0
+              {latitude === 0 && longitude === 0
                 ? "Not set"
-                : locationLabel || `${settings.latitude.toFixed(4)}, ${settings.longitude.toFixed(4)}`}
+                : city && country
+                  ? `${city}, ${country}`
+                  : `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`}
             </span>
           </SettingRow>
           <Divider />
 
-          {/* Latitude */}
-          <SettingRow label="Latitude" description="-90 to 90">
-            <input
-              type="number"
-              value={settings.latitude || ""}
-              onChange={(e) => {
-                const v = Number(e.target.value);
-                if (!isNaN(v)) update({ latitude: Math.max(-90, Math.min(90, v)) });
-              }}
-              min={-90}
-              max={90}
-              step="any"
-              aria-label="Latitude"
-              placeholder="0.0000"
-              className="rounded-lg border border-input bg-background px-3 text-foreground text-center outline-none transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)] focus:border-ring focus:shadow-[var(--focus-ring)]"
-              style={{ height: "var(--space-10)", width: "100px", fontSize: "var(--text-body)", fontFamily: "var(--font-mono)" }}
-            />
-          </SettingRow>
+          {/* Location details */}
+          {settings.locationUpdatedAt && (
+            <>
+              <SettingRow label="Last updated" description="When location was last refreshed">
+                <span className="text-muted-foreground" style={{ fontSize: "var(--text-body-sm)", textAlign: "right" }}>
+                  {new Date(settings.locationUpdatedAt).toLocaleString()}
+                </span>
+              </SettingRow>
+              <Divider />
+            </>
+          )}
+          {settings.accuracy && settings.accuracy > 0 && (
+            <>
+              <SettingRow label="Accuracy" description="GPS accuracy radius">
+                <span className="text-muted-foreground" style={{ fontSize: "var(--text-body-sm)", textAlign: "right" }}>
+                  ±{Math.round(settings.accuracy)}m
+                </span>
+              </SettingRow>
+              <Divider />
+            </>
+          )}
+          {settings.timezone && (
+            <>
+              <SettingRow label="Timezone" description="Detected from location">
+                <span className="text-muted-foreground" style={{ fontSize: "var(--text-body-sm)", textAlign: "right" }}>
+                  {settings.timezone}
+                </span>
+              </SettingRow>
+              <Divider />
+            </>
+          )}
+
+          {/* City search */}
+          <div style={{ padding: "var(--space-4) 0" }}>
+            <label className="text-muted-foreground" style={{ fontSize: "var(--text-caption)", fontWeight: 500, letterSpacing: "var(--tracking-wide)", display: "block", marginBottom: "var(--space-2)" }}>
+              Search city
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={citySearch}
+                onChange={(e) => setCitySearch(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") handleCitySearch(); }}
+                placeholder="e.g. Makkah, Madinah"
+                aria-label="Search city"
+                className="flex-1 rounded-lg border border-input bg-background px-3 text-foreground placeholder:text-muted-foreground outline-none transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)] focus:border-ring focus:shadow-[var(--focus-ring)]"
+                style={{ height: "var(--space-10)", fontSize: "var(--text-body)", fontFamily: "var(--font-body)" }}
+              />
+              <button
+                type="button"
+                onClick={handleCitySearch}
+                disabled={!citySearch.trim() || locationLoading}
+                className="flex items-center justify-center rounded-lg border border-input bg-background text-foreground transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)] hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50"
+                style={{ width: "var(--space-10)", height: "var(--space-10)" }}
+                aria-label="Search"
+              >
+                <Search size={16} strokeWidth={1.5} />
+              </button>
+            </div>
+          </div>
           <Divider />
 
-          {/* Longitude */}
-          <SettingRow label="Longitude" description="-180 to 180">
-            <input
-              type="number"
-              value={settings.longitude || ""}
-              onChange={(e) => {
-                const v = Number(e.target.value);
-                if (!isNaN(v)) update({ longitude: Math.max(-180, Math.min(180, v)) });
-              }}
-              min={-180}
-              max={180}
-              step="any"
-              aria-label="Longitude"
-              placeholder="0.0000"
-              className="rounded-lg border border-input bg-background px-3 text-foreground text-center outline-none transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)] focus:border-ring focus:shadow-[var(--focus-ring)]"
-              style={{ height: "var(--space-10)", width: "100px", fontSize: "var(--text-body)", fontFamily: "var(--font-mono)" }}
-            />
-          </SettingRow>
-          <Divider />
-
-          {/* Use current location */}
+          {/* GPS detection */}
           <SettingRow label="Use current location" description="Detect via GPS">
-            <button
-              type="button"
-              onClick={handleGeolocation}
-              disabled={geoLoading}
-              className="flex items-center gap-2 rounded-lg border border-input bg-background px-3 text-foreground transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)] hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50"
-              style={{ height: "var(--space-10)", fontSize: "var(--text-body-sm)", fontWeight: 500 }}
-            >
-              <MapPin size={16} strokeWidth={1.5} />
-              {geoLoading ? "Detecting..." : "Use GPS"}
-            </button>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={handleGeolocation}
+                disabled={locationLoading}
+                className="flex items-center gap-2 rounded-lg border border-input bg-background px-3 text-foreground transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)] hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50"
+                style={{ height: "var(--space-10)", fontSize: "var(--text-body-sm)", fontWeight: 500 }}
+              >
+                <MapPin size={16} strokeWidth={1.5} />
+                {locationLoading ? "Detecting..." : "Use GPS"}
+              </button>
+              {latitude !== 0 && longitude !== 0 && (
+                <button
+                  type="button"
+                  onClick={handleGeolocation}
+                  disabled={locationLoading}
+                  className="flex items-center justify-center rounded-lg border border-input bg-background text-foreground transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)] hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50"
+                  style={{ width: "var(--space-10)", height: "var(--space-10)" }}
+                  aria-label="Refresh location"
+                >
+                  <RefreshCw size={16} strokeWidth={1.5} />
+                </button>
+              )}
+            </div>
           </SettingRow>
+          {locationError && (
+            <p className="text-destructive" style={{ fontSize: "var(--text-body-sm)", marginTop: "var(--space-2)" }}>
+              {locationError}
+            </p>
+          )}
         </section>
 
         {/* ─── Notifications ─── */}
@@ -650,6 +717,27 @@ export default function SettingsPage() {
           <Divider />
           <SettingRow label="Vibrate" description="Vibrate with notification">
             <Toggle checked={settings.vibrate} onChange={(vibrate) => updateImmediate({ vibrate })} label="Vibrate" />
+          </SettingRow>
+        </section>
+
+        {/* ─── Compass ─── */}
+        <section aria-labelledby="section-compass" style={{ marginBottom: "var(--space-12)" }}>
+          <SectionHeading id="section-compass">Compass</SectionHeading>
+          <SettingRow label="Show degrees" description="Display degree markers on compass">
+            <Toggle checked={settings.compassShowDegrees ?? true} onChange={(compassShowDegrees) => updateImmediate({ compassShowDegrees })} label="Show degrees" />
+          </SettingRow>
+          <Divider />
+          <SettingRow label="Auto calibration" description="Prompt for compass calibration">
+            <Toggle checked={settings.compassAutoCalibration ?? true} onChange={(compassAutoCalibration) => updateImmediate({ compassAutoCalibration })} label="Auto calibration" />
+          </SettingRow>
+          <Divider />
+          <SettingRow label="Smoothing" description="Compass smoothing level">
+            <Select
+              value={String(settings.compassSmoothing ?? 0.3)}
+              onChange={(v) => updateImmediate({ compassSmoothing: Number(v) })}
+              options={["0.1", "0.3", "0.5", "0.7"]}
+              label="Smoothing"
+            />
           </SettingRow>
         </section>
 

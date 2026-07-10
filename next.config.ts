@@ -39,6 +39,20 @@ const withPWA = withPWAInit({
           },
         },
       },
+      {
+        urlPattern: /^https:\/\/nominatim\.openstreetmap\.org\/.*/i,
+        handler: "StaleWhileRevalidate",
+        options: {
+          cacheName: "nominatim-geocoding",
+          expiration: {
+            maxEntries: 50,
+            maxAgeSeconds: 7 * 24 * 60 * 60,
+          },
+          cacheableResponse: {
+            statuses: [0, 200],
+          },
+        },
+      },
     ],
   },
 });

@@ -32,3 +32,82 @@ export function formatValue(value: number, unit: string): string {
 export function getIncrementStep(habit: Habit): number {
   return habit.increment || 1;
 }
+
+/* ─── Date helpers ─── */
+
+/** Returns the date string for N days ago. */
+export function daysAgo(n: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() - n);
+  return d.toISOString().split("T")[0];
+}
+
+/** Returns the date string for N days from now. */
+export function daysFromNow(n: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() + n);
+  return d.toISOString().split("T")[0];
+}
+
+/** Returns the start of the week (Sunday) for a given date string. */
+export function startOfWeek(dateStr: string): string {
+  const d = new Date(dateStr + "T00:00:00");
+  const day = d.getDay();
+  d.setDate(d.getDate() - day);
+  return d.toISOString().split("T")[0];
+}
+
+/** Returns the end of the week (Saturday) for a given date string. */
+export function endOfWeek(dateStr: string): string {
+  const start = startOfWeek(dateStr);
+  const d = new Date(start + "T00:00:00");
+  d.setDate(d.getDate() + 6);
+  return d.toISOString().split("T")[0];
+}
+
+/** Returns the first day of the month for a given date string. */
+export function startOfMonth(dateStr: string): string {
+  const d = new Date(dateStr + "T00:00:00");
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
+}
+
+/** Returns the last day of the month for a given date string. */
+export function endOfMonth(dateStr: string): string {
+  const d = new Date(dateStr + "T00:00:00");
+  const lastDay = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
+}
+
+/** Returns the first day of the year for a given date string. */
+export function startOfYear(dateStr: string): string {
+  const d = new Date(dateStr + "T00:00:00");
+  return `${d.getFullYear()}-01-01`;
+}
+
+/** Returns the last day of the year for a given date string. */
+export function endOfYear(dateStr: string): string {
+  const d = new Date(dateStr + "T00:00:00");
+  return `${d.getFullYear()}-12-31`;
+}
+
+/** Returns an array of date strings between start and end (inclusive). */
+export function dateRange(start: string, end: string): string[] {
+  const dates: string[] = []
+  const d = new Date(start + "T00:00:00")
+  const endD = new Date(end + "T00:00:00")
+  while (d <= endD) {
+    dates.push(d.toISOString().split("T")[0])
+    d.setDate(d.getDate() + 1)
+  }
+  return dates
+}
+
+/** Returns YYYY-MM format for a date string. */
+export function toYearMonth(dateStr: string): string {
+  return dateStr.slice(0, 7)
+}
+
+/** Returns YYYY format for a date string. */
+export function toYear(dateStr: string): string {
+  return dateStr.slice(0, 4)
+}
