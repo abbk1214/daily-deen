@@ -8,11 +8,15 @@ interface CompassDialProps {
   showDegrees: boolean
 }
 
-export const CompassDial = memo(function CompassDial({ heading: _heading, showDegrees }: CompassDialProps) {
+export const CompassDial = memo(function CompassDial({ heading, showDegrees }: CompassDialProps) {
   return (
     <div className="relative w-72 h-72 sm:w-80 sm:h-80">
-      {/* Outer ring */}
-      <svg viewBox="0 0 320 320" className="w-full h-full">
+      {/* Outer ring — counter-rotate so north always points up visually */}
+      <svg
+        viewBox="0 0 320 320"
+        className="w-full h-full"
+        style={{ transform: `rotate(${-heading}deg)` }}
+      >
         {/* Background circle */}
         <circle
           cx="160"
@@ -68,10 +72,6 @@ export const CompassDial = memo(function CompassDial({ heading: _heading, showDe
                   ? "fill-[var(--color-lantern)] dark:fill-[var(--color-lantern)]"
                   : "fill-[var(--color-stone-500)] dark:fill-[var(--color-stone-400)]"
               }`}
-              style={{
-                transform: `rotate(${angle}deg)`,
-                transformOrigin: `160px ${160}px`,
-              }}
             >
               {label}
             </text>

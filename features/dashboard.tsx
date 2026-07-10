@@ -28,7 +28,7 @@ import {
 import { getQiblaDirection } from "@/lib/qibla";
 
 const QiblaCompass = lazy(() =>
-  import("@/components/qibla/compass").then((m) => ({ default: m.Compass }))
+  import("@/components/qibla/compass").then((m) => ({ default: m.CompassWidget }))
 );
 
 const AFFIRMATIONS = [

@@ -11,20 +11,24 @@ export const CompassArrow = memo(function CompassArrow({
   qiblaBearing,
   deviceHeading,
 }: CompassArrowProps) {
+  // The arrow points to qibla relative to the device's current heading.
+  // Since the dial already counter-rotates by -heading, we just need the
+  // arrow to point at the qibla bearing in world coordinates.
+  const arrowAngle = qiblaBearing - deviceHeading
+
   return (
     <div
       className="absolute inset-0 flex items-center justify-center pointer-events-none"
-      style={{ transform: `rotate(${-deviceHeading}deg)` }}
     >
-      {/* Kaaba indicator - gold arrow pointing to Qibla */}
+      {/* Arrow pointing to Qibla */}
       <div
         className="absolute"
         style={{
-          transform: `rotate(${qiblaBearing}deg)`,
+          transform: `rotate(${arrowAngle}deg)`,
           transformOrigin: "center",
         }}
       >
-        {/* Arrow shaft */}
+        {/* Arrow shaft — outward from center */}
         <div className="absolute left-1/2 -translate-x-1/2 -top-28 sm:-top-32">
           <div className="w-0.5 h-20 bg-gradient-to-t from-transparent to-[var(--color-lantern)] mx-auto" />
           {/* Arrow head */}

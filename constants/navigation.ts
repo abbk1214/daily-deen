@@ -3,6 +3,7 @@ import {
   ListChecks,
   BookOpen,
   Settings,
+  Compass,
   type LucideIcon,
 } from "lucide-react";
 
@@ -17,6 +18,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { href: "/", label: "Home", icon: Home, shortcutKey: "h" },
   { href: "/habits", label: "Habits", icon: ListChecks, shortcutKey: "b" },
   { href: "/journal", label: "Journal", icon: BookOpen, shortcutKey: "j" },
+  { href: "/compass", label: "Compass", icon: Compass, shortcutKey: "c" },
   { href: "/settings", label: "Settings", icon: Settings, shortcutKey: "s" },
 ] as const;
 
