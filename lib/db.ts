@@ -83,6 +83,7 @@ export interface AppSettings {
   timezone: string
   locationUpdatedAt: number
   accuracy: number
+  locationManualOverride: boolean
   calculationMethod: string
   notificationsEnabled: boolean
   onboardingComplete: boolean
@@ -122,6 +123,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
   locationUpdatedAt: 0,
   accuracy: 0,
+  locationManualOverride: false,
   calculationMethod: "MuslimWorldLeague",
   notificationsEnabled: true,
   onboardingComplete: true,
@@ -206,6 +208,7 @@ function mergeWithDefaults(saved: AppSettings): AppSettings {
     ...DEFAULT_SETTINGS,
     ...saved,
     id: 1,
+    locationManualOverride: saved.locationManualOverride ?? false,
     prayerAdjustments: {
       ...DEFAULT_ADJUSTMENTS,
       ...(saved.prayerAdjustments ?? {}),

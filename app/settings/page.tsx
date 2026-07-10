@@ -314,17 +314,30 @@ export default function SettingsPage() {
   const {
     loading: locationLoading,
     error: locationError,
+    permission: locationPermission,
     city,
     country,
     latitude,
     longitude,
+    timezone: locationTimezone,
+    locationUpdatedAt,
+    accuracy,
+    isManualOverride,
+    isOnline: locationOnline,
+    retryCount,
     detectLocation,
+    retry: retryLocation,
     searchCity,
+    setManualCoordinates,
+    clearManualOverride,
   } = useLocation();
 
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [citySearch, setCitySearch] = useState("");
+  const [manualLat, setManualLat] = useState("");
+  const [manualLng, setManualLng] = useState("");
+  const [showManualInput, setShowManualInput] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isOnline = useOnlineStatus();
@@ -340,6 +353,25 @@ export default function SettingsPage() {
     await detectLocation();
     showToast("Location updated");
   }, [detectLocation, showToast]);
+
+  /* ── Manual coordinates ── */
+  const handleManualCoordinateSubmit = useCallback(async () => {
+    const lat = parseFloat(manualLat);
+    const lng = parseFloat(manualLng);
+    if (isNaN(lat) || isNaN(lng)) {
+      showToast("Invalid coordinates");
+      return;
+    }
+    if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+      showToast("Coordinates out of range");
+      return;
+    }
+    await setManualCoordinates(lat, lng);
+    setManualLat("");
+    setManualLng("");
+    setShowManualInput(false);
+    showToast("Location updated manually");
+  }, [manualLat, manualLng, setManualCoordinates, showToast]);
 
   /* ── City search ── */
   const handleCitySearch = useCallback(async () => {
@@ -604,32 +636,69 @@ export default function SettingsPage() {
           </SettingRow>
           <Divider />
 
+          {/* Manual override indicator */}
+          {isManualOverride && (
+            <>
+              <SettingRow label="Source" description="Location was set manually">
+                <span className="text-dusk-teal" style={{ fontSize: "var(--text-body-sm)", fontWeight: 500 }}>
+                  Manual
+                </span>
+              </SettingRow>
+              <Divider />
+            </>
+          )}
+
+          {/* Offline state */}
+          {!locationOnline && (
+            <>
+              <SettingRow label="Network" description="Connection status">
+                <span className="text-muted-foreground flex items-center gap-1" style={{ fontSize: "var(--text-body-sm)" }}>
+                  <WifiOff size={14} strokeWidth={1.5} />
+                  Offline
+                </span>
+              </SettingRow>
+              <Divider />
+            </>
+          )}
+
+          {/* Permission denied state */}
+          {locationPermission === "denied" && (
+            <>
+              <SettingRow label="GPS permission" description="Permission was denied">
+                <span className="text-destructive" style={{ fontSize: "var(--text-body-sm)", fontWeight: 500 }}>
+                  Denied
+                </span>
+              </SettingRow>
+              <Divider />
+            </>
+          )}
+
           {/* Location details */}
-          {settings.locationUpdatedAt && (
+          {locationUpdatedAt > 0 && (
             <>
               <SettingRow label="Last updated" description="When location was last refreshed">
                 <span className="text-muted-foreground" style={{ fontSize: "var(--text-body-sm)", textAlign: "right" }}>
-                  {new Date(settings.locationUpdatedAt).toLocaleString()}
+                  {new Date(locationUpdatedAt).toLocaleString()}
                 </span>
               </SettingRow>
               <Divider />
             </>
           )}
-          {settings.accuracy && settings.accuracy > 0 && (
+          {accuracy > 0 && (
             <>
               <SettingRow label="Accuracy" description="GPS accuracy radius">
                 <span className="text-muted-foreground" style={{ fontSize: "var(--text-body-sm)", textAlign: "right" }}>
-                  ±{Math.round(settings.accuracy)}m
+                  ±{Math.round(accuracy)}m
                 </span>
               </SettingRow>
               <Divider />
             </>
           )}
-          {settings.timezone && (
+          {locationTimezone && (
             <>
               <SettingRow label="Timezone" description="Detected from location">
                 <span className="text-muted-foreground" style={{ fontSize: "var(--text-body-sm)", textAlign: "right" }}>
-                  {settings.timezone}
+                  {locationTimezone}
                 </span>
               </SettingRow>
               <Divider />
@@ -655,7 +724,7 @@ export default function SettingsPage() {
               <button
                 type="button"
                 onClick={handleCitySearch}
-                disabled={!citySearch.trim() || locationLoading}
+                disabled={!citySearch.trim() || locationLoading || !locationOnline}
                 className="flex items-center justify-center rounded-lg border border-input bg-background text-foreground transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)] hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50"
                 style={{ width: "var(--space-10)", height: "var(--space-10)" }}
                 aria-label="Search"
@@ -672,7 +741,7 @@ export default function SettingsPage() {
               <button
                 type="button"
                 onClick={handleGeolocation}
-                disabled={locationLoading}
+                disabled={locationLoading || !locationOnline}
                 className="flex items-center gap-2 rounded-lg border border-input bg-background px-3 text-foreground transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)] hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50"
                 style={{ height: "var(--space-10)", fontSize: "var(--text-body-sm)", fontWeight: 500 }}
               >
@@ -683,7 +752,7 @@ export default function SettingsPage() {
                 <button
                   type="button"
                   onClick={handleGeolocation}
-                  disabled={locationLoading}
+                  disabled={locationLoading || !locationOnline}
                   className="flex items-center justify-center rounded-lg border border-input bg-background text-foreground transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)] hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50"
                   style={{ width: "var(--space-10)", height: "var(--space-10)" }}
                   aria-label="Refresh location"
@@ -693,10 +762,90 @@ export default function SettingsPage() {
               )}
             </div>
           </SettingRow>
+
+          {/* Error state with retry */}
           {locationError && (
-            <p className="text-destructive" style={{ fontSize: "var(--text-body-sm)", marginTop: "var(--space-2)" }}>
-              {locationError}
-            </p>
+            <div style={{ padding: "var(--space-2) 0" }}>
+              <p className="text-destructive" style={{ fontSize: "var(--text-body-sm)", marginBottom: "var(--space-2)" }}>
+                {locationError}
+              </p>
+              {locationOnline && locationPermission !== "denied" && (
+                <button
+                  type="button"
+                  onClick={retryLocation}
+                  disabled={locationLoading}
+                  className="text-dusk-teal flex items-center gap-1 transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)] hover:underline"
+                  style={{ fontSize: "var(--text-body-sm)", fontWeight: 500 }}
+                >
+                  <RefreshCw size={14} strokeWidth={1.5} />
+                  Retry{retryCount > 0 ? ` (${retryCount})` : ""}
+                </button>
+              )}
+            </div>
+          )}
+          <Divider />
+
+          {/* Manual coordinate override */}
+          <div style={{ padding: "var(--space-4) 0" }}>
+            <button
+              type="button"
+              onClick={() => setShowManualInput(!showManualInput)}
+              className="text-dusk-teal flex items-center gap-1 transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)] hover:underline"
+              style={{ fontSize: "var(--text-body-sm)", fontWeight: 500 }}
+            >
+              {showManualInput ? "Hide" : "Enter coordinates manually"}
+            </button>
+            {showManualInput && (
+              <div className="flex flex-col gap-2" style={{ marginTop: "var(--space-3)" }}>
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    value={manualLat}
+                    onChange={(e) => setManualLat(e.target.value)}
+                    placeholder="Latitude (e.g. 21.4225)"
+                    aria-label="Manual latitude"
+                    step="0.0001"
+                    min="-90"
+                    max="90"
+                    className="flex-1 rounded-lg border border-input bg-background px-3 text-foreground placeholder:text-muted-foreground outline-none transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)] focus:border-ring focus:shadow-[var(--focus-ring)]"
+                    style={{ height: "var(--space-10)", fontSize: "var(--text-body)", fontFamily: "var(--font-mono)" }}
+                  />
+                  <input
+                    type="number"
+                    value={manualLng}
+                    onChange={(e) => setManualLng(e.target.value)}
+                    placeholder="Longitude (e.g. 39.8262)"
+                    aria-label="Manual longitude"
+                    step="0.0001"
+                    min="-180"
+                    max="180"
+                    className="flex-1 rounded-lg border border-input bg-background px-3 text-foreground placeholder:text-muted-foreground outline-none transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)] focus:border-ring focus:shadow-[var(--focus-ring)]"
+                    style={{ height: "var(--space-10)", fontSize: "var(--text-body)", fontFamily: "var(--font-mono)" }}
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={handleManualCoordinateSubmit}
+                  disabled={locationLoading || !manualLat.trim() || !manualLng.trim()}
+                  className="rounded-lg border border-input bg-background px-4 text-foreground transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)] hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50"
+                  style={{ height: "var(--space-10)", fontSize: "var(--text-body-sm)", fontWeight: 500 }}
+                >
+                  Set Coordinates
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Clear manual override */}
+          {isManualOverride && (
+            <>
+              <Divider />
+              <LinkRow
+                label="Resume automatic detection"
+                onClick={clearManualOverride}
+                icon={<RefreshCw size={16} strokeWidth={1.5} className="text-muted-foreground" />}
+              />
+            </>
           )}
         </section>
 

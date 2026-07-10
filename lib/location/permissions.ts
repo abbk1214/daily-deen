@@ -19,8 +19,31 @@ export async function requestGeolocationPermission(): Promise<PermissionState> {
   }
   try {
     const result = await navigator.permissions.query({ name: 'geolocation' })
-    return result.state
+    return result.state as PermissionState
   } catch {
     return 'prompt'
+  }
+}
+
+export function onPermissionChange(callback: (state: PermissionState) => void): () => void {
+  if (typeof navigator === 'undefined' || !navigator.permissions) {
+    return () => {}
+  }
+
+  let mounted = true
+
+  navigator.permissions
+    .query({ name: 'geolocation' })
+    .then((result) => {
+      if (!mounted) return
+      callback(result.state as PermissionState)
+      result.addEventListener('change', () => {
+        if (mounted) callback(result.state as PermissionState)
+      })
+    })
+    .catch(() => {})
+
+  return () => {
+    mounted = false
   }
 }
