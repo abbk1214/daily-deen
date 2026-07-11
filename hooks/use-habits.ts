@@ -290,13 +290,6 @@ export function useHabits(date: string): UseHabitsReturn {
     [habits],
   );
 
-  /* ── Cleanup ── */
-  useEffect(() => {
-    return () => {
-      mountedRef.current = false;
-    };
-  }, []);
-
   return {
     habits,
     habitLogs,

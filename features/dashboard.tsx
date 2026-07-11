@@ -64,28 +64,6 @@ function getGregorianDate(): string {
   });
 }
 
-const cardEntranceStyle = `
-  @keyframes dd-card-enter {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  .dd-card { animation: dd-card-enter 300ms var(--ease-out) both; }
-  .dd-card-1 { animation-delay: 0ms; }
-  .dd-card-2 { animation-delay: 50ms; }
-  .dd-card-3 { animation-delay: 100ms; }
-  .dd-card-4 { animation-delay: 150ms; }
-  .dd-card-5 { animation-delay: 200ms; }
-  .dd-card-6 { animation-delay: 250ms; }
-  .dd-card-7 { animation-delay: 300ms; }
-  .dd-card-8 { animation-delay: 350ms; }
-  .dd-card-9 { animation-delay: 400ms; }
-  .dd-card-10 { animation-delay: 450ms; }
-
-  @media (prefers-reduced-motion: reduce) {
-    .dd-card { animation: none; opacity: 1; transform: none; }
-  }
-`;
-
 function NotificationStatus() {
   const { supported, enabled, permission } = useNotifications();
   const { settings } = useSettings();
@@ -174,8 +152,6 @@ export function Dashboard() {
 
   return (
     <>
-      <style dangerouslySetInnerHTML={{ __html: cardEntranceStyle }} />
-
       <header
         className="sticky top-0 z-30 flex items-center border-b border-border bg-background/90 backdrop-blur-md"
         style={{

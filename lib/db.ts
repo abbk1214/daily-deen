@@ -122,7 +122,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   longitude: 0,
   city: '',
   country: '',
-  timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+  timezone: typeof Intl !== 'undefined' ? Intl.DateTimeFormat().resolvedOptions().timeZone : 'UTC',
   locationUpdatedAt: 0,
   accuracy: 0,
   locationManualOverride: false,
@@ -199,9 +199,32 @@ class DailyDeenDB extends Dexie {
   }
 }
 
-const db = new DailyDeenDB()
+/* ──────────────────────────────────────────────
+   Lazy database singleton (SSG-safe)
+   ────────────────────────────────────────────── */
 
-export default db
+let _db: DailyDeenDB | null = null
+
+function getDb(): DailyDeenDB {
+  if (!_db) {
+    _db = new DailyDeenDB()
+  }
+  return _db
+}
+
+// Proxy so `db.table` calls work directly (e.g. db.prayers.toArray())
+const dbProxy = new Proxy({} as DailyDeenDB, {
+  get(_target, prop, _receiver) {
+    const dbInstance = getDb()
+    const value = Reflect.get(dbInstance, prop, dbInstance)
+    if (typeof value === 'function') {
+      return value.bind(dbInstance)
+    }
+    return value
+  },
+})
+
+export default dbProxy
 
 /* ──────────────────────────────────────────────
    Settings CRUD — single row, id = 1
@@ -223,15 +246,17 @@ function mergeWithDefaults(saved: AppSettings): AppSettings {
 }
 
 export async function getSettings(): Promise<AppSettings> {
-  const existing = await db.settings.get(1)
+  const dbInstance = getDb()
+  const existing = await dbInstance.settings.get(1)
   if (existing) return mergeWithDefaults(existing)
-  await db.settings.put({ ...DEFAULT_SETTINGS, id: 1 })
+  await dbInstance.settings.put({ ...DEFAULT_SETTINGS, id: 1 })
   return { ...DEFAULT_SETTINGS, id: 1 }
 }
 
 export async function saveSettings(
   partial: Partial<Omit<AppSettings, 'id'>>,
 ): Promise<AppSettings> {
+  const dbInstance = getDb()
   const current = await getSettings()
   const next: AppSettings = {
     ...current,
@@ -242,13 +267,14 @@ export async function saveSettings(
       ...(partial.prayerAdjustments ?? {}),
     },
   }
-  await db.settings.put(next)
+  await dbInstance.settings.put(next)
   return next
 }
 
 export async function resetSettings(): Promise<AppSettings> {
+  const dbInstance = getDb()
   const reset = { ...DEFAULT_SETTINGS, id: 1 }
-  await db.settings.put(reset)
+  await dbInstance.settings.put(reset)
   return reset
 }
 
@@ -268,13 +294,14 @@ export interface DatabaseExport {
 }
 
 export async function exportDatabase(): Promise<DatabaseExport> {
+  const dbInstance = getDb()
   const [prayers, habits, habitLogs, journal, settings, prayerLogs] = await Promise.all([
-    db.prayers.toArray(),
-    db.habits.toArray(),
-    db.habitLogs.toArray(),
-    db.journal.toArray(),
+    dbInstance.prayers.toArray(),
+    dbInstance.habits.toArray(),
+    dbInstance.habitLogs.toArray(),
+    dbInstance.journal.toArray(),
     getSettings(),
-    db.prayerLogs.toArray(),
+    dbInstance.prayerLogs.toArray(),
   ])
   return {
     version: 1,
@@ -289,44 +316,46 @@ export async function exportDatabase(): Promise<DatabaseExport> {
 }
 
 export async function importDatabase(data: DatabaseExport): Promise<void> {
-  await db.transaction(
+  const dbInstance = getDb()
+  await dbInstance.transaction(
     'rw',
-    [db.prayers, db.habits, db.habitLogs, db.journal, db.settings, db.prayerLogs],
+    [dbInstance.prayers, dbInstance.habits, dbInstance.habitLogs, dbInstance.journal, dbInstance.settings, dbInstance.prayerLogs],
     async () => {
       await Promise.all([
-        db.prayers.clear(),
-        db.habits.clear(),
-        db.habitLogs.clear(),
-        db.journal.clear(),
-        db.settings.clear(),
-        db.prayerLogs.clear(),
+        dbInstance.prayers.clear(),
+        dbInstance.habits.clear(),
+        dbInstance.habitLogs.clear(),
+        dbInstance.journal.clear(),
+        dbInstance.settings.clear(),
+        dbInstance.prayerLogs.clear(),
       ])
       await Promise.all([
-        db.prayers.bulkAdd(data.prayers),
-        db.habits.bulkAdd(data.habits),
-        db.habitLogs.bulkAdd(data.habitLogs),
-        db.journal.bulkAdd(data.journal),
-        db.settings.put({ ...data.settings, id: 1 }),
-        data.prayerLogs.length > 0 ? db.prayerLogs.bulkAdd(data.prayerLogs) : Promise.resolve(),
+        dbInstance.prayers.bulkAdd(data.prayers),
+        dbInstance.habits.bulkAdd(data.habits),
+        dbInstance.habitLogs.bulkAdd(data.habitLogs),
+        dbInstance.journal.bulkAdd(data.journal),
+        dbInstance.settings.put({ ...data.settings, id: 1 }),
+        data.prayerLogs.length > 0 ? dbInstance.prayerLogs.bulkAdd(data.prayerLogs) : Promise.resolve(),
       ])
     },
   )
 }
 
 export async function clearAllData(): Promise<void> {
-  await db.transaction(
+  const dbInstance = getDb()
+  await dbInstance.transaction(
     'rw',
-    [db.prayers, db.habits, db.habitLogs, db.journal, db.settings, db.prayerLogs],
+    [dbInstance.prayers, dbInstance.habits, dbInstance.habitLogs, dbInstance.journal, dbInstance.settings, dbInstance.prayerLogs],
     async () => {
       await Promise.all([
-        db.prayers.clear(),
-        db.habits.clear(),
-        db.habitLogs.clear(),
-        db.journal.clear(),
-        db.settings.clear(),
-        db.prayerLogs.clear(),
+        dbInstance.prayers.clear(),
+        dbInstance.habits.clear(),
+        dbInstance.habitLogs.clear(),
+        dbInstance.journal.clear(),
+        dbInstance.settings.clear(),
+        dbInstance.prayerLogs.clear(),
       ])
-      await db.settings.put({ ...DEFAULT_SETTINGS, id: 1 })
+      await dbInstance.settings.put({ ...DEFAULT_SETTINGS, id: 1 })
     },
   )
 }
