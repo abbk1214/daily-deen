@@ -2,6 +2,7 @@
 
 import { memo, useEffect, useState } from "react";
 import { timeToMinutes, formatTimeFromMinutes } from "@/lib/utils";
+import { formatHijriDate } from "@/lib/hijri-date";
 import type { Prayer } from "@/lib/db";
 
 function minutesToAngle(minutes: number, fajrMinutes: number, ishaMinutes: number): number {
@@ -238,13 +239,8 @@ function describeArc(
 function getHijriDateString(): string {
   try {
     const now = new Date();
-    const formatted = now.toLocaleDateString("en-US", {
-      calendar: "islamic-umalqura",
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
-    return formatted;
+    const dateStr = now.toISOString().slice(0, 10);
+    return formatHijriDate(dateStr);
   } catch {
     return "";
   }

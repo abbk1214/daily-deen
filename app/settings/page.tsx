@@ -915,6 +915,33 @@ export default function SettingsPage() {
           </SettingRow>
         </section>
 
+        {/* ─── Calendar ─── */}
+        <section aria-labelledby="section-calendar" style={{ marginBottom: "var(--space-12)" }}>
+          <SectionHeading id="section-calendar">Calendar</SectionHeading>
+          <SettingRow label="Calendar type" description="Show Gregorian or Hijri dates in the calendar">
+            <div role="radiogroup" aria-label="Calendar type" className="flex gap-3">
+              {(["gregorian", "hijri"] as const).map((t) => (
+                <label key={t} className="flex cursor-pointer items-center gap-2" style={{ fontSize: "var(--text-body-sm)", fontWeight: 500 }}>
+                  <input
+                    type="radio"
+                    name="calendarType"
+                    value={t}
+                    checked={settings.calendarType === t}
+                    onChange={() => updateImmediate({ calendarType: t })}
+                    className="accent-[var(--dd-dusk-teal)]"
+                    style={{ width: "16px", height: "16px" }}
+                  />
+                  <span className="capitalize">{t === "gregorian" ? "Gregorian" : "Hijri"}</span>
+                </label>
+              ))}
+            </div>
+          </SettingRow>
+          <Divider />
+          <SettingRow label="Today badge" description="Highlight today's date in the calendar">
+            <Toggle checked={true} onChange={() => {}} label="Today badge" />
+          </SettingRow>
+        </section>
+
         {/* ─── Appearance ─── */}
         <section aria-labelledby="section-appearance" style={{ marginBottom: "var(--space-12)" }}>
           <SectionHeading id="section-appearance">Appearance</SectionHeading>

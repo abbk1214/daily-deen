@@ -14,6 +14,7 @@ import {
 } from "@/lib/prayer/statistics"
 import { computeStreaks, getWeeklyProgress } from "@/lib/prayer/streaks"
 import { getToday, daysAgo, startOfWeek } from "@/lib/utils"
+import { useSettings } from "@/hooks/use-settings"
 import { PrayerCalendar } from "@/components/prayer/calendar"
 import { Heatmap } from "@/components/prayer/heatmap"
 import { DonutChart, BarChart } from "@/components/prayer/charts"
@@ -39,6 +40,7 @@ const STATUS_OPTIONS: { label: string; value: StatusFilter }[] = [
 ]
 
 export default function HistoryPage() {
+  const { settings, updateImmediate } = useSettings()
   const [logs, setLogs] = useState<PrayerLog[]>([])
   const [loading, setLoading] = useState(true)
   const [filterType, setFilterType] = useState<FilterType>('week')
@@ -269,6 +271,8 @@ export default function HistoryPage() {
           logs={logs}
           selectedDate={selectedDate}
           onSelectDate={setSelectedDate}
+          calendarType={settings.calendarType}
+          onCalendarTypeChange={(type) => updateImmediate({ calendarType: type })}
         />
 
         {/* Prayer details for selected day */}

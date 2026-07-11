@@ -103,6 +103,7 @@ export interface AppSettings {
   compassShowDegrees: boolean
   compassAutoCalibration: boolean
   compassSmoothing: number
+  calendarType: 'gregorian' | 'hijri'
 }
 
 export const DEFAULT_ADJUSTMENTS: PrayerAdjustments = {
@@ -143,6 +144,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   compassShowDegrees: true,
   compassAutoCalibration: true,
   compassSmoothing: 0.3,
+  calendarType: 'gregorian',
 }
 
 /* ──────────────────────────────────────────────
@@ -209,6 +211,7 @@ function mergeWithDefaults(saved: AppSettings): AppSettings {
     ...saved,
     id: 1,
     locationManualOverride: saved.locationManualOverride ?? false,
+    calendarType: saved.calendarType ?? 'gregorian',
     prayerAdjustments: {
       ...DEFAULT_ADJUSTMENTS,
       ...(saved.prayerAdjustments ?? {}),

@@ -1,4 +1,4 @@
-const HIJRI_MONTHS = [
+export const HIJRI_MONTHS = [
   "Muharram",
   "Safar",
   "Rabi al-Awwal",
@@ -9,71 +9,138 @@ const HIJRI_MONTHS = [
   "Shaban",
   "Ramadan",
   "Shawwal",
-  "Dhul Qi dah",
+  "Dhul Qi'dah",
   "Dhul Hijjah",
-];
+] as const
 
-function gregorianToHijri(isoDate: string): { day: number; month: number; year: number; monthName: string } {
-  const [y, m, d] = isoDate.split("-").map(Number);
+const HIJRI_DAYS_IN_MONTH_COMMON = [30, 29, 30, 29, 30, 29, 30, 29, 30, 29, 30, 29] as const
+const HIJRI_DAYS_IN_MONTH_LEAP = [30, 29, 30, 29, 30, 29, 30, 29, 30, 29, 30, 30] as const
 
-  // Julian Day Number from Gregorian date
-  const jd = gregorianToJD(y, m, d);
+const CACHE = new Map<string, { year: number; month: number; day: number }>()
 
-  return jdToHijri(jd);
+function cacheKey(dateStr: string): string {
+  return dateStr
 }
 
-function gregorianToJD(year: number, month: number, day: number): number {
-  const a = Math.floor((14 - month) / 12);
-  const y = year + 4800 - a;
-  const m = month + 12 * a - 3;
+function parseComponents(
+  date: Date,
+): { year: number; month: number; day: number } {
+  const key = cacheKey(date.toISOString().slice(0, 10))
+  const cached = CACHE.get(key)
+  if (cached) return cached
 
-  return (
-    day +
-    Math.floor((153 * m + 2) / 5) +
-    365 * y +
-    Math.floor(y / 4) -
-    Math.floor(y / 100) +
-    Math.floor(y / 400) -
-    32045
-  );
+  const formatter = new Intl.DateTimeFormat("en-US-u-ca-islamic-umalqura", {
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+  })
+
+  const parts = formatter.formatToParts(date)
+  const year = Number(parts.find((p) => p.type === "year")?.value ?? 0)
+  const month = Number(parts.find((p) => p.type === "month")?.value ?? 0)
+  const day = Number(parts.find((p) => p.type === "day")?.value ?? 0)
+
+  const result = { year, month, day }
+  CACHE.set(key, result)
+  return result
 }
 
-function jdToHijri(jd: number): { day: number; month: number; year: number; monthName: string } {
-  const l = jd - 1948440 + 10632;
-  const n = Math.floor((l - 1) / 10631);
-  const remainder = l - 10631 * n + 354;
-  const j =
-    Math.floor((10985 - remainder) / 5316) *
-      Math.floor((50 * remainder) / 17719) +
-    Math.floor(remainder / 5670) *
-      Math.floor((43 * remainder) / 15238);
-  const adjustedRemainder =
-    remainder -
-    Math.floor((30 - j) / 15) *
-      Math.floor((17719 * j) / 50) -
-    Math.floor(j / 16) *
-      Math.floor((15238 * j) / 43) +
-    29;
-  const month = Math.floor((24 * adjustedRemainder) / 709);
-  const day =
-    adjustedRemainder - Math.floor((709 * month) / 24);
-  const year = 30 * n + j - 30;
-
+export function getHijriDate(date: Date = new Date()): {
+  year: number
+  month: number
+  day: number
+  monthName: string
+} {
+  const { year, month, day } = parseComponents(date)
   return {
-    day,
-    month,
     year,
+    month,
+    day,
     monthName: HIJRI_MONTHS[month - 1] ?? "",
-  };
+  }
 }
 
-/**
- * Format a Hijri date for display.
- * Example: "14 Ramadan 1447"
- */
 export function formatHijriDate(isoDate: string): string {
-  const h = gregorianToHijri(isoDate);
-  return `${h.day} ${h.monthName} ${h.year}`;
+  const date = new Date(isoDate + "T00:00:00")
+  const h = getHijriDate(date)
+  return `${h.day} ${h.monthName} ${h.year}`
 }
 
+export function formatHijriDateShort(isoDate: string): string {
+  const date = new Date(isoDate + "T00:00:00")
+  const h = getHijriDate(date)
+  return `${h.day} ${h.monthName}`
+}
 
+export function getHijriMonthYear(isoDate: string): {
+  year: number
+  month: number
+} {
+  const date = new Date(isoDate + "T00:00:00")
+  const h = getHijriDate(date)
+  return { year: h.year, month: h.month }
+}
+
+export function isHijriLeapYear(year: number): boolean {
+  const base = 1445
+  const diff = year - base
+  return (11 * diff + 14) % 30 < 11
+}
+
+export function getDaysInHijriMonth(year: number, month: number): number {
+  if (isHijriLeapYear(year)) {
+    return HIJRI_DAYS_IN_MONTH_LEAP[month - 1] ?? 29
+  }
+  return HIJRI_DAYS_IN_MONTH_COMMON[month - 1] ?? 29
+}
+
+export function hijriToGregorian(
+  year: number,
+  month: number,
+  day: number,
+): Date {
+  const jd =
+    Math.floor((11 * year + 3) / 30) +
+    Math.floor(354 * year) +
+    Math.floor((30 * month - month + 5) / 10) +
+    day +
+    1948440 -
+    385
+
+  const l = jd + 68569
+  const n = Math.floor((4 * l) / 146097)
+  const l2 = l - Math.floor((146097 * n + 3) / 4)
+  const i = Math.floor((4000 * (l2 + 1)) / 1461001)
+  const l3 = l2 - Math.floor((1461 * i) / 4) + 31
+  const j = Math.floor((80 * l3) / 2447)
+  const dayNum = l3 - Math.floor((2447 * j) / 80)
+  const l4 = Math.floor(j / 11)
+  const monthNum = j + 2 - 12 * l4
+  const yearNum = 100 * (n - 49) + i + l4
+
+  const result = new Date(yearNum, monthNum - 1, dayNum)
+  result.setHours(12, 0, 0, 0)
+  return result
+}
+
+export function hijriToIsoDate(
+  year: number,
+  month: number,
+  day: number,
+): string {
+  const date = hijriToGregorian(year, month, day)
+  return date.toISOString().slice(0, 10)
+}
+
+export function getHijriToday(): {
+  year: number
+  month: number
+  day: number
+  monthName: string
+  isoDate: string
+} {
+  const today = new Date()
+  const h = getHijriDate(today)
+  const isoDate = today.toISOString().slice(0, 10)
+  return { ...h, isoDate }
+}
