@@ -1,5 +1,3 @@
 export type { PermissionStatus, NotificationPayload, ScheduledNotification, NotificationScheduleConfig, NotificationServiceState } from './types'
-export { isNotificationSupported, getPermissionStatus, requestNotificationPermission, canNotify } from './permission'
-export { getPrayerReminderPayload, getPrayerStartPayload, minutesToMs, getMsUntilMidnight, buildNotificationTag } from './helpers'
-export { scheduleNotifications, cancelAllNotifications, getScheduledCount, setRescheduleCallback, clearRescheduleCallback } from './scheduler'
 export { getNotificationState, requestPermission, schedulePrayerNotifications, cancelPrayerNotifications, initializeNotificationService } from './notification-service'
+export { registerNotificationSW } from './sw-handler'

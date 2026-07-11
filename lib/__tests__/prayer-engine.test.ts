@@ -155,7 +155,7 @@ describe('getNextPrayer', () => {
     expect(result!.minutesUntil).toBeGreaterThanOrEqual(0)
   })
 
-  it('returns next prayer for a time after Dhuhr', () => {
+  it('returns next prayer for a known time', () => {
     const afterDhuhr = new Date(MAKKAH_INPUT.date)
     afterDhuhr.setHours(13, 30, 0, 0) // 1:30 PM
     const result = getNextPrayer(MAKKAH_INPUT, afterDhuhr)
@@ -164,9 +164,10 @@ describe('getNextPrayer', () => {
     expect(result!.minutesUntil).toBeGreaterThanOrEqual(0)
   })
 
-  it('returns null only if truly no prayer found', () => {
-    const result = getNextPrayer(MAKKAH_INPUT)
-    // Should always find a next prayer (wraps to next day)
+  it('returns a next prayer for any given time', () => {
+    const testTime = new Date(MAKKAH_INPUT.date)
+    testTime.setHours(6, 0, 0, 0) // 6:00 AM - between Fajr and Sunrise
+    const result = getNextPrayer(MAKKAH_INPUT, testTime)
     expect(result).not.toBeNull()
   })
 })

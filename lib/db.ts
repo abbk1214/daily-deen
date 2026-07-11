@@ -93,6 +93,7 @@ export interface AppSettings {
   reminderOffset: number
   adhanSound: boolean
   vibrate: boolean
+  silentMode: boolean
   theme: string
   paperTexture: boolean
   textSize: string
@@ -134,6 +135,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   reminderOffset: 10,
   adhanSound: false,
   vibrate: true,
+  silentMode: false,
   theme: "system",
   paperTexture: false,
   textSize: "default",
@@ -212,6 +214,7 @@ function mergeWithDefaults(saved: AppSettings): AppSettings {
     id: 1,
     locationManualOverride: saved.locationManualOverride ?? false,
     calendarType: saved.calendarType ?? 'gregorian',
+    silentMode: saved.silentMode ?? false,
     prayerAdjustments: {
       ...DEFAULT_ADJUSTMENTS,
       ...(saved.prayerAdjustments ?? {}),

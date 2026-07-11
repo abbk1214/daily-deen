@@ -2,6 +2,7 @@ import type { PrayerName } from '../prayer/types'
 import type { ScheduledNotification, NotificationScheduleConfig } from './types'
 import { canNotify } from './permission'
 import { getPrayerReminderPayload, getPrayerStartPayload, minutesToMs } from './helpers'
+import { playAdhanSound, stopAdhanSound } from './sound'
 
 const PRAYER_NAMES: PrayerName[] = ['fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha']
 
@@ -9,8 +10,12 @@ let scheduledNotifications: ScheduledNotification[] = []
 let midnightTimer: ReturnType<typeof setTimeout> | null = null
 let heartbeatInterval: ReturnType<typeof setInterval> | null = null
 let rescheduleCallback: (() => void) | null = null
+let currentConfig: NotificationScheduleConfig | null = null
 
-function sendNotification(payload: { title: string; body: string; tag?: string; requireInteraction?: boolean }): void {
+function sendNotification(
+  payload: { title: string; body: string; tag?: string; requireInteraction?: boolean },
+  options: { silent: boolean; vibrate: boolean },
+): void {
   if (!canNotify()) return
 
   try {
@@ -18,7 +23,12 @@ function sendNotification(payload: { title: string; body: string; tag?: string; 
       body: payload.body,
       tag: payload.tag,
       requireInteraction: payload.requireInteraction ?? false,
+      silent: options.silent,
     })
+
+    if (options.vibrate && !options.silent && 'vibrate' in navigator) {
+      navigator.vibrate([200, 100, 200])
+    }
 
     notification.onclick = () => {
       window.focus()
@@ -46,12 +56,15 @@ function cancelAllScheduled(): void {
     clearInterval(heartbeatInterval)
     heartbeatInterval = null
   }
+
+  stopAdhanSound()
 }
 
 function schedulePrayerNotification(
   prayerName: PrayerName,
   scheduledTimeMs: number,
   type: 'reminder' | 'prayer',
+  config: NotificationScheduleConfig,
   offsetMinutes?: number,
 ): void {
   const now = Date.now()
@@ -62,9 +75,19 @@ function schedulePrayerNotification(
   const id = `${type}-${prayerName}-${scheduledTimeMs}`
   const timeoutId = setTimeout(() => {
     if (type === 'reminder' && offsetMinutes !== undefined) {
-      sendNotification(getPrayerReminderPayload(prayerName, offsetMinutes))
+      sendNotification(getPrayerReminderPayload(prayerName, offsetMinutes), {
+        silent: config.silent,
+        vibrate: config.vibrate,
+      })
     } else {
-      sendNotification(getPrayerStartPayload(prayerName))
+      sendNotification(getPrayerStartPayload(prayerName), {
+        silent: config.silent,
+        vibrate: config.vibrate,
+      })
+
+      if (config.adhanSound && prayerName !== 'sunrise') {
+        playAdhanSound(0.5)
+      }
     }
 
     scheduledNotifications = scheduledNotifications.filter((n) => n.id !== id)
@@ -79,11 +102,33 @@ function schedulePrayerNotification(
   })
 }
 
+function cancelObsoleteNotifications(newConfig: NotificationScheduleConfig): void {
+  if (!currentConfig) return
+
+  const newKey = buildConfigKey(newConfig)
+  const oldKey = buildConfigKey(currentConfig)
+
+  if (newKey === oldKey) return
+
+  for (const n of scheduledNotifications) {
+    if (n.timeoutId !== null) {
+      clearTimeout(n.timeoutId)
+    }
+  }
+  scheduledNotifications = []
+  stopAdhanSound()
+}
+
+function buildConfigKey(config: NotificationScheduleConfig): string {
+  return `${config.date}:${config.prayerTimes.fajr}:${config.prayerTimes.dhuhr}:${config.prayerTimes.asr}:${config.prayerTimes.maghrib}:${config.prayerTimes.isha}:${config.reminderOffset}:${config.adhanSound}:${config.silent}`
+}
+
 function scheduleDay(config: NotificationScheduleConfig): number {
-  cancelAllScheduled()
+  cancelObsoleteNotifications(config)
 
   if (!canNotify()) return 0
 
+  currentConfig = config
   const { prayerTimes, reminderOffset, date } = config
   const [year, month, day] = date.split('-').map(Number)
 
@@ -97,14 +142,14 @@ function scheduleDay(config: NotificationScheduleConfig): number {
     const prayerDate = new Date(year, month - 1, day, hours, minutes, 0, 0)
     const prayerTimeMs = prayerDate.getTime()
 
-    schedulePrayerNotification(prayerName, prayerTimeMs, 'prayer')
+    schedulePrayerNotification(prayerName, prayerTimeMs, 'prayer', config)
     count++
 
     const reminderMs = minutesToMs(reminderOffset)
     const reminderTimeMs = prayerTimeMs - reminderMs
 
     if (reminderTimeMs > Date.now()) {
-      schedulePrayerNotification(prayerName, reminderTimeMs, 'reminder', reminderOffset)
+      schedulePrayerNotification(prayerName, reminderTimeMs, 'reminder', config, reminderOffset)
       count++
     }
   }
@@ -153,6 +198,7 @@ export function scheduleNotifications(config: NotificationScheduleConfig): numbe
 
 export function cancelAllNotifications(): void {
   cancelAllScheduled()
+  currentConfig = null
 }
 
 export function getScheduledCount(): number {

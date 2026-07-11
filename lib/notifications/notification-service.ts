@@ -18,8 +18,15 @@ import { getMsUntilMidnight } from './helpers'
 
 let lastScheduleKey = ''
 
-function buildScheduleKey(times: PrayerTimes, offset: number, date: string): string {
-  return `${date}:${times.fajr}:${times.dhuhr}:${times.asr}:${times.maghrib}:${times.isha}:${offset}`
+function buildScheduleKey(
+  times: PrayerTimes,
+  offset: number,
+  date: string,
+  adhanSound: boolean,
+  vibrate: boolean,
+  silent: boolean,
+): string {
+  return `${date}:${times.fajr}:${times.dhuhr}:${times.asr}:${times.maghrib}:${times.isha}:${offset}:${adhanSound}:${vibrate}:${silent}`
 }
 
 export function getNotificationState(): NotificationServiceState {
@@ -41,10 +48,13 @@ export function schedulePrayerNotifications(
   times: PrayerTimes,
   reminderOffset: number,
   date: string,
+  adhanSound: boolean,
+  vibrate: boolean,
+  silent: boolean,
 ): number {
   if (!canNotify()) return 0
 
-  const key = buildScheduleKey(times, reminderOffset, date)
+  const key = buildScheduleKey(times, reminderOffset, date, adhanSound, vibrate, silent)
   if (key === lastScheduleKey) return getScheduledCount()
   lastScheduleKey = key
 
@@ -52,6 +62,9 @@ export function schedulePrayerNotifications(
     prayerTimes: times,
     reminderOffset,
     date,
+    adhanSound,
+    vibrate,
+    silent,
   }
 
   return scheduleNotifications(config)

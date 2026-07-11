@@ -8,6 +8,7 @@ export interface NotificationPayload {
   icon?: string
   tag?: string
   requireInteraction?: boolean
+  silent?: boolean
 }
 
 export interface ScheduledNotification {
@@ -22,6 +23,9 @@ export interface NotificationScheduleConfig {
   prayerTimes: PrayerTimes
   reminderOffset: number
   date: string
+  adhanSound: boolean
+  vibrate: boolean
+  silent: boolean
 }
 
 export interface NotificationServiceState {

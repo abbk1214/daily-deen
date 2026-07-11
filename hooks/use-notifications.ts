@@ -9,6 +9,7 @@ import {
   schedulePrayerNotifications,
   cancelPrayerNotifications,
   initializeNotificationService,
+  registerNotificationSW,
 } from "@/lib/notifications"
 import type { PermissionStatus } from "@/lib/notifications"
 import { getToday } from "@/lib/utils"
@@ -69,9 +70,20 @@ export function useNotifications(): UseNotificationsResult {
       times,
       settings.reminderOffset,
       today,
+      settings.adhanSound,
+      settings.vibrate,
+      settings.silentMode ?? false,
     )
     setScheduledCount(count)
-  }, [settings.notificationsEnabled, settings.reminderOffset, times, syncState])
+  }, [
+    settings.notificationsEnabled,
+    settings.reminderOffset,
+    settings.adhanSound,
+    settings.vibrate,
+    settings.silentMode,
+    times,
+    syncState,
+  ])
 
   const refresh = useCallback(() => {
     syncState()
@@ -106,6 +118,9 @@ export function useNotifications(): UseNotificationsResult {
     settings.latitude,
     settings.longitude,
     settings.school,
+    settings.adhanSound,
+    settings.vibrate,
+    settings.silentMode,
     times,
     scheduleToday,
     syncState,
@@ -117,6 +132,9 @@ export function useNotifications(): UseNotificationsResult {
         scheduleToday()
       }
     })
+
+    registerNotificationSW()
+
     return cleanup
   }, [scheduleToday])
 

@@ -867,6 +867,10 @@ export default function SettingsPage() {
           <SettingRow label="Vibrate" description="Vibrate with notification">
             <Toggle checked={settings.vibrate} onChange={(vibrate) => updateImmediate({ vibrate })} label="Vibrate" />
           </SettingRow>
+          <Divider />
+          <SettingRow label="Silent mode" description="Suppress notification sound and vibration">
+            <Toggle checked={settings.silentMode ?? false} onChange={(silentMode) => updateImmediate({ silentMode })} label="Silent mode" />
+          </SettingRow>
         </section>
 
         {/* ─── Compass ─── */}
