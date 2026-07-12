@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { RefreshCw } from "lucide-react";
 import { getSettings, type AppSettings } from "@/lib/db";
 import { formatTimeFromMinutes, getToday } from "@/lib/utils";
@@ -50,9 +50,14 @@ async function loadOfflineData(): Promise<OfflineData> {
 
 export default function OfflinePage() {
   const [data, setData] = useState<OfflineData | null>(null);
+  const mountedRef = useRef(true);
 
   useEffect(() => {
-    loadOfflineData().then(setData);
+    mountedRef.current = true;
+    loadOfflineData().then((d) => {
+      if (mountedRef.current) setData(d);
+    });
+    return () => { mountedRef.current = false; };
   }, []);
 
   return (

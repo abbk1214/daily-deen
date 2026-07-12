@@ -24,7 +24,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
 
 export const SHORTCUT_MAP: Record<string, string> = Object.fromEntries(
   NAV_ITEMS.filter((item) => item.shortcutKey != null).map((item) => [
-    item.shortcutKey!,
+    `g${item.shortcutKey}`,
     item.href,
   ]),
 );

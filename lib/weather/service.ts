@@ -36,22 +36,34 @@ export async function fetchWeather(
 ): Promise<WeatherData> {
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m`
 
-  const res = await fetch(url, { signal })
-  if (!res.ok) throw new Error(`Weather fetch failed: ${res.status}`)
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 10_000)
 
-  const json = await res.json()
-  const current = json.current
+  // Merge external signal with timeout
+  if (signal) {
+    signal.addEventListener('abort', () => controller.abort())
+  }
 
-  const { description, icon } = getWeatherDescription(current.weather_code)
+  try {
+    const res = await fetch(url, { signal: controller.signal })
+    if (!res.ok) throw new Error(`Weather fetch failed: ${res.status}`)
 
-  return {
-    temperature: Math.round(current.temperature_2m),
-    weatherCode: current.weather_code,
-    description,
-    icon,
-    humidity: current.relative_humidity_2m,
-    windSpeed: Math.round(current.wind_speed_10m),
-    feelsLike: Math.round(current.apparent_temperature),
+    const json = await res.json()
+    const current = json.current
+
+    const { description, icon } = getWeatherDescription(current.weather_code)
+
+    return {
+      temperature: Math.round(current.temperature_2m),
+      weatherCode: current.weather_code,
+      description,
+      icon,
+      humidity: current.relative_humidity_2m,
+      windSpeed: Math.round(current.wind_speed_10m),
+      feelsLike: Math.round(current.apparent_temperature),
+    }
+  } finally {
+    clearTimeout(timeoutId)
   }
 }
 

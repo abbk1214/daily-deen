@@ -350,8 +350,8 @@ export default function SettingsPage() {
 
   /* ── Geolocation ── */
   const handleGeolocation = useCallback(async () => {
-    await detectLocation();
-    showToast("Location updated");
+    const success = await detectLocation();
+    showToast(success ? "Location updated" : "Failed to detect location");
   }, [detectLocation, showToast]);
 
   /* ── Manual coordinates ── */
@@ -939,10 +939,6 @@ export default function SettingsPage() {
                 </label>
               ))}
             </div>
-          </SettingRow>
-          <Divider />
-          <SettingRow label="Today badge" description="Highlight today's date in the calendar">
-            <Toggle checked={true} onChange={() => {}} label="Today badge" />
           </SettingRow>
         </section>
 

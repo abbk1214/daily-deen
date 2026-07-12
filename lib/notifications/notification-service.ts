@@ -14,7 +14,6 @@ import {
   setRescheduleCallback,
   clearRescheduleCallback,
 } from './scheduler'
-import { getMsUntilMidnight } from './helpers'
 
 let lastScheduleKey = ''
 
@@ -80,13 +79,8 @@ export function initializeNotificationService(
 ): () => void {
   setRescheduleCallback(onReschedule)
 
-  const midnightCheck = setInterval(() => {
-    // Re-check at midnight boundary
-  }, getMsUntilMidnight() + 60_000)
-
   return () => {
     clearRescheduleCallback()
-    clearInterval(midnightCheck)
     cancelAllNotifications()
   }
 }

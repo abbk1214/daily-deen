@@ -150,12 +150,15 @@ function hijriToIsoDateForHoliday(
     }
   }
 
-  return bestDate.toISOString().slice(0, 10)
+  return `${bestDate.getFullYear()}-${String(bestDate.getMonth() + 1).padStart(2, '0')}-${String(bestDate.getDate()).padStart(2, '0')}`
 }
 
 export function getCurrentHoliday(): HolidayResult | null {
-  const today = new Date().toISOString().slice(0, 10)
-  return getHolidayForDate(today)
+  const today = new Date()
+  const y = today.getFullYear()
+  const m = String(today.getMonth() + 1).padStart(2, '0')
+  const d = String(today.getDate()).padStart(2, '0')
+  return getHolidayForDate(`${y}-${m}-${d}`)
 }
 
 export function getNextHoliday(): {
@@ -164,18 +167,21 @@ export function getNextHoliday(): {
 } | null {
   const today = new Date()
   today.setHours(12, 0, 0, 0)
+  const todayMs = today.getTime()
 
   let nearest: { holiday: IslamicHoliday; daysUntil: number } | null = null
 
-  for (const holiday of ISLAMIC_HOLIDAYS) {
-    const testDate = new Date(today)
-    testDate.setFullYear(testDate.getFullYear() + 1)
-    const testHijri = getHijriDate(testDate)
+  // Check current Hijri year and next Hijri year
+  const currentHijri = getHijriDate(today)
+  const hijriYears = [currentHijri.year, currentHijri.year + 1]
 
-    if (holiday.month === testHijri.month && holiday.day === testHijri.day) {
-      const diffDays = Math.ceil(
-        (testDate.getTime() - today.getTime()) / 86400000,
-      )
+  for (const holiday of ISLAMIC_HOLIDAYS) {
+    for (const hy of hijriYears) {
+      const gregDate = hijriToIsoDateForHoliday(hy, holiday.month, holiday.day)
+      const holidayDate = new Date(gregDate + "T12:00:00")
+      const diffMs = holidayDate.getTime() - todayMs
+      const diffDays = Math.ceil(diffMs / 86400000)
+
       if (diffDays > 0 && (!nearest || diffDays < nearest.daysUntil)) {
         nearest = { holiday, daysUntil: diffDays }
       }

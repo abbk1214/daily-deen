@@ -1,8 +1,16 @@
 import type { Habit } from "@/lib/db";
 
-/** Returns today's date as an ISO string (YYYY-MM-DD). */
+/** Formats a Date as local YYYY-MM-DD. */
+function fmtLocal(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+/** Returns today's date as a local ISO string (YYYY-MM-DD). */
 export function getToday(): string {
-  return new Date().toISOString().split("T")[0];
+  return fmtLocal(new Date());
 }
 
 /** Converts a "HH:MM" time string to total minutes since midnight. */
@@ -39,14 +47,14 @@ export function getIncrementStep(habit: Habit): number {
 export function daysAgo(n: number): string {
   const d = new Date();
   d.setDate(d.getDate() - n);
-  return d.toISOString().split("T")[0];
+  return fmtLocal(d);
 }
 
 /** Returns the date string for N days from now. */
 export function daysFromNow(n: number): string {
   const d = new Date();
   d.setDate(d.getDate() + n);
-  return d.toISOString().split("T")[0];
+  return fmtLocal(d);
 }
 
 /** Returns the start of the week (Sunday) for a given date string. */
@@ -54,7 +62,7 @@ export function startOfWeek(dateStr: string): string {
   const d = new Date(dateStr + "T00:00:00");
   const day = d.getDay();
   d.setDate(d.getDate() - day);
-  return d.toISOString().split("T")[0];
+  return fmtLocal(d);
 }
 
 /** Returns the end of the week (Saturday) for a given date string. */
@@ -62,7 +70,7 @@ export function endOfWeek(dateStr: string): string {
   const start = startOfWeek(dateStr);
   const d = new Date(start + "T00:00:00");
   d.setDate(d.getDate() + 6);
-  return d.toISOString().split("T")[0];
+  return fmtLocal(d);
 }
 
 /** Returns the first day of the month for a given date string. */
@@ -96,7 +104,7 @@ export function dateRange(start: string, end: string): string[] {
   const d = new Date(start + "T00:00:00")
   const endD = new Date(end + "T00:00:00")
   while (d <= endD) {
-    dates.push(d.toISOString().split("T")[0])
+    dates.push(fmtLocal(d))
     d.setDate(d.getDate() + 1)
   }
   return dates

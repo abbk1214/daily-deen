@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { useSettings } from "./use-settings"
 import { getPrayerTimes, invalidateCache } from "@/lib/prayer"
 import type { PrayerTimes } from "@/lib/prayer"
@@ -77,32 +77,34 @@ export function usePrayerTimes(): UsePrayerTimesResult {
     return () => window.removeEventListener("prayer-settings-changed", onSettingsChange)
   }, [compute])
 
-  const nextPrayer = times
-    ? (() => {
-        const keys = ["fajr", "sunrise", "dhuhr", "asr", "maghrib", "isha"] as const
-        for (const key of keys) {
-          if (nowMinutes < times[key]) {
-            return {
-              name: key.charAt(0).toUpperCase() + key.slice(1),
-              minutesUntil: times[key] - nowMinutes,
-            }
-          }
-        }
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization
+  const nextPrayer = useMemo(() => {
+    if (!times) return null
+    const keys = ["fajr", "sunrise", "dhuhr", "asr", "maghrib", "isha"] as const
+    for (const key of keys) {
+      if (nowMinutes < times[key]) {
         return {
-          name: "Fajr",
-          minutesUntil: 24 * 60 - nowMinutes + times.fajr,
+          name: key.charAt(0).toUpperCase() + key.slice(1),
+          minutesUntil: times[key] - nowMinutes,
         }
-      })()
-    : null
+      }
+    }
+    return {
+      name: "Fajr",
+      minutesUntil: 24 * 60 - nowMinutes + times.fajr,
+    }
+  }, [times, nowMinutes])
+
+  const refresh = useCallback(() => {
+    invalidateCache()
+    compute()
+  }, [compute])
 
   return {
     times,
     loading,
     error,
     nextPrayer,
-    refresh: () => {
-      invalidateCache()
-      compute()
-    },
+    refresh,
   }
 }

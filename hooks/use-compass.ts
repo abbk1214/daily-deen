@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import {
   isCompassSupported,
   requestCompassPermission,
@@ -38,6 +38,7 @@ export function useCompass(smoothing?: number): UseCompassReturn {
   const startListening = useCallback(async () => {
     if (cleanupRef.current) {
       cleanupRef.current()
+      cleanupRef.current = null
     }
 
     const granted = await requestCompassPermission()
@@ -54,9 +55,21 @@ export function useCompass(smoothing?: number): UseCompassReturn {
     }
   }, [])
 
-  const compass = getCompassState(heading, isSupported)
-  compass.permissionState = permissionState
-  compass.isCalibrated = isCalibrated
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (cleanupRef.current) {
+        cleanupRef.current()
+        cleanupRef.current = null
+      }
+    }
+  }, [])
+
+  const compass: CompassState = {
+    ...getCompassState(heading, isSupported),
+    permissionState,
+    isCalibrated,
+  }
 
   return {
     compass,

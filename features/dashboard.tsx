@@ -64,8 +64,8 @@ function getGregorianDate(): string {
   });
 }
 
-function NotificationStatus() {
-  const { supported, enabled, permission } = useNotifications();
+function NotificationStatus({ computedTimes }: { computedTimes: import("@/lib/prayer").PrayerTimes | null }) {
+  const { supported, enabled, permission } = useNotifications(computedTimes);
   const { settings } = useSettings();
 
   if (!supported) return null;
@@ -126,17 +126,18 @@ export function Dashboard() {
   );
   const [showCompass, setShowCompass] = useState(false);
 
+  const today = useMemo(() => getToday(), []);
   const affirmation = useMemo(() => getTodayAffirmation(), []);
   const greeting = useMemo(() => getGreeting(), []);
   const gregorianDate = useMemo(() => getGregorianDate(), []);
 
   const hijriDate = useMemo(() => {
     try {
-      return formatHijriDate(getToday());
+      return formatHijriDate(today);
     } catch {
       return null;
     }
-  }, []);
+  }, [today]);
 
   const hasLocation =
     typeof latitude === "number" &&
@@ -149,6 +150,8 @@ export function Dashboard() {
     const result = getQiblaDirection({ latitude: latitude!, longitude: longitude! })
     return result.bearing
   }, [latitude, longitude, hasLocation])
+
+  const lastSyncTime = useMemo(() => new Date().getTime(), []);
 
   return (
     <>
@@ -205,7 +208,7 @@ export function Dashboard() {
         </div>
       </header>
 
-      <NotificationStatus />
+      <NotificationStatus computedTimes={computedTimes} />
 
       <main
         id="main"
@@ -236,7 +239,7 @@ export function Dashboard() {
             city={city}
             country={country}
             isOnline={isOnline}
-            lastSync={new Date().getTime()}
+            lastSync={lastSyncTime}
           />
         </div>
 

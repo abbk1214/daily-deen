@@ -38,6 +38,7 @@ export default function JournalPage() {
 
 
   const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const saveStatusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mountedRef = useRef(true);
   const initialLoadDoneRef = useRef(false);
   const savingRef = useRef(false);
@@ -77,6 +78,8 @@ export default function JournalPage() {
 
     return () => {
       mountedRef.current = false;
+      if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
+      if (saveStatusTimerRef.current) clearTimeout(saveStatusTimerRef.current);
     };
   }, []);
 
@@ -120,7 +123,8 @@ export default function JournalPage() {
         }
 
         // Reset saved status after 2s
-        setTimeout(() => {
+        if (saveStatusTimerRef.current) clearTimeout(saveStatusTimerRef.current);
+        saveStatusTimerRef.current = setTimeout(() => {
           if (mountedRef.current) {
             setSaveStatus("idle");
           }

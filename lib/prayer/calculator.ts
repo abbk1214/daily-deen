@@ -72,11 +72,9 @@ export function calculatePrayerTimes(input: PrayerCalculationInput): PrayerTimes
   }
 
   const asrDecl = decl
+  const asrAngleRad = Math.atan(1 / (asrFactor + Math.abs(Math.tan((latitude - asrDecl) * DEG_TO_RAD))))
   const asrHA2 =
-    (Math.sin(
-      -Math.atan(1 / (asrFactor + Math.abs(Math.tan((latitude - asrDecl) * DEG_TO_RAD)))) *
-        DEG_TO_RAD,
-    ) -
+    (Math.sin(-asrAngleRad) -
       Math.sin(latitude * DEG_TO_RAD) *
         Math.sin(asrDecl * DEG_TO_RAD)) /
     (Math.cos(latitude * DEG_TO_RAD) *

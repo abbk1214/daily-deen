@@ -3,6 +3,13 @@ import { PRAYER_NAMES } from './history-service'
 
 const ALL_PRAYERS = [...PRAYER_NAMES]
 
+function fmtLocal(d: Date): string {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
 export interface PrayerStatistics {
   totalPrayers: number
   completedCount: number
@@ -100,7 +107,7 @@ export function computeWeeklyStats(logs: PrayerLog[], weekStart: string): Weekly
   const days: DailyStats[] = []
 
   for (let i = 0; i < 7; i++) {
-    const dateStr = d.toISOString().split('T')[0]
+    const dateStr = fmtLocal(d)
     days.push(computeDailyStats(dateStr, logs))
     d.setDate(d.getDate() + 1)
   }
@@ -129,7 +136,7 @@ export function computeMonthlyStats(logs: PrayerLog[], year: number, month: numb
   const endD = new Date(lastDay + 'T00:00:00')
 
   while (d <= endD) {
-    const weekStart = d.toISOString().split('T')[0]
+    const weekStart = fmtLocal(d)
     weeks.push(computeWeeklyStats(logs, weekStart))
     d.setDate(d.getDate() + 7)
   }
@@ -173,7 +180,7 @@ export function computeWeeklyTrend(logs: PrayerLog[], weeksBack: number = 12): D
   for (let w = weeksBack - 1; w >= 0; w--) {
     const weekDate = new Date(today)
     weekDate.setDate(weekDate.getDate() - w * 7)
-    const weekStart = weekDate.toISOString().split('T')[0]
+    const weekStart = fmtLocal(weekDate)
     const weekLogs = logs.filter((l) => {
       const d = new Date(l.date + 'T00:00:00')
       const start = new Date(weekStart + 'T00:00:00')

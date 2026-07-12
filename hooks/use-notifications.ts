@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useSettings } from "./use-settings"
-import { usePrayerTimes } from "./use-prayer-times"
 import {
   getNotificationState,
   requestPermission,
@@ -12,6 +11,7 @@ import {
   registerNotificationSW,
 } from "@/lib/notifications"
 import type { PermissionStatus } from "@/lib/notifications"
+import type { PrayerTimes } from "@/lib/prayer"
 import { getToday } from "@/lib/utils"
 
 export interface UseNotificationsResult {
@@ -25,9 +25,8 @@ export interface UseNotificationsResult {
   requestPermission: () => Promise<void>
 }
 
-export function useNotifications(): UseNotificationsResult {
+export function useNotifications(times: PrayerTimes | null): UseNotificationsResult {
   const { settings } = useSettings()
-  const { times } = usePrayerTimes()
 
   const [permission, setPermission] = useState<PermissionStatus>("unsupported")
   const [supported, setSupported] = useState(false)
@@ -127,15 +126,18 @@ export function useNotifications(): UseNotificationsResult {
   ])
 
   useEffect(() => {
-    const cleanup = initializeNotificationService(() => {
+    const cleanupService = initializeNotificationService(() => {
       if (mountedRef.current) {
         scheduleToday()
       }
     })
 
-    registerNotificationSW()
+    const cleanupSW = registerNotificationSW()
 
-    return cleanup
+    return () => {
+      cleanupService()
+      cleanupSW()
+    }
   }, [scheduleToday])
 
   useEffect(() => {

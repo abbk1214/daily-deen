@@ -120,7 +120,7 @@ function cancelObsoleteNotifications(newConfig: NotificationScheduleConfig): voi
 }
 
 function buildConfigKey(config: NotificationScheduleConfig): string {
-  return `${config.date}:${config.prayerTimes.fajr}:${config.prayerTimes.dhuhr}:${config.prayerTimes.asr}:${config.prayerTimes.maghrib}:${config.prayerTimes.isha}:${config.reminderOffset}:${config.adhanSound}:${config.silent}`
+  return `${config.date}:${config.prayerTimes.fajr}:${config.prayerTimes.sunrise}:${config.prayerTimes.dhuhr}:${config.prayerTimes.asr}:${config.prayerTimes.maghrib}:${config.prayerTimes.isha}:${config.reminderOffset}:${config.adhanSound}:${config.vibrate}:${config.silent}`
 }
 
 function scheduleDay(config: NotificationScheduleConfig): number {

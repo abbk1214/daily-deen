@@ -69,10 +69,14 @@ export default function OnboardingPage() {
   const [goals, setGoals] = useState({ water: 8, exercise: 30, walking: 8000 });
   const [announcement, setAnnouncement] = useState("");
   const mountedRef = useRef(true);
+  const transitionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     mountedRef.current = true;
-    return () => { mountedRef.current = false; };
+    return () => {
+      mountedRef.current = false;
+      if (transitionTimerRef.current) clearTimeout(transitionTimerRef.current);
+    };
   }, []);
 
   const announce = useCallback((text: string) => {
@@ -82,7 +86,9 @@ export default function OnboardingPage() {
 
   const transitionTo = useCallback((next: Screen) => {
     setTransitioning(true);
-    setTimeout(() => {
+    if (transitionTimerRef.current) clearTimeout(transitionTimerRef.current);
+    transitionTimerRef.current = setTimeout(() => {
+      if (!mountedRef.current) return;
       setScreen(next);
       setTransitioning(false);
       const stepNum = next === "welcome" ? 1 : next === "location" ? 2 : 3;

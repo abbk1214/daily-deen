@@ -56,11 +56,13 @@ export const HabitSummaryCard = memo(function HabitSummaryCard({
 
   if (habits.length === 0) return null
 
+  const logMap = new Map(habitLogs.map((l) => [l.habitId, l]))
+
   return (
     <DashboardCard title="Habits" ariaLabel="Habit summary">
       <div className="flex flex-col gap-3">
         {habits.map((habit) => {
-          const log = habitLogs.find((l) => l.habitId === habit.id)
+          const log = habit.id != null ? logMap.get(habit.id) : undefined
           const value = log?.value ?? 0
           const progress = Math.min(100, (value / habit.target) * 100)
           const isComplete = value >= habit.target

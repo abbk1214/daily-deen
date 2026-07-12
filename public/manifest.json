@@ -4,8 +4,12 @@
   "description": "Your daily Islamic companion - prayer times, habits, and journaling",
   "start_url": "/",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#EFE6D8",
   "theme_color": "#1B2430",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["lifestyle", "education"],
   "icons": [
     {
       "src": "/icons/icon-192x192.png",
@@ -17,7 +21,7 @@
       "src": "/icons/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "maskable"
+      "purpose": "any maskable"
     }
   ]
 }

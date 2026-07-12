@@ -27,41 +27,65 @@ export const PrayerDetails = memo(function PrayerDetails({ date, logs, scheduled
   const [noteText, setNoteText] = useState('')
 
   const handleMarkCompleted = useCallback(async (prayer: string) => {
-    const scheduled = scheduledTimes?.[prayer]
-    const timeStr = scheduled !== undefined ? formatTimeFromMinutes(scheduled) : ''
-    await markCompleted(date, prayer, timeStr)
-    onUpdate()
+    try {
+      const scheduled = scheduledTimes?.[prayer]
+      const timeStr = scheduled !== undefined ? formatTimeFromMinutes(scheduled) : ''
+      await markCompleted(date, prayer, timeStr)
+      onUpdate()
+    } catch (err) {
+      console.error("Failed to mark prayer completed:", err)
+    }
   }, [date, scheduledTimes, onUpdate])
 
   const handleMarkMissed = useCallback(async (prayer: string) => {
-    await markMissed(date, prayer)
-    onUpdate()
+    try {
+      await markMissed(date, prayer)
+      onUpdate()
+    } catch (err) {
+      console.error("Failed to mark prayer missed:", err)
+    }
   }, [date, onUpdate])
 
   const handleMarkQaza = useCallback(async (prayer: string) => {
-    const scheduled = scheduledTimes?.[prayer]
-    const timeStr = scheduled !== undefined ? formatTimeFromMinutes(scheduled) : ''
-    await markQaza(date, prayer, timeStr)
-    onUpdate()
+    try {
+      const scheduled = scheduledTimes?.[prayer]
+      const timeStr = scheduled !== undefined ? formatTimeFromMinutes(scheduled) : ''
+      await markQaza(date, prayer, timeStr)
+      onUpdate()
+    } catch (err) {
+      console.error("Failed to mark prayer qaza:", err)
+    }
   }, [date, scheduledTimes, onUpdate])
 
   const handleMarkJamaah = useCallback(async (prayer: string) => {
-    const scheduled = scheduledTimes?.[prayer]
-    const timeStr = scheduled !== undefined ? formatTimeFromMinutes(scheduled) : ''
-    await markJamaah(date, prayer, timeStr)
-    onUpdate()
+    try {
+      const scheduled = scheduledTimes?.[prayer]
+      const timeStr = scheduled !== undefined ? formatTimeFromMinutes(scheduled) : ''
+      await markJamaah(date, prayer, timeStr)
+      onUpdate()
+    } catch (err) {
+      console.error("Failed to mark prayer jamaah:", err)
+    }
   }, [date, scheduledTimes, onUpdate])
 
   const handleSaveNote = useCallback(async (prayer: string) => {
-    await addNote(date, prayer, noteText)
-    setEditingNote(null)
-    setNoteText('')
-    onUpdate()
+    try {
+      await addNote(date, prayer, noteText)
+      setEditingNote(null)
+      setNoteText('')
+      onUpdate()
+    } catch (err) {
+      console.error("Failed to save note:", err)
+    }
   }, [date, noteText, onUpdate])
 
   const handleRemoveNote = useCallback(async (prayer: string) => {
-    await removeNote(date, prayer)
-    onUpdate()
+    try {
+      await removeNote(date, prayer)
+      onUpdate()
+    } catch (err) {
+      console.error("Failed to remove note:", err)
+    }
   }, [date, onUpdate])
 
   return (

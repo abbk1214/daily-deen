@@ -84,7 +84,7 @@ export function useNavigation(): UseNavigationReturn {
     const mql = window.matchMedia("(min-width: 1024px)");
 
     // Defer initial read to avoid synchronous setState in effect
-    requestAnimationFrame(() => {
+    const rafId = requestAnimationFrame(() => {
       setIsDesktop(mql.matches);
     });
 
@@ -97,7 +97,10 @@ export function useNavigation(): UseNavigationReturn {
     };
 
     mql.addEventListener("change", onChange);
-    return () => mql.removeEventListener("change", onChange);
+    return () => {
+      cancelAnimationFrame(rafId);
+      mql.removeEventListener("change", onChange);
+    };
   }, []);
 
   const toggleSidebar = useCallback(() => {

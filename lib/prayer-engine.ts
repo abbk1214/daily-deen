@@ -75,7 +75,7 @@ function getMethod(key: string): () => CalculationParameters {
 }
 
 function getMadhab(school: string): typeof Madhab[keyof typeof Madhab] {
-  return school === 'Hanafi' ? Madhab.Hanafi : Madhab.Shafi
+  return school.toLowerCase() === 'hanafi' ? Madhab.Hanafi : Madhab.Shafi
 }
 
 function buildParams(input: PrayerEngineInput): CalculationParameters {

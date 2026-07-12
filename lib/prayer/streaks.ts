@@ -2,6 +2,13 @@ import type { PrayerLog } from '../db'
 import { PRAYER_NAMES } from './history-service'
 import { getToday, daysAgo } from '../utils'
 
+function fmtLocal(d: Date): string {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
 const ALL_PRAYERS = [...PRAYER_NAMES]
 
 export interface StreakInfo {
@@ -33,24 +40,27 @@ export function computeStreaks(logs: PrayerLog[]): StreakInfo {
   let checkDate = today
 
   while (true) {
-    const dayLogs = logs.filter((l) => l.date === checkDate)
-    if (dayLogs.length === 0 && checkDate !== today) break
-    if (dayLogs.length > 0 && !isDayComplete(checkDate, logs)) break
-    if (dayLogs.length > 0) current++
+    if (checkDate !== today) {
+      const dayLogs = logs.filter((l) => l.date === checkDate)
+      if (dayLogs.length === 0) break
+      if (!isDayComplete(checkDate, logs)) break
+    }
+    if (isDayComplete(checkDate, logs)) current++
     checkDate = daysAgo(current)
+    if (current > 365) break
   }
 
   let longest = 0
   let streak = 0
   for (let i = 0; i < dates.length; i++) {
     if (isDayComplete(dates[i], logs)) {
-      if (i === 0 || dates[i] === daysAgo(0)) {
+      if (i === 0) {
         streak++
       } else {
         const prevDate = new Date(dates[i] + 'T00:00:00')
         prevDate.setDate(prevDate.getDate() - 1)
-        const prevStr = prevDate.toISOString().split('T')[0]
-        if (dates.includes(prevStr) && isDayComplete(prevStr, logs)) {
+        const prevStr = fmtLocal(prevDate)
+        if (isDayComplete(prevStr, logs)) {
           streak++
         } else {
           streak = 1
@@ -79,7 +89,7 @@ export function computeStreaks(logs: PrayerLog[]): StreakInfo {
       weeklyStreak++
       const d = new Date(weekCheck + 'T00:00:00')
       d.setDate(d.getDate() - 7)
-      weekCheck = d.toISOString().split('T')[0]
+      weekCheck = fmtLocal(d)
     } else {
       break
     }
@@ -101,7 +111,7 @@ export function computeStreaks(logs: PrayerLog[]): StreakInfo {
     if (allComplete && monthDates.size === daysInMonth) {
       monthlyStreak++
       d.setMonth(d.getMonth() - 1)
-      monthCheck = d.toISOString().split('T')[0]
+      monthCheck = fmtLocal(d)
     } else {
       break
     }
@@ -111,7 +121,7 @@ export function computeStreaks(logs: PrayerLog[]): StreakInfo {
   for (let i = 0; i < 52; i++) {
     const d = new Date(today + 'T00:00:00')
     d.setDate(d.getDate() - i * 7)
-    const weekStart = d.toISOString().split('T')[0]
+    const weekStart = fmtLocal(d)
     const weekLogs = logs.filter((l) => {
       const ld = new Date(l.date + 'T00:00:00')
       const start = new Date(weekStart + 'T00:00:00')
@@ -181,7 +191,7 @@ export function getWeeklyProgress(logs: PrayerLog[]): { completed: number; total
   for (let i = 0; i < 7; i++) {
     const d = new Date(start)
     d.setDate(d.getDate() + i)
-    const dateStr = d.toISOString().split('T')[0]
+    const dateStr = fmtLocal(d)
     if (dateStr > today) break
     const dayLogs = logs.filter((l) => l.date === dateStr)
     completed += dayLogs.filter((l) => l.completed).length

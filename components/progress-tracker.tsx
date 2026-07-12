@@ -58,11 +58,13 @@ export const ProgressTracker = memo(function ProgressTracker({
     return null;
   }
 
+  const logMap = new Map(habitLogs.map((l) => [l.habitId, l]));
+
   return (
     <section aria-label="Daily progress">
       <div className="flex flex-col gap-4">
         {habits.map((habit) => {
-          const log = habitLogs.find((l) => l.habitId === habit.id);
+          const log = habit.id != null ? logMap.get(habit.id) : undefined;
           const value = log?.value ?? 0;
           const progress = Math.min(100, (value / habit.target) * 100);
           const isComplete = value >= habit.target;
@@ -133,7 +135,7 @@ export const ProgressTracker = memo(function ProgressTracker({
 
               <div className="flex items-center justify-between">
                 <button
-                  onClick={() => onDecrement(habit.id!, step)}
+                  onClick={() => habit.id != null && onDecrement(habit.id, step)}
                   disabled={value <= 0}
                   aria-label={`Decrement ${habit.name}`}
                   className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground disabled:text-border disabled:opacity-50"
@@ -153,7 +155,7 @@ export const ProgressTracker = memo(function ProgressTracker({
                   {"·".repeat(20)}
                 </span>
                 <button
-                  onClick={() => onIncrement(habit.id!, step)}
+                  onClick={() => habit.id != null && onIncrement(habit.id, step)}
                   disabled={isComplete}
                   aria-label={`Increment ${habit.name}`}
                   className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground disabled:text-border disabled:opacity-50"

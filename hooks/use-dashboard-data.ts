@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import {
   type Prayer,
   type Habit,
@@ -26,14 +26,14 @@ export function useDashboardData(): DashboardData & {
   decrementHabit: (habitId: number, step: number) => Promise<void>;
   refreshPrayers: () => void;
 } {
-  const today = getToday();
+  const [currentDate, setCurrentDate] = useState(getToday);
 
   const {
     habits,
     habitLogs,
     increment,
     decrement,
-  } = useHabits(today);
+  } = useHabits(currentDate);
 
   const {
     times: computedTimes,
@@ -61,18 +61,32 @@ export function useDashboardData(): DashboardData & {
     return () => {
       mountedRef.current = false;
     };
-  }, []);
+  }, [currentDate]);
 
-  const mergedPrayers = prayers && computedTimes
-    ? {
-        ...prayers,
-        fajr: formatTimeFromMinutes(computedTimes.fajr),
-        dhuhr: formatTimeFromMinutes(computedTimes.dhuhr),
-        asr: formatTimeFromMinutes(computedTimes.asr),
-        maghrib: formatTimeFromMinutes(computedTimes.maghrib),
-        isha: formatTimeFromMinutes(computedTimes.isha),
+  // Refresh when date changes (e.g., past midnight)
+  useEffect(() => {
+    const checkDate = () => {
+      const today = getToday();
+      if (today !== currentDate) {
+        setCurrentDate(today);
       }
-    : prayers;
+    };
+
+    const interval = setInterval(checkDate, 60_000);
+    return () => clearInterval(interval);
+  }, [currentDate]);
+
+  const mergedPrayers = useMemo(() => {
+    if (!prayers || !computedTimes) return prayers;
+    return {
+      ...prayers,
+      fajr: formatTimeFromMinutes(computedTimes.fajr),
+      dhuhr: formatTimeFromMinutes(computedTimes.dhuhr),
+      asr: formatTimeFromMinutes(computedTimes.asr),
+      maghrib: formatTimeFromMinutes(computedTimes.maghrib),
+      isha: formatTimeFromMinutes(computedTimes.isha),
+    };
+  }, [prayers, computedTimes]);
 
   // Seed computed prayer times to IndexedDB for offline persistence
   useEffect(() => {
@@ -83,7 +97,7 @@ export function useDashboardData(): DashboardData & {
       asr: formatTimeFromMinutes(computedTimes.asr),
       maghrib: formatTimeFromMinutes(computedTimes.maghrib),
       isha: formatTimeFromMinutes(computedTimes.isha),
-    }).catch(() => {});
+    }).catch((err) => console.error("Failed to seed prayer data:", err));
   }, [computedTimes]);
 
   return {

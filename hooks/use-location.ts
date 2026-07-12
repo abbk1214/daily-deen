@@ -58,10 +58,10 @@ export function useLocation() {
     })
   }, [])
 
-  const detectLocation = useCallback(async () => {
+  const detectLocation = useCallback(async (): Promise<boolean> => {
     if (!isOnline) {
       setError("Offline — cannot detect location")
-      return
+      return false
     }
 
     setLoading(true)
@@ -77,7 +77,7 @@ export function useLocation() {
         signal: abortRef.current.signal,
       })
 
-      if (!mountedRef.current) return
+      if (!mountedRef.current) return true
       setPermission("granted")
 
       const geoResult = await reverseGeocode(
@@ -85,7 +85,7 @@ export function useLocation() {
         abortRef.current.signal,
       )
 
-      if (!mountedRef.current) return
+      if (!mountedRef.current) return true
 
       await update({
         latitude: geo.coordinates.latitude,
@@ -108,13 +108,15 @@ export function useLocation() {
       })
 
       invalidateCache()
+      return true
     } catch (err: unknown) {
-      if (!mountedRef.current) return
-      if (err instanceof Error && err.name === "AbortError") return
+      if (!mountedRef.current) return false
+      if (err instanceof Error && err.name === "AbortError") return false
 
       const msg = err instanceof Error ? err.message : "Failed to detect location"
       setError(msg)
       if (msg.includes("denied")) setPermission("denied")
+      return false
     } finally {
       if (mountedRef.current) setLoading(false)
     }

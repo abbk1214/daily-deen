@@ -9,7 +9,8 @@ export function isNotificationSupported(): boolean {
 
 export function getPermissionStatus(): PermissionStatus {
   if (!isNotificationSupported()) return 'unsupported'
-  return Notification.permission as PermissionStatus
+  if (Notification.permission === 'default') return 'prompt'
+  return Notification.permission
 }
 
 export async function requestNotificationPermission(): Promise<Result<PermissionStatus>> {

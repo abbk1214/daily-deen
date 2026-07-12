@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useCallback, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { Check } from "lucide-react";
 import { formatValue, getIncrementStep } from "@/lib/utils";
 import type { Habit, HabitLog } from "@/lib/db";
@@ -41,6 +41,11 @@ export const HabitRow = memo(function HabitRow({ habit, log, onIncrement, onDecr
     setIsAccelerated(false);
   }, []);
 
+  // Cleanup timers on unmount
+  useEffect(() => {
+    return () => clearAllTimers();
+  }, [clearAllTimers]);
+
   const handleIncrementStart = useCallback(() => {
     setIsPressed("inc");
     onIncrement(habitId, baseStep);
@@ -80,7 +85,7 @@ export const HabitRow = memo(function HabitRow({ habit, log, onIncrement, onDecr
       if (e.key === "+" || (e.key === "=" && e.shiftKey)) {
         e.preventDefault();
         onIncrement(habitId, baseStep);
-      } else if (e.key === "-" || (e.key === "-" && !e.shiftKey)) {
+      } else if (e.key === "-") {
         e.preventDefault();
         onDecrement(habitId, baseStep);
       }

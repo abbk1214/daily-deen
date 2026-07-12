@@ -8,7 +8,7 @@ export function useOnlineStatus(): boolean {
 
   useEffect(() => {
     // Defer initial read to avoid synchronous setState in effect
-    requestAnimationFrame(() => {
+    const rafId = requestAnimationFrame(() => {
       setIsOnline(navigator.onLine);
     });
 
@@ -19,6 +19,7 @@ export function useOnlineStatus(): boolean {
     window.addEventListener("offline", handleOffline);
 
     return () => {
+      cancelAnimationFrame(rafId);
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
     };
