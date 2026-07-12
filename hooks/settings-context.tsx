@@ -5,6 +5,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type ReactNode,
@@ -223,20 +224,33 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     if (mountedRef.current) setSettings(fresh);
   }, [flushDebounce]);
 
+  const value = useMemo<UseSettingsReturn>(
+    () => ({
+      settings,
+      loading,
+      update,
+      updateImmediate,
+      reset,
+      refresh,
+      exportData,
+      importData,
+      clearAll,
+    }),
+    [
+      settings,
+      loading,
+      update,
+      updateImmediate,
+      reset,
+      refresh,
+      exportData,
+      importData,
+      clearAll,
+    ],
+  );
+
   return (
-    <SettingsContext.Provider
-      value={{
-        settings,
-        loading,
-        update,
-        updateImmediate,
-        reset,
-        refresh,
-        exportData,
-        importData,
-        clearAll,
-      }}
-    >
+    <SettingsContext.Provider value={value}>
       {children}
     </SettingsContext.Provider>
   );

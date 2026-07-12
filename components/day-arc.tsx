@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useEffect, useState } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
 import { timeToMinutes, formatTimeFromMinutes } from "@/lib/utils";
 import { formatHijriDate } from "@/lib/hijri-date";
 import type { Prayer } from "@/lib/db";
@@ -30,6 +30,33 @@ export const DayArc = memo(function DayArc({ prayers, loading }: DayArcProps) {
     }, 60_000);
     return () => clearInterval(interval);
   }, []);
+
+  const timeData = useMemo(() => {
+    const hours = Math.floor(now / 60);
+    const minutes = now % 60;
+    const ampm = hours >= 12 ? "PM" : "AM";
+    const displayHours = hours % 12 || 12;
+    return {
+      timeString: `${displayHours}:${minutes.toString().padStart(2, "0")} ${ampm}`,
+      isoString: new Date().toISOString(),
+    };
+  }, [now]);
+
+  const dateKey = useMemo(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+  }, [now]);
+
+  const hijriDate = useMemo(() => getHijriDateString(), [dateKey]);
+  const gregorianDate = useMemo(
+    () =>
+      new Date().toLocaleDateString("en-US", {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+      }),
+    [dateKey],
+  );
 
   if (loading || !prayers) {
     return (
@@ -88,20 +115,6 @@ export const DayArc = memo(function DayArc({ prayers, loading }: DayArcProps) {
 
   const currentPrayerName = getCurrentPrayerName(now, prayerTimes);
 
-  const nowTime = new Date();
-  const hours = nowTime.getHours();
-  const minutes = nowTime.getMinutes();
-  const ampm = hours >= 12 ? "PM" : "AM";
-  const displayHours = hours % 12 || 12;
-  const timeString = `${displayHours}:${minutes.toString().padStart(2, "0")} ${ampm}`;
-
-  const hijriDate = getHijriDateString();
-  const gregorianDate = nowTime.toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-  });
-
   return (
     <section
       className="rounded-lg border border-border bg-card"
@@ -109,7 +122,7 @@ export const DayArc = memo(function DayArc({ prayers, loading }: DayArcProps) {
         padding: "var(--space-8) var(--space-6)",
         boxShadow: "var(--shadow-xs)",
       }}
-      aria-label={`Prayer times arc, currently ${timeString}`}
+      aria-label={`Prayer times arc, currently ${timeData.timeString}`}
     >
       <div className="flex flex-col items-center gap-4">
         {currentPrayerName && (
@@ -123,7 +136,7 @@ export const DayArc = memo(function DayArc({ prayers, loading }: DayArcProps) {
 
         <svg
           role="img"
-          aria-label={`Prayer times arc, currently ${timeString}`}
+      aria-label={`Prayer times arc, currently ${timeData.timeString}`}
           viewBox="0 0 200 110"
           className="w-full max-w-xs"
           style={{ height: "clamp(100px, 20vw, 160px)" }}
@@ -187,9 +200,9 @@ export const DayArc = memo(function DayArc({ prayers, loading }: DayArcProps) {
               fontFamily: "var(--font-mono)",
               fontWeight: 500,
             }}
-            dateTime={nowTime.toISOString()}
+            dateTime={timeData.isoString}
           >
-            {timeString}
+            {timeData.timeString}
           </time>
           <p
             className="text-muted-foreground"
