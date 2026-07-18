@@ -2,7 +2,6 @@
 
 import { memo } from "react"
 import { Clock, Check } from "lucide-react"
-import { DashboardCard } from "./dashboard-card"
 import type { PrayerTimes } from "@/lib/prayer"
 import type { Prayer } from "@/lib/db"
 
@@ -27,7 +26,6 @@ const PRAYER_DISPLAY: Record<string, string> = {
   asr: "Asr",
   maghrib: "Maghrib",
   isha: "Isha",
-  Sunrise: "Sunrise",
 }
 
 export const NextPrayerCard = memo(function NextPrayerCard({
@@ -38,51 +36,52 @@ export const NextPrayerCard = memo(function NextPrayerCard({
 }: NextPrayerCardProps) {
   if (loading) {
     return (
-      <DashboardCard title="Next Prayer" ariaLabel="Next prayer loading">
+      <div className="rounded-2xl border border-border bg-card p-5 animate-pulse">
         <div className="flex items-center gap-3">
-          <div className="h-12 w-12 animate-pulse rounded-lg bg-muted" />
+          <div className="h-12 w-12 animate-pulse rounded-full bg-muted" />
           <div className="flex flex-col gap-1.5">
             <div className="h-7 w-20 animate-pulse rounded bg-muted" />
             <div className="h-4 w-28 animate-pulse rounded bg-muted" />
           </div>
         </div>
-      </DashboardCard>
+      </div>
     )
   }
 
   if (!nextPrayer || !computedTimes) return null
 
   return (
-    <DashboardCard title="Next Prayer" ariaLabel={`Next prayer: ${nextPrayer.name} in ${formatCountdown(nextPrayer.minutesUntil)}`}>
-      <div className="flex items-center gap-3">
+    <div className="rounded-2xl border border-border bg-card p-5">
+      {/* Main info */}
+      <div className="flex items-center gap-4">
         <div
-          className="flex items-center justify-center rounded-lg"
+          className="flex items-center justify-center rounded-full"
           style={{
             width: 48,
             height: 48,
-            backgroundColor: "var(--dd-lantern-gold)",
-            color: "var(--primary-foreground)",
+            background: "var(--muted)",
+            color: "var(--foreground)",
           }}
         >
-          <Clock size={24} strokeWidth={1.5} />
+          <Clock size={22} strokeWidth={1.5} />
         </div>
-        <div className="flex flex-col">
+        <div>
           <span
-            className="font-display text-foreground"
+            className="text-foreground"
             style={{
               fontFamily: "var(--font-display)",
-              fontSize: "var(--text-h3)",
+              fontSize: "var(--text-h4)",
               fontWeight: 600,
-              lineHeight: "var(--leading-tight)",
+              lineHeight: 1.1,
             }}
           >
             {nextPrayer.name}
           </span>
           <span
-            className="text-muted-foreground font-mono"
+            className="text-muted-foreground block"
             style={{
               fontSize: "var(--text-body-sm)",
-              fontFamily: "var(--font-mono)",
+              marginTop: "2px",
             }}
           >
             in {formatCountdown(nextPrayer.minutesUntil)}
@@ -90,51 +89,49 @@ export const NextPrayerCard = memo(function NextPrayerCard({
         </div>
       </div>
 
-      {computedTimes && (
-        <div
-          className="mt-4 flex gap-2 overflow-x-auto"
-          role="list"
-          aria-label="Prayer schedule"
-          style={{ scrollbarWidth: "none" }}
-        >
-          {PRAYER_KEYS.map((key) => {
-            const timeMinutes = computedTimes[key]
-            const h = Math.floor(timeMinutes / 60)
-            const m = timeMinutes % 60
-            const displayH = h % 12 || 12
-            const timeStr = `${displayH}:${String(m).padStart(2, "0")}`
-            const isNext = nextPrayer.name.toLowerCase() === key
-            const isCompleted = prayers?.completed[key] ?? false
+      {/* Prayer schedule — compact chips */}
+      <div
+        className="flex gap-2 overflow-x-auto"
+        role="list"
+        aria-label="Prayer schedule"
+        style={{ marginTop: "var(--space-4)", scrollbarWidth: "none" }}
+      >
+        {PRAYER_KEYS.map((key) => {
+          const timeMinutes = computedTimes[key]
+          const h = Math.floor(timeMinutes / 60)
+          const m = timeMinutes % 60
+          const displayH = h % 12 || 12
+          const timeStr = `${displayH}:${String(m).padStart(2, "0")}`
+          const isNext = nextPrayer.name.toLowerCase() === key
+          const isCompleted = prayers?.completed[key] ?? false
 
-            return (
-              <div
-                key={key}
-                role="listitem"
-                className="flex flex-col items-center gap-1 rounded-md px-2.5 py-1.5 shrink-0"
+          return (
+            <div
+              key={key}
+              role="listitem"
+              className="flex flex-col items-center rounded-xl px-3 py-2 shrink-0"
+              style={{
+                minWidth: 56,
+                background: isNext ? "var(--foreground)" : "var(--muted)",
+                color: isNext ? "var(--background)" : isCompleted ? "var(--dd-dusk-teal)" : "var(--foreground)",
+              }}
+            >
+              <span style={{ fontSize: "10px", fontWeight: 500, letterSpacing: "0.02em" }}>
+                {PRAYER_DISPLAY[key]}
+              </span>
+              <span
                 style={{
-                  minWidth: 56,
-                  backgroundColor: isNext ? "var(--dd-lantern-gold)" : isCompleted ? "var(--dd-quiet-sage)" : "var(--muted)",
-                  color: isNext || isCompleted ? "var(--primary-foreground)" : "var(--foreground)",
+                  fontSize: "var(--text-caption)",
+                  fontWeight: 600,
+                  marginTop: "2px",
                 }}
               >
-                <span style={{ fontSize: "var(--text-caption)", fontWeight: 500 }}>
-                  {PRAYER_DISPLAY[key] ?? key}
-                </span>
-                <span
-                  className="font-mono"
-                  style={{
-                    fontSize: "var(--text-caption)",
-                    fontFamily: "var(--font-mono)",
-                    fontWeight: 600,
-                  }}
-                >
-                  {isCompleted ? <Check size={12} strokeWidth={2.5} /> : timeStr}
-                </span>
-              </div>
-            )
-          })}
-        </div>
-      )}
-    </DashboardCard>
+                {isCompleted ? <Check size={12} strokeWidth={2.5} /> : timeStr}
+              </span>
+            </div>
+          )
+        })}
+      </div>
+    </div>
   )
 })

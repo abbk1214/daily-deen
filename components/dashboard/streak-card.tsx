@@ -4,12 +4,14 @@ import { memo, useEffect, useRef, useState } from "react"
 import { Flame, Trophy, Target } from "lucide-react"
 import { DashboardCard } from "./dashboard-card"
 import { computeStreaks, getWeeklyProgress } from "@/lib/prayer/streaks"
+import { getToday } from "@/lib/utils"
 
 interface StreakCardProps {
   loading: boolean
+  refreshKey?: number
 }
 
-export const StreakCard = memo(function StreakCard({ loading }: StreakCardProps) {
+export const StreakCard = memo(function StreakCard({ loading, refreshKey }: StreakCardProps) {
   const [streaks, setStreaks] = useState<{
     current: number
     longest: number
@@ -24,7 +26,7 @@ export const StreakCard = memo(function StreakCard({ loading }: StreakCardProps)
         const { getHistory } = await import("@/lib/prayer/history-service")
         const year = new Date().getFullYear()
         const start = `${year}-01-01`
-        const end = new Date().toISOString().split("T")[0]
+        const end = getToday()
         const logs = await getHistory(start, end)
         if (!mountedRef.current) return
         const s = computeStreaks(logs)
@@ -40,7 +42,7 @@ export const StreakCard = memo(function StreakCard({ loading }: StreakCardProps)
     }
     load()
     return () => { mountedRef.current = false }
-  }, [])
+  }, [refreshKey])
 
   if (loading && !streaks) {
     return (

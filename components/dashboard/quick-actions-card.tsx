@@ -34,9 +34,7 @@ export const QuickActionsCard = memo(function QuickActionsCard({
     {
       icon: Compass,
       label: "Qibla",
-      onClick: () => {
-        document.querySelector<HTMLButtonElement>("[aria-label='Qibla compass']")?.click()
-      },
+      onClick: () => router.push("/compass"),
       color: "var(--dd-lantern-gold)",
     },
     {

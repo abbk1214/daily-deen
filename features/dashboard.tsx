@@ -1,35 +1,27 @@
 "use client";
 
-import { lazy, Suspense, useMemo, useState } from "react";
-import { Bell, BellOff } from "lucide-react";
+import { memo, useMemo, useEffect, useState } from "react";
+import Link from "next/link";
+import { BookOpen, ChevronRight, ArrowRight } from "lucide-react";
 import { useDashboardData } from "@/hooks/use-dashboard-data";
 import { useOnlineStatus } from "@/hooks/use-online-status";
-import { useNotifications } from "@/hooks/use-notifications";
 import { useSettings } from "@/hooks/use-settings";
-import { useLocation } from "@/hooks/use-location";
-import { useWeather } from "@/hooks/use-weather";
-import { DayArc } from "@/components/day-arc";
-import { ProgressTracker } from "@/components/progress-tracker";
-import { PrayerStatus } from "@/components/prayer-status";
 import { getToday } from "@/lib/utils";
 import { formatHijriDate } from "@/lib/hijri-date";
-import {
-  DateHeader,
-  NextPrayerCard,
-  StreakCard,
-  CompletionCard,
-  HabitSummaryCard,
-  WeatherCard,
-  QiblaCard,
-  QuickActionsCard,
-  JournalReminderCard,
-  QuranReminderCard,
-} from "@/components/dashboard";
-import { getQiblaDirection } from "@/lib/qibla";
-
-const QiblaCompass = lazy(() =>
-  import("@/components/qibla/compass").then((m) => ({ default: m.CompassWidget }))
-);
+import { DateHeader, NextPrayerCard } from "@/components/dashboard";
+import { getLastReadSurah } from "@/lib/db";
+import { SURAH_LIST } from "@/lib/quran/data";
+import { AdhkarTracker } from "@/components/adhkar-tracker";
+import { DashboardSkeleton } from "@/components/skeleton";
+import { WeatherWidget } from "@/components/weather-widget";
+import { DailyQuote } from "@/components/daily-quote";
+import { PrayerCheckIn } from "@/components/prayer-checkin";
+import { StreakCard } from "@/components/dashboard/streak-card";
+import { TodayHabits } from "@/components/dashboard/today-habits";
+import { JournalPrompt } from "@/components/dashboard/journal-prompt";
+import { WeeklySummary } from "@/components/dashboard/weekly-summary";
+import { HealthSummary } from "@/components/dashboard/health-summary";
+import { CompanionCard } from "@/components/companion/companion-card";
 
 const AFFIRMATIONS = [
   { text: "And He found you lost and guided.", source: "Quran 93:7" },
@@ -48,11 +40,10 @@ function getTodayAffirmation() {
   return AFFIRMATIONS[dayOfYear % AFFIRMATIONS.length];
 }
 
-function getGreeting(): string {
+function getGreeting(name?: string): string {
   const hour = new Date().getHours();
-  if (hour < 12) return "Good morning";
-  if (hour < 17) return "Good afternoon";
-  return "Good evening";
+  const timeGreeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+  return name ? `${timeGreeting}, ${name}` : timeGreeting;
 }
 
 function getGregorianDate(): string {
@@ -60,51 +51,41 @@ function getGregorianDate(): string {
     weekday: "long",
     month: "long",
     day: "numeric",
-    year: "numeric",
   });
 }
 
-function NotificationStatus({ computedTimes }: { computedTimes: import("@/lib/prayer").PrayerTimes | null }) {
-  const { supported, enabled, permission } = useNotifications(computedTimes);
-  const { settings } = useSettings();
+const ContinueReading = memo(function ContinueReading() {
+  const [lastRead, setLastRead] = useState<{ surahNumber: number; ayahNumber: number } | null>(null);
 
-  if (!supported) return null;
+  useEffect(() => {
+    getLastReadSurah().then(setLastRead);
+  }, []);
 
-  if (permission === "denied") {
-    return (
-      <div
-        role="status"
-        className="flex items-center justify-center gap-2 bg-muted text-muted-foreground"
-        style={{
-          height: "var(--space-10)",
-          fontSize: "var(--text-body-sm)",
-          fontWeight: 500,
-        }}
-      >
-        <BellOff size={16} strokeWidth={1.5} />
-        Notifications are disabled in your browser.
-      </div>
-    );
-  }
+  if (!lastRead) return null;
 
-  if (!enabled || !settings.notificationsEnabled) return null;
+  const surah = SURAH_LIST.find((s) => s.number === lastRead.surahNumber);
+  if (!surah) return null;
 
   return (
-    <div
-      role="status"
-      aria-live="polite"
-      className="flex items-center justify-center gap-2 bg-dusk-teal/10 text-dusk-teal"
-      style={{
-        height: "var(--space-10)",
-        fontSize: "var(--text-body-sm)",
-        fontWeight: 500,
-      }}
+    <Link
+      href={`/quran/${lastRead.surahNumber}?ayah=${lastRead.ayahNumber}`}
+      className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4 transition-colors hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
     >
-      <Bell size={16} strokeWidth={1.5} />
-      Notifications Enabled — Reminder: {settings.reminderOffset} min before
-    </div>
+      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-dusk-teal/10">
+        <BookOpen size={20} className="text-dusk-teal" strokeWidth={1.5} />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-foreground" style={{ fontSize: "var(--text-body-sm)", fontWeight: 500 }}>
+          Continue Reading
+        </p>
+        <p className="text-muted-foreground truncate" style={{ fontSize: "var(--text-caption)" }}>
+          {surah.englishName} — Ayah {lastRead.ayahNumber}
+        </p>
+      </div>
+      <ChevronRight size={16} className="text-muted-foreground flex-shrink-0" />
+    </Link>
   );
-}
+});
 
 export function Dashboard() {
   const {
@@ -113,24 +94,18 @@ export function Dashboard() {
     habits,
     habitLogs,
     loading,
-    incrementHabit,
-    decrementHabit,
     nextPrayer,
-    refreshPrayers,
+    incrementHabit,
   } = useDashboardData();
   const isOnline = useOnlineStatus();
-  const { latitude, longitude, city, country, detectLocation } = useLocation();
-  const { weather } = useWeather(
-    typeof latitude === "number" ? latitude : undefined,
-    typeof longitude === "number" ? longitude : undefined,
-  );
-  const [showCompass, setShowCompass] = useState(false);
+  const { settings } = useSettings();
+  const [streakRefreshKey, setStreakRefreshKey] = useState(0);
 
   const today = useMemo(() => getToday(), []);
   const affirmation = useMemo(() => getTodayAffirmation(), []);
-  const greeting = useMemo(() => getGreeting(), []);
+  const greeting = useMemo(() => getGreeting(settings.name || undefined), [settings.name]);
   const gregorianDate = useMemo(() => getGregorianDate(), []);
-
+  const [lastSyncTime] = useState(() => Date.now());
   const hijriDate = useMemo(() => {
     try {
       return formatHijriDate(today);
@@ -139,24 +114,39 @@ export function Dashboard() {
     }
   }, [today]);
 
-  const hasLocation =
-    typeof latitude === "number" &&
-    typeof longitude === "number" &&
-    !isNaN(latitude) &&
-    !isNaN(longitude);
-
-  const qiblaBearing = useMemo(() => {
-    if (!hasLocation) return null
-    const result = getQiblaDirection({ latitude: latitude!, longitude: longitude! })
-    return result.bearing
-  }, [latitude, longitude, hasLocation])
-
-  const lastSyncTime = useMemo(() => new Date().getTime(), []);
+  if (loading) {
+    return (
+      <>
+        <header
+          className="sticky top-0 z-30 flex items-center border-b border-border bg-background"
+          style={{
+            height: "var(--space-12)",
+            padding: "var(--space-3) var(--space-5)",
+          }}
+        >
+          <h1
+            className="font-display text-foreground"
+            style={{
+              fontFamily: "var(--font-display)",
+              fontSize: "var(--text-h4)",
+              fontWeight: 600,
+              letterSpacing: "-0.01em",
+            }}
+          >
+            Daily Deen
+          </h1>
+        </header>
+        <main id="main" aria-busy="true" aria-label="Dashboard loading">
+          <DashboardSkeleton />
+        </main>
+      </>
+    );
+  }
 
   return (
     <>
       <header
-        className="sticky top-0 z-30 flex items-center border-b border-border bg-background/90 backdrop-blur-md"
+        className="sticky top-0 z-30 flex items-center border-b border-border bg-background"
         style={{
           height: "var(--space-12)",
           padding: "var(--space-3) var(--space-5)",
@@ -173,244 +163,140 @@ export function Dashboard() {
         >
           Daily Deen
         </h1>
-        <span
-          className="ml-4 text-muted-foreground hidden sm:inline"
-          style={{ fontSize: "var(--text-body-sm)" }}
-        >
-          {greeting}
-        </span>
-        <div className="ml-auto flex items-center gap-2">
-          {hasLocation && (
-            <button
-              aria-label="Qibla compass"
-              onClick={() => setShowCompass(!showCompass)}
-              className={`flex h-9 w-9 items-center justify-center rounded-md transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${
-                showCompass
-                  ? "bg-[var(--color-lantern)] text-white"
-                  : "text-foreground hover:bg-secondary"
-              }`}
-            >
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <circle cx="12" cy="12" r="10" />
-                <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
-              </svg>
-            </button>
-          )}
-        </div>
       </header>
-
-      <NotificationStatus computedTimes={computedTimes} />
 
       <main
         id="main"
         className="flex flex-1 flex-col pb-24 lg:pb-8"
         style={{
-          padding: "var(--space-5)",
-          paddingBottom: "calc(var(--space-14) + env(safe-area-inset-bottom, 0px) + var(--space-5))",
+          padding: "var(--space-6)",
+          paddingBottom: "calc(var(--space-16) + env(safe-area-inset-bottom, 0px) + var(--space-6))",
           maxWidth: "var(--content-reading)",
           marginLeft: "auto",
           marginRight: "auto",
           width: "100%",
-          gap: "var(--space-5)",
+          gap: "var(--space-8)",
         }}
       >
-        {/* Greeting + Date Header */}
-        <div className="dd-card dd-card-1">
-          <div className="mb-2">
-            <span
-              className="text-muted-foreground"
-              style={{ fontSize: "var(--text-body-sm)" }}
-            >
-              {greeting}
-            </span>
-          </div>
+        {/* Greeting + Date — calm, minimal */}
+        <section aria-label="Date and greeting" style={{ paddingTop: "var(--space-2)" }}>
+          <p className="text-muted-foreground" style={{ fontSize: "var(--text-body-sm)", marginBottom: "var(--space-1)" }}>
+            {greeting}
+          </p>
           <DateHeader
             hijriDate={hijriDate}
             gregorianDate={gregorianDate}
-            city={city}
-            country={country}
+            city={settings.city || ""}
+            country={settings.country || ""}
             isOnline={isOnline}
             lastSync={lastSyncTime}
           />
-        </div>
+        </section>
 
-        {/* Day Arc — full width */}
-        <div
-          className="dd-card dd-card-2"
-          style={{
-            marginLeft: "calc(-1 * var(--space-5))",
-            marginRight: "calc(-1 * var(--space-5))",
-            paddingLeft: "var(--space-5)",
-            paddingRight: "var(--space-5)",
-          }}
-        >
-          <DayArc prayers={prayers} loading={loading} />
-        </div>
+        {/* Prayer Check-in — primary action */}
+        <section aria-label="Mark prayers as completed">
+          <PrayerCheckIn onToggle={() => setStreakRefreshKey((k) => k + 1)} />
+        </section>
 
-        {/* Qibla Compass (conditionally visible) */}
-        {showCompass && hasLocation && (
-          <div className="dd-card dd-card-3">
-            <section
-              role="region"
-              aria-label="Qibla compass"
-              className="rounded-lg border border-border bg-card"
-              style={{
-                padding: "var(--space-6)",
-                boxShadow: "var(--shadow-xs)",
-              }}
-            >
-              <h2
-                className="font-display text-foreground mb-4"
-                style={{
-                  fontFamily: "var(--font-display)",
-                  fontSize: "var(--text-h5)",
-                  fontWeight: 600,
-                }}
-              >
-                Qibla Direction
-              </h2>
-              {city && country && (
-                <p
-                  className="text-muted-foreground mb-4"
-                  style={{ fontSize: "var(--text-caption)" }}
-                >
-                  {city}, {country}
-                </p>
-              )}
-              <Suspense
-                fallback={
-                  <div className="flex items-center justify-center h-80">
-                    <div className="h-6 w-32 animate-pulse rounded bg-muted" />
-                  </div>
-                }
-              >
-                <QiblaCompass />
-              </Suspense>
-            </section>
-          </div>
-        )}
+        {/* Journal Prompt — contextual, appears after all prayers done */}
+        <section aria-label="Journal prompt">
+          <JournalPrompt
+            allPrayersCompleted={
+              prayers
+                ? Object.values(prayers.completed).every(Boolean)
+                : false
+            }
+          />
+        </section>
 
-        {/* Card grid: 2-column on larger screens */}
-        <div
-          className="dd-card dd-card-3 grid gap-4"
-          style={{
-            gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))",
-          }}
-        >
+        {/* Weekly Summary — progress overview */}
+        <section aria-label="Weekly summary">
+          <WeeklySummary />
+        </section>
+
+        {/* Health Summary — today's wellness at a glance */}
+        <section aria-label="Health summary">
+          <HealthSummary />
+        </section>
+
+        {/* Streak — visible progress */}
+        <section aria-label="Prayer streak">
+          <StreakCard loading={loading} refreshKey={streakRefreshKey} />
+        </section>
+
+        {/* Today's Habits — quick log */}
+        <section aria-label="Today's habits">
+          <TodayHabits
+            habits={habits}
+            habitLogs={habitLogs}
+            onIncrement={incrementHabit}
+          />
+        </section>
+
+        {/* Next Prayer + Continue Reading — task-oriented */}
+        <section aria-label="Next prayer and reading" className="flex flex-col" style={{ gap: "var(--space-3)" }}>
+          <ContinueReading />
           <NextPrayerCard
             nextPrayer={nextPrayer}
             computedTimes={computedTimes}
             prayers={prayers}
             loading={loading}
           />
-          <WeatherCard
-            weather={weather}
-            city={city}
-            loading={loading}
-          />
-        </div>
+        </section>
 
-        <div
-          className="dd-card dd-card-4 grid gap-4"
-          style={{
-            gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))",
-          }}
-        >
-          <CompletionCard
-            computedTimes={computedTimes}
-            loading={loading}
-          />
-          <StreakCard loading={loading} />
-        </div>
+        {/* Today's Focus — one contextual card */}
+        <section aria-label="Today's focus">
+          <AdhkarTracker />
+        </section>
 
-        <div
-          className="dd-card dd-card-5 grid gap-4"
-          style={{
-            gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))",
-          }}
-        >
-          <HabitSummaryCard
-            habits={habits}
-            habitLogs={habitLogs}
-            loading={loading}
-          />
-          <QiblaCard
-            bearing={qiblaBearing}
-            city={city}
-            onOpenCompass={() => setShowCompass(!showCompass)}
-            isVisible={showCompass}
-          />
-        </div>
+        {/* Deen Guide — spiritual companion */}
+        <section aria-label="Deen Guide">
+          <CompanionCard />
+        </section>
 
-        {/* Interactive Progress Tracker */}
-        <div className="dd-card dd-card-6">
-          <ProgressTracker
-            habits={habits}
-            habitLogs={habitLogs}
-            onIncrement={incrementHabit}
-            onDecrement={decrementHabit}
-            loading={loading}
-          />
-        </div>
+        {/* Weather + Quote — ambient context */}
+        <section aria-label="Weather and inspiration" className="flex flex-col" style={{ gap: "var(--space-3)" }}>
+          <WeatherWidget />
+          <DailyQuote />
+        </section>
 
-        {/* Prayer Status Detail */}
-        <div className="dd-card dd-card-7">
-          {computedTimes && <PrayerStatus prayers={computedTimes} loading={loading} />}
-        </div>
-
-        {/* Reminders */}
-        <div
-          className="dd-card dd-card-8 grid gap-4"
-          style={{
-            gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))",
-          }}
-        >
-          <JournalReminderCard loading={loading} />
-          <QuranReminderCard loading={loading} />
-        </div>
-
-        {/* Quick Actions */}
-        <div className="dd-card dd-card-9">
-          <QuickActionsCard
-            onRefreshLocation={detectLocation}
-            onRefreshPrayers={refreshPrayers}
-          />
-        </div>
-
-        {/* Daily Affirmation */}
+        {/* Daily Affirmation — closing thought */}
         <aside
-          aria-label="Daily affirmation"
-          className="dd-card dd-card-10 flex flex-col items-center py-12 text-center"
-          style={{ maxWidth: "65ch", marginInline: "auto" }}
+          aria-label="Daily reflection"
+          className="flex flex-col items-center text-center"
+          style={{ paddingTop: "var(--space-6)", paddingBottom: "var(--space-4)", maxWidth: "40ch", marginInline: "auto" }}
         >
           <p
-            className="font-display text-foreground"
+            className="text-foreground"
             style={{
               fontFamily: "var(--font-display)",
-              fontSize: "clamp(24px, 3vw, 32px)",
-              fontWeight: 600,
-              lineHeight: 1.3,
-              letterSpacing: "-0.015em",
+              fontSize: "clamp(18px, 3vw, 24px)",
+              fontWeight: 500,
+              lineHeight: 1.5,
+              letterSpacing: "-0.01em",
             }}
           >
             {affirmation.text}
           </p>
           <p
-            className="mt-3 text-muted-foreground"
-            style={{ fontSize: "var(--text-body-sm)" }}
+            className="text-muted-foreground"
+            style={{ fontSize: "var(--text-caption)", marginTop: "var(--space-2)" }}
           >
             — {affirmation.source}
           </p>
         </aside>
+
+        {/* Explore more — progressive disclosure */}
+        <Link
+          href="/wellness"
+          aria-label="Explore all wellness trackers"
+          className="flex items-center justify-center gap-2 rounded-2xl border border-border bg-card py-4 transition-colors hover:bg-secondary"
+        >
+          <span className="text-muted-foreground" style={{ fontSize: "var(--text-body-sm)", fontWeight: 500 }}>
+            Explore all trackers
+          </span>
+          <ArrowRight size={16} className="text-muted-foreground" />
+        </Link>
       </main>
     </>
   );
