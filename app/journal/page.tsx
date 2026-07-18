@@ -226,7 +226,7 @@ export default function JournalPage() {
 
       {/* Top bar */}
       <header
-        className="sticky top-0 z-30 flex items-center border-b border-border bg-background/90 backdrop-blur-md"
+        className="sticky top-0 z-30 flex items-center border-b border-border bg-background"
         style={{
           height: "var(--space-12)",
           padding: "var(--space-3) var(--space-5)",

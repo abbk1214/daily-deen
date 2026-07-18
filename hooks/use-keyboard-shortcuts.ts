@@ -19,8 +19,13 @@ function isInputElement(el: Element | null): boolean {
 
 export function useKeyboardShortcuts() {
   const router = useRouter();
+  const routerRef = useRef(router);
   const pendingKey = useRef<string | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    routerRef.current = router;
+  });
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -35,7 +40,7 @@ export function useKeyboardShortcuts() {
         const route = SHORTCUT_MAP[sequence];
         if (route) {
           e.preventDefault();
-          router.push(route);
+          routerRef.current.push(route);
         }
         return;
       }
@@ -54,5 +59,5 @@ export function useKeyboardShortcuts() {
       window.removeEventListener("keydown", handler);
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [router]);
+  }, []);
 }

@@ -42,12 +42,7 @@ export const DayArc = memo(function DayArc({ prayers, loading }: DayArcProps) {
     };
   }, [now]);
 
-  const dateKey = useMemo(() => {
-    const d = new Date();
-    return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
-  }, [now]);
-
-  const hijriDate = useMemo(() => getHijriDateString(), [dateKey]);
+  const hijriDate = useMemo(() => getHijriDateString(), []);
   const gregorianDate = useMemo(
     () =>
       new Date().toLocaleDateString("en-US", {
@@ -55,7 +50,7 @@ export const DayArc = memo(function DayArc({ prayers, loading }: DayArcProps) {
         month: "long",
         day: "numeric",
       }),
-    [dateKey],
+    [],
   );
 
   if (loading || !prayers) {
@@ -81,11 +76,11 @@ export const DayArc = memo(function DayArc({ prayers, loading }: DayArcProps) {
     );
   }
 
-  const fajrMin = timeToMinutes(prayers.fajr);
-  const dhuhrMin = timeToMinutes(prayers.dhuhr);
-  const asrMin = timeToMinutes(prayers.asr);
-  const maghribMin = timeToMinutes(prayers.maghrib);
-  const ishaMin = timeToMinutes(prayers.isha);
+  const fajrMin = timeToMinutes(prayers.fajr) || 0;
+  const dhuhrMin = timeToMinutes(prayers.dhuhr) || 0;
+  const asrMin = timeToMinutes(prayers.asr) || 0;
+  const maghribMin = timeToMinutes(prayers.maghrib) || 0;
+  const ishaMin = timeToMinutes(prayers.isha) || 0;
 
   const prayerTimes = [
     { name: "Fajr", minutes: fajrMin, key: "fajr" as const },
@@ -184,7 +179,7 @@ export const DayArc = memo(function DayArc({ prayers, loading }: DayArcProps) {
                 r={6}
                 fill="var(--dd-lantern-gold)"
                 style={{
-                  filter: "drop-shadow(0 0 8px oklch(0.76 0.14 85 / 0.3))",
+                  filter: "none",
                 }}
                 aria-hidden="true"
               />

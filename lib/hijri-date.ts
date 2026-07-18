@@ -18,14 +18,13 @@ const HIJRI_DAYS_IN_MONTH_LEAP = [30, 29, 30, 29, 30, 29, 30, 29, 30, 29, 30, 30
 
 const CACHE = new Map<string, { year: number; month: number; day: number }>()
 
-function cacheKey(dateStr: string): string {
-  return dateStr
-}
-
 function parseComponents(
   date: Date,
 ): { year: number; month: number; day: number } {
-  const key = cacheKey(date.toISOString().slice(0, 10))
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  const key = `${y}-${m}-${d}`;
   const cached = CACHE.get(key)
   if (cached) return cached
 
@@ -129,7 +128,10 @@ export function hijriToIsoDate(
   day: number,
 ): string {
   const date = hijriToGregorian(year, month, day)
-  return date.toISOString().slice(0, 10)
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
 }
 
 export function getHijriToday(): {
@@ -141,6 +143,9 @@ export function getHijriToday(): {
 } {
   const today = new Date()
   const h = getHijriDate(today)
-  const isoDate = today.toISOString().slice(0, 10)
+  const y = today.getFullYear();
+  const m = String(today.getMonth() + 1).padStart(2, "0");
+  const d = String(today.getDate()).padStart(2, "0");
+  const isoDate = `${y}-${m}-${d}`;
   return { ...h, isoDate }
 }

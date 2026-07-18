@@ -39,15 +39,18 @@ export function computeStreaks(logs: PrayerLog[]): StreakInfo {
   let current = 0
   let checkDate = today
 
-  while (true) {
+  while (current <= 365) {
     if (checkDate !== today) {
       const dayLogs = logs.filter((l) => l.date === checkDate)
       if (dayLogs.length === 0) break
       if (!isDayComplete(checkDate, logs)) break
     }
-    if (isDayComplete(checkDate, logs)) current++
-    checkDate = daysAgo(current)
-    if (current > 365) break
+    if (isDayComplete(checkDate, logs)) {
+      current++
+      checkDate = daysAgo(current)
+    } else {
+      break
+    }
   }
 
   let longest = 0

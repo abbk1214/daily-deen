@@ -3,16 +3,16 @@ import withPWAInit from "@ducanh2912/next-pwa";
 
 const withPWA = withPWAInit({
   dest: "public",
-  register: true,
+  register: false,
   reloadOnOnline: true,
-  cacheOnFrontEndNav: true,
-  aggressiveFrontEndNavCaching: true,
+  cacheOnFrontEndNav: false,
+  aggressiveFrontEndNavCaching: false,
   fallbacks: {
     document: "/offline",
   },
   workboxOptions: {
-    skipWaiting: true,
-    clientsClaim: true,
+    skipWaiting: false,
+    clientsClaim: false,
     runtimeCaching: [
       {
         urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -47,6 +47,80 @@ const withPWA = withPWAInit({
           expiration: {
             maxEntries: 50,
             maxAgeSeconds: 7 * 24 * 60 * 60,
+          },
+          cacheableResponse: {
+            statuses: [0, 200],
+          },
+        },
+      },
+      {
+        urlPattern: /^https:\/\/cdn\.jsdelivr\.net\/gh\/fawazahmed0\/quran-api\/.*/i,
+        handler: "CacheFirst",
+        options: {
+          cacheName: "quran-data",
+          expiration: {
+            maxEntries: 10,
+            maxAgeSeconds: 30 * 24 * 60 * 60,
+          },
+          cacheableResponse: {
+            statuses: [0, 200],
+          },
+        },
+      },
+      {
+        urlPattern: /^https:\/\/api\.islamic\.app\/.*/i,
+        handler: "NetworkFirst",
+        options: {
+          cacheName: "quran-words",
+          expiration: {
+            maxEntries: 500,
+            maxAgeSeconds: 30 * 24 * 60 * 60,
+          },
+          cacheableResponse: {
+            statuses: [0, 200],
+          },
+        },
+      },
+      {
+        urlPattern: /^https:\/\/api\.alquran\.cloud\/.*/i,
+        handler: "NetworkOnly",
+      },
+      {
+        urlPattern: /^https:\/\/cdn\.islamic\.network\/.*/i,
+        handler: "CacheFirst",
+        options: {
+          cacheName: "quran-audio",
+          expiration: {
+            maxEntries: 100,
+            maxAgeSeconds: 30 * 24 * 60 * 60,
+          },
+          cacheableResponse: {
+            statuses: [0, 200],
+          },
+        },
+      },
+      {
+        urlPattern: /^https:\/\/api\.open-meteo\.com\/.*/i,
+        handler: "NetworkFirst",
+        options: {
+          cacheName: "weather-api",
+          expiration: {
+            maxEntries: 20,
+            maxAgeSeconds: 60 * 60,
+          },
+          cacheableResponse: {
+            statuses: [0, 200],
+          },
+        },
+      },
+      {
+        urlPattern: /^https:\/\/zenquotes\.io\/.*/i,
+        handler: "NetworkFirst",
+        options: {
+          cacheName: "daily-quotes",
+          expiration: {
+            maxEntries: 5,
+            maxAgeSeconds: 24 * 60 * 60,
           },
           cacheableResponse: {
             statuses: [0, 200],

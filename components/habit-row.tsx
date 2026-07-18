@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useCallback, useEffect, useRef, useState } from "react";
-import { Check } from "lucide-react";
+import { Check, Pencil } from "lucide-react";
 import { formatValue, getIncrementStep } from "@/lib/utils";
 import type { Habit, HabitLog } from "@/lib/db";
 
@@ -10,6 +10,8 @@ interface HabitRowProps {
   log: HabitLog | undefined;
   onIncrement: (habitId: number, step: number) => Promise<void>;
   onDecrement: (habitId: number, step: number) => Promise<void>;
+  onEdit: (habit: Habit) => void;
+  showSeparator?: boolean;
 }
 
 function truncateName(name: string, maxLen = 24): string {
@@ -17,7 +19,7 @@ function truncateName(name: string, maxLen = 24): string {
   return name.slice(0, maxLen - 1) + "\u2026";
 }
 
-export const HabitRow = memo(function HabitRow({ habit, log, onIncrement, onDecrement }: HabitRowProps) {
+export const HabitRow = memo(function HabitRow({ habit, log, onIncrement, onDecrement, onEdit, showSeparator = false }: HabitRowProps) {
   const currentValue = log?.value ?? 0;
   const isComplete = currentValue >= habit.target;
   const baseStep = getIncrementStep(habit);
@@ -97,10 +99,11 @@ export const HabitRow = memo(function HabitRow({ habit, log, onIncrement, onDecr
 
   return (
     <li
-      className="flex flex-col"
+      className="flex flex-col group"
       role="listitem"
       aria-label={`${habit.name}: ${progressLabel}`}
       onKeyDown={handleKeyDown}
+      style={showSeparator ? { borderBottom: "1px solid var(--border)", margin: "var(--space-4) 0", paddingBottom: "var(--space-4)" } : { padding: "var(--space-4) 0" }}
     >
       {/* Title + Progress label */}
       <div
@@ -129,6 +132,15 @@ export const HabitRow = memo(function HabitRow({ habit, log, onIncrement, onDecr
               aria-label="Goal reached"
             />
           )}
+          <button
+            type="button"
+            aria-label={`Edit ${habit.name}`}
+            onClick={() => onEdit(habit)}
+            className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity duration-[var(--duration-fast)] ease-[var(--ease-out)] text-muted-foreground hover:text-foreground rounded p-0.5"
+            style={{ background: "none", border: "none", cursor: "pointer" }}
+          >
+            <Pencil size={14} strokeWidth={1.5} />
+          </button>
         </div>
         <span
           className={isComplete ? "text-quiet-sage" : "text-muted-foreground"}

@@ -94,124 +94,76 @@ export function useHabits(date: string): UseHabitsReturn {
   const increment = useCallback(
     async (habitId: number, step: number) => {
       const currentDate = dateRef.current;
-
-      // Snapshot for rollback
-      const prevLogs = habitLogs;
-
-      // Optimistic: compute new log locally
-      const existing = prevLogs.find(
-        (l) => l.habitId === habitId && l.date === currentDate,
-      );
-      const newValue = (existing?.value ?? 0) + step;
       const now = Date.now();
 
-      const optimisticLog: HabitLog = existing?.id != null
-        ? { ...existing, value: newValue, timestamp: now }
-        : { id: 0, habitId, date: currentDate, value: newValue, timestamp: now };
-
-      // Apply optimistic update
-      setHabitLogs((prev) => {
-        const idx = prev.findIndex(
-          (l) => l.habitId === habitId && l.date === currentDate,
-        );
-        if (idx >= 0) {
-          const next = [...prev];
-          next[idx] = optimisticLog;
-          return next;
-        }
-        return [...prev, optimisticLog];
-      });
-
-      // Persist to DB
       try {
+        // Query DB directly to avoid stale closure issues
+        const existing = await db.habitLogs
+          .where('[habitId+date]')
+          .equals([habitId, currentDate])
+          .first();
+
         if (existing?.id != null) {
+          const newValue = existing.value + step;
           await db.habitLogs.update(existing.id, {
             value: newValue,
             timestamp: now,
           });
-          // Patch with real id
-          if (optimisticLog.id === 0) {
-            optimisticLog.id = existing.id;
-          }
         } else {
-          const id = await db.habitLogs.add({
+          await db.habitLogs.add({
             habitId,
             date: currentDate,
-            value: newValue,
+            value: step,
             timestamp: now,
           });
-          optimisticLog.id = id;
-          // Update state with real id
-          setHabitLogs((prev) =>
-            prev.map((l) =>
-              l === optimisticLog ? { ...l, id } : l,
-            ),
-          );
+        }
+
+        // Sync state from DB
+        const logsData = await db.habitLogs.where("date").equals(currentDate).toArray();
+        if (mountedRef.current) {
+          setHabitLogs(logsData);
         }
       } catch (err) {
         console.error("Failed to save habit log:", err);
-        // Rollback
-        setHabitLogs(prevLogs);
       }
     },
-    [habitLogs],
+    [],
   );
 
   /* ── Optimistic decrement ── */
   const decrement = useCallback(
     async (habitId: number, step: number) => {
       const currentDate = dateRef.current;
-
-      // Snapshot for rollback
-      const prevLogs = habitLogs;
-
-      // Optimistic: compute new value
-      const existing = prevLogs.find(
-        (l) => l.habitId === habitId && l.date === currentDate,
-      );
-      if (!existing) return;
-
-      const newValue = Math.max(0, existing.value - step);
       const now = Date.now();
 
-      // Apply optimistic update
-      if (newValue <= 0) {
-        // Remove log entry
-        setHabitLogs((prev) =>
-          prev.filter(
-            (l) => !(l.habitId === habitId && l.date === currentDate),
-          ),
-        );
-      } else {
-        const optimisticLog = { ...existing, value: newValue, timestamp: now };
-        setHabitLogs((prev) =>
-          prev.map((l) =>
-            l.habitId === habitId && l.date === currentDate
-              ? optimisticLog
-              : l,
-          ),
-        );
-      }
-
-      // Persist to DB
       try {
+        const existing = await db.habitLogs
+          .where('[habitId+date]')
+          .equals([habitId, currentDate])
+          .first();
+
+        if (!existing?.id) return;
+
+        const newValue = existing.value - step;
         if (newValue <= 0) {
-          if (existing.id != null) {
-            await db.habitLogs.delete(existing.id);
-          }
-        } else if (existing.id != null) {
+          await db.habitLogs.delete(existing.id);
+        } else {
           await db.habitLogs.update(existing.id, {
             value: newValue,
             timestamp: now,
           });
         }
+
+        // Sync state from DB
+        const logsData = await db.habitLogs.where("date").equals(currentDate).toArray();
+        if (mountedRef.current) {
+          setHabitLogs(logsData);
+        }
       } catch (err) {
         console.error("Failed to save habit log:", err);
-        // Rollback
-        setHabitLogs(prevLogs);
       }
     },
-    [habitLogs],
+    [],
   );
 
   /* ── Optimistic add habit ── */

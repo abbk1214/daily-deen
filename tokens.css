@@ -26,9 +26,9 @@
   --foreground: var(--dd-ink-night);
 
   /* ---- Cards & Popovers ---- */
-  --card: oklch(0.96 0.01 80);
+  --card: oklch(0.97 0.008 80);
   --card-foreground: var(--dd-ink-night);
-  --popover: oklch(0.96 0.01 80);
+  --popover: oklch(0.97 0.008 80);
   --popover-foreground: var(--dd-ink-night);
 
   /* ---- Primary (Ink Night — default action) ---- */
@@ -40,11 +40,11 @@
   --achievement-foreground: oklch(0.18 0.02 250);
 
   /* ---- Secondary (soft parchment) ---- */
-  --secondary: oklch(0.90 0.02 80);
+  --secondary: oklch(0.92 0.015 80);
   --secondary-foreground: var(--dd-ink-night);
 
   /* ---- Muted (parchment wash) ---- */
-  --muted: oklch(0.90 0.02 80);
+  --muted: oklch(0.92 0.015 80);
   --muted-foreground: oklch(0.48 0.02 250);
 
   /* ---- Accent (Dusk Teal) ---- */
@@ -64,8 +64,8 @@
   --info-foreground: oklch(0.96 0.01 175);
 
   /* ---- Borders & Inputs ---- */
-  --border: oklch(0.85 0.02 80);
-  --input: oklch(0.85 0.02 80);
+  --border: oklch(0.88 0.015 80);
+  --input: oklch(0.88 0.015 80);
   --ring: var(--dd-dusk-teal);
 
   /* ---- Chart Colors ---- */
@@ -76,17 +76,17 @@
   --chart-5: oklch(0.35 0.02 250);
 
   /* ---- Sidebar ---- */
-  --sidebar: oklch(0.96 0.01 80);
+  --sidebar: oklch(0.97 0.008 80);
   --sidebar-foreground: var(--dd-ink-night);
   --sidebar-primary: var(--dd-ink-night);
   --sidebar-primary-foreground: var(--dd-parchment);
-  --sidebar-accent: oklch(0.90 0.02 80);
+  --sidebar-accent: oklch(0.92 0.015 80);
   --sidebar-accent-foreground: var(--dd-ink-night);
-  --sidebar-border: oklch(0.85 0.02 80);
+  --sidebar-border: oklch(0.88 0.015 80);
   --sidebar-ring: var(--dd-dusk-teal);
 
   /* ---- Border Radius ---- */
-  --radius: 0.5rem;
+  --radius: 0.75rem;
   --radius-sm: calc(var(--radius) * 0.5);
   --radius-md: var(--radius);
   --radius-lg: calc(var(--radius) * 1.25);
@@ -98,11 +98,12 @@
   --font-mono: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
 
   /* ---- Type Scale ---- */
-  --text-h2: clamp(24px, 3vw, 32px);
+  --text-h1: clamp(28px, 4vw, 36px);
+  --text-h2: clamp(24px, 3vw, 30px);
   --text-h3: 20px;
   --text-h4: 18px;
-  --text-body: 16px;
-  --text-body-sm: 14px;
+  --text-body: 15px;
+  --text-body-sm: 13.5px;
   --text-caption: 12px;
   --text-mono: 14px;
   --text-mono-sm: 12px;
@@ -111,15 +112,15 @@
   --leading-h2: 1.2;
   --leading-h3: 1.3;
   --leading-h4: 1.4;
-  --leading-body: 1.6;
+  --leading-body: 1.65;
   --leading-tight: 1.2;
   --leading-snug: 1.375;
 
   /* ---- Letter Spacing ---- */
-  --tracking-h2: -0.015em;
+  --tracking-h2: -0.02em;
   --tracking-h3: -0.01em;
   --tracking-body: 0em;
-  --tracking-wide: 0.02em;
+  --tracking-wide: 0.025em;
 
   /* ---- Spacing Scale (8px base) ---- */
   --space-0: 0;
@@ -136,15 +137,19 @@
   --space-12: 48px;
   --space-14: 56px;
   --space-16: 64px;
+  --space-20: 80px;
   --space-24: 96px;
 
-  /* ---- Shadows (Light Mode — editorial, barely visible) ---- */
+  /* ---- Shadows (Light Mode — layered, refined) ---- */
   --shadow-none: none;
-  --shadow-xs: 0 1px 2px oklch(0 0 0 / 0.03);
-  --shadow-sm: 0 1px 3px oklch(0 0 0 / 0.04);
-  --shadow-md: 0 2px 6px oklch(0 0 0 / 0.04);
-  --shadow-lg: 0 4px 12px oklch(0 0 0 / 0.05);
-  --shadow-xl: 0 8px 24px oklch(0 0 0 / 0.06);
+  --shadow-xs: 0 1px 2px oklch(0 0 0 / 0.04);
+  --shadow-sm: 0 1px 3px oklch(0 0 0 / 0.06), 0 1px 2px oklch(0 0 0 / 0.04);
+  --shadow-md: 0 4px 6px -1px oklch(0 0 0 / 0.06), 0 2px 4px -2px oklch(0 0 0 / 0.04);
+  --shadow-lg: 0 10px 15px -3px oklch(0 0 0 / 0.06), 0 4px 6px -4px oklch(0 0 0 / 0.04);
+  --shadow-xl: 0 20px 25px -5px oklch(0 0 0 / 0.08), 0 8px 10px -6px oklch(0 0 0 / 0.04);
+  --shadow-card: 0 1px 3px oklch(0 0 0 / 0.04), 0 1px 2px oklch(0 0 0 / 0.02);
+  --shadow-card-hover: 0 4px 12px oklch(0 0 0 / 0.08), 0 2px 4px oklch(0 0 0 / 0.04);
+  --shadow-elevated: 0 8px 24px oklch(0 0 0 / 0.1), 0 4px 8px oklch(0 0 0 / 0.04);
 
   /* ---- Elevation Z-Index ---- */
   --z-base: 0;
@@ -154,12 +159,14 @@
   --z-modal: 40;
   --z-toast: 50;
 
-  /* ---- Motion (fade + translate only, 150–200ms) ---- */
-  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  /* ---- Motion (spring-like, premium feel) ---- */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 
   --duration-fast: 150ms;
-  --duration-normal: 200ms;
+  --duration-normal: 250ms;
+  --duration-slow: 400ms;
 
   /* ---- Icon Sizes ---- */
   --icon-sm: 16px;
@@ -181,13 +188,13 @@
    =========================================================== */
 .dark {
   /* ---- Background & Foreground ---- */
-  --background: oklch(0.16 0.02 250);
+  --background: oklch(0.14 0.015 250);
   --foreground: oklch(0.93 0.01 80);
 
   /* ---- Cards & Popovers ---- */
-  --card: oklch(0.20 0.02 250);
+  --card: oklch(0.18 0.015 250);
   --card-foreground: oklch(0.93 0.01 80);
-  --popover: oklch(0.20 0.02 250);
+  --popover: oklch(0.18 0.015 250);
   --popover-foreground: oklch(0.93 0.01 80);
 
   /* ---- Primary (Parchment — default action on dark bg) ---- */
@@ -199,11 +206,11 @@
   --achievement-foreground: oklch(0.16 0.02 250);
 
   /* ---- Secondary ---- */
-  --secondary: oklch(0.24 0.02 250);
+  --secondary: oklch(0.22 0.015 250);
   --secondary-foreground: oklch(0.93 0.01 80);
 
   /* ---- Muted ---- */
-  --muted: oklch(0.24 0.02 250);
+  --muted: oklch(0.22 0.015 250);
   --muted-foreground: oklch(0.62 0.02 250);
 
   /* ---- Accent (Dusk Teal, brighter for dark) ---- */
@@ -235,21 +242,24 @@
   --chart-5: oklch(0.45 0.02 250);
 
   /* ---- Sidebar ---- */
-  --sidebar: oklch(0.20 0.02 250);
+  --sidebar: oklch(0.18 0.015 250);
   --sidebar-foreground: oklch(0.93 0.01 80);
   --sidebar-primary: var(--dd-parchment);
   --sidebar-primary-foreground: var(--dd-ink-night);
-  --sidebar-accent: oklch(0.24 0.02 250);
+  --sidebar-accent: oklch(0.22 0.015 250);
   --sidebar-accent-foreground: oklch(0.93 0.01 80);
   --sidebar-border: oklch(1 0 0 / 8%);
-  --sidebar-ring: var(--dd-dusk-teal);
+  --sidebar-ring: oklch(0.62 0.08 175);
 
-  /* ---- Shadows (Dark Mode — editorial) ---- */
-  --shadow-xs: 0 1px 2px oklch(0 0 0 / 0.15);
-  --shadow-sm: 0 1px 3px oklch(0 0 0 / 0.2);
-  --shadow-md: 0 2px 6px oklch(0 0 0 / 0.25);
-  --shadow-lg: 0 4px 12px oklch(0 0 0 / 0.3);
-  --shadow-xl: 0 8px 24px oklch(0 0 0 / 0.35);
+  /* ---- Shadows (Dark Mode — deeper, more dramatic) ---- */
+  --shadow-xs: 0 1px 2px oklch(0 0 0 / 0.2);
+  --shadow-sm: 0 1px 3px oklch(0 0 0 / 0.25), 0 1px 2px oklch(0 0 0 / 0.15);
+  --shadow-md: 0 4px 6px -1px oklch(0 0 0 / 0.3), 0 2px 4px -2px oklch(0 0 0 / 0.2);
+  --shadow-lg: 0 10px 15px -3px oklch(0 0 0 / 0.35), 0 4px 6px -4px oklch(0 0 0 / 0.2);
+  --shadow-xl: 0 20px 25px -5px oklch(0 0 0 / 0.4), 0 8px 10px -6px oklch(0 0 0 / 0.25);
+  --shadow-card: 0 1px 3px oklch(0 0 0 / 0.2), 0 1px 2px oklch(0 0 0 / 0.1);
+  --shadow-card-hover: 0 4px 12px oklch(0 0 0 / 0.3), 0 2px 4px oklch(0 0 0 / 0.15);
+  --shadow-elevated: 0 8px 24px oklch(0 0 0 / 0.4), 0 4px 8px oklch(0 0 0 / 0.2);
 }
 
 /* ===========================================================
@@ -307,15 +317,77 @@
   content: '';
   position: absolute;
   inset: 0;
-  opacity: 0.02;
+  opacity: 0.03;
   pointer-events: none;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAIAAADYYG7QAAAAFklEQVR42u3BAQEAAACCIP+vbkhAAQAAAAD8GgYCAAFp8OFtAAAAAElFTkSuQmCC");
   background-repeat: repeat;
-  background-size: 256px 256px;
+  background-size: 64px 64px;
   mix-blend-mode: multiply;
 }
 
 /* Dark mode paper texture — even subtler */
 .dark .paper-texture::before {
   opacity: 0.015;
+}
+
+/* Premium card styles */
+.dd-card-base {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  transition: box-shadow var(--duration-normal) var(--ease-out),
+              transform var(--duration-normal) var(--ease-out),
+              border-color var(--duration-normal) var(--ease-out);
+}
+
+.dd-card-base:hover {
+  box-shadow: var(--shadow-card-hover);
+  border-color: oklch(0 0 0 / 0.08);
+}
+
+/* Premium button styles */
+.dd-btn-primary {
+  background: var(--dd-dusk-teal);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-4);
+  font-weight: 500;
+  font-size: var(--text-body-sm);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.dd-btn-primary:hover {
+  background: oklch(0.42 0.06 175);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.dd-btn-primary:active {
+  transform: translateY(0);
+}
+
+/* Subtle hover effect for interactive cards */
+.dd-interactive {
+  cursor: pointer;
+  transition: all var(--duration-normal) var(--ease-out);
+}
+
+.dd-interactive:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-elevated);
+}
+
+.dd-interactive:active {
+  transform: translateY(0);
+}
+
+/* Gradient text utility */
+.dd-gradient-text {
+  background: linear-gradient(135deg, var(--dd-dusk-teal), var(--dd-quiet-sage));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }

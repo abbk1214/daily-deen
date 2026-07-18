@@ -36,14 +36,18 @@ async function loadOfflineData(): Promise<OfflineData> {
         { name: "Maghrib", time: formatTimeFromMinutes(times.maghrib) },
         { name: "Isha", time: formatTimeFromMinutes(times.isha) },
       ];
-    } catch {}
+    } catch {
+      // Prayer calculation failed offline — show empty list
+    }
   }
 
   let hijriDate = "";
   try {
     const { formatHijriDate } = await import("@/lib/hijri-date");
     hijriDate = formatHijriDate(today);
-  } catch {}
+  } catch {
+    // Hijri date unavailable offline
+  }
 
   return { settings, prayerTimes, hijriDate };
 }

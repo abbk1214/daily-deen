@@ -11,8 +11,11 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Daily Deen",
-  description: "Your Islamic daily companion",
+  title: {
+    default: "Daily Deen",
+    template: "%s | Daily Deen",
+  },
+  description: "Your personal Islamic companion — prayer times, Quran, habits, journal, and insights. All offline.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
@@ -20,7 +23,20 @@ export const metadata: Metadata = {
     title: "Daily Deen",
   },
   icons: {
+    icon: "/favicon.png",
     apple: "/icons/icon-192x192.png",
+  },
+  openGraph: {
+    title: "Daily Deen",
+    description: "Your personal Islamic companion — prayer times, Quran, habits, journal, and insights.",
+    type: "website",
+    locale: "en_US",
+    siteName: "Daily Deen",
+  },
+  twitter: {
+    card: "summary",
+    title: "Daily Deen",
+    description: "Your personal Islamic companion — prayer times, Quran, habits, journal, and insights.",
   },
 };
 
@@ -32,6 +48,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <link rel="icon" href="/favicon.png" type="image/png" />
         <link
           rel="preconnect"
           href="https://fonts.googleapis.com"
@@ -48,6 +65,9 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-dvh antialiased">
+        <a href="#main" className="skip-to-content">
+          Skip to main content
+        </a>
         <Providers>{children}</Providers>
       </body>
     </html>
