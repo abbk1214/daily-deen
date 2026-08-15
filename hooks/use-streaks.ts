@@ -131,8 +131,12 @@ export function useStreaks(): { data: StreakData | null; loading: boolean } {
 
     computeStreaks();
 
-    // Refresh every minute
-    const interval = setInterval(computeStreaks, 60_000);
+    // Refresh every minute, but only when page is visible
+    const interval = setInterval(() => {
+      if (typeof document !== "undefined" && document.visibilityState === "visible") {
+        computeStreaks();
+      }
+    }, 60_000);
 
     return () => {
       cancelled = true;

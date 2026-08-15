@@ -45,7 +45,7 @@ export const InsightCard = memo(function InsightCard({
 
   return (
     <article
-      className="rounded-2xl border border-border bg-card p-4 transition-colors hover:bg-secondary"
+      className="rounded-2xl border border-border bg-card p-5 transition-colors hover:bg-secondary"
       aria-label={insight.title}
     >
       <div className="flex gap-3">

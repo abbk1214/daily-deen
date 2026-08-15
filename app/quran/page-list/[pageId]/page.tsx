@@ -16,7 +16,7 @@ export default function PageReaderPage() {
   const pageId = Number(params.pageId)
 
   const [ayahs, setAyahs] = useState<Ayah[]>([])
-  const [translations, setTranslations] = useState<AyahTranslation[]>([])
+  const [translations, setTranslations] = useState<(AyahTranslation & { surahNumber: number })[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showTranslation, setShowTranslation] = useState(true)
@@ -74,7 +74,12 @@ export default function PageReaderPage() {
       .then((results) => {
         if (cancelled) return
         setAyahs(results.flatMap((r) => r.ayahs))
-        setTranslations(results.flatMap((r) => r.translations))
+        setTranslations(results.flatMap((r) =>
+          r.translations.map((t) => ({
+            ...t,
+            surahNumber: r.ayahs[0]?.surahNumber ?? 0,
+          }))
+        ))
         setIsLoading(false)
       })
       .catch((err) => {
@@ -99,6 +104,15 @@ export default function PageReaderPage() {
     audio.onended = () => setPlayingAyah(null)
   }, [ayahs, selectedReciter])
 
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause()
+        audioRef.current = null
+      }
+    }
+  }, [])
+
   const stopPlayback = useCallback(() => {
     if (audioRef.current) {
       audioRef.current.pause()
@@ -107,7 +121,7 @@ export default function PageReaderPage() {
     setPlayingAyah(null)
   }, [])
 
-  const transMap = useMemo(() => new Map(translations.map((t) => [t.ayahNumber, t.text])), [translations])
+  const transMap = useMemo(() => new Map(translations.map((t) => [`${t.surahNumber}:${t.ayahNumber}`, t.text])), [translations])
 
   const ayahsWithHeaders = useMemo(() => {
     const result: (Ayah & { showSurahHeader: boolean })[] = []
@@ -217,6 +231,7 @@ export default function PageReaderPage() {
               type="button"
               role="switch"
               aria-checked={showTranslation}
+              aria-label="Show translation"
               onClick={() => {
                 const v = !showTranslation
                 setShowTranslation(v)
@@ -239,6 +254,7 @@ export default function PageReaderPage() {
                 setSelectedTranslation(e.target.value)
                 saveQuranSettings({ selectedTranslation: e.target.value })
               }}
+              aria-label="Translation language"
               className="flex-1 rounded-lg border border-border bg-background px-3 py-1.5 text-sm text-foreground"
             >
               {TRANSLATIONS.map((t) => (
@@ -256,6 +272,7 @@ export default function PageReaderPage() {
                 setSelectedReciter(e.target.value)
                 saveQuranSettings({ selectedReciter: e.target.value })
               }}
+              aria-label="Reciter"
               className="flex-1 rounded-lg border border-border bg-background px-3 py-1.5 text-sm text-foreground"
             >
               {RECITERS.map((r) => (
@@ -277,6 +294,7 @@ export default function PageReaderPage() {
                 setFontSize(v)
                 saveQuranSettings({ fontSize: v })
               }}
+              aria-label="Arabic font size"
               className="flex-1 accent-[var(--dd-dusk-teal)]"
             />
             <span className="text-muted-foreground w-8 text-right" style={{ fontSize: "var(--text-caption)" }}>
@@ -288,7 +306,7 @@ export default function PageReaderPage() {
 
       <main className="flex-1 overflow-auto pb-24 lg:pb-8">
         {ayahsWithHeaders.map((ayah: Ayah & { showSurahHeader: boolean }) => {
-          const trans = transMap.get(ayah.numberInSurah)
+          const trans = transMap.get(`${ayah.surahNumber}:${ayah.numberInSurah}`)
           const surahMeta = getSurahMeta(ayah.surahNumber)
 
           return (
@@ -308,7 +326,7 @@ export default function PageReaderPage() {
                   <button
                     type="button"
                     onClick={() => playingAyah === ayah.number ? stopPlayback() : playAyah(ayah.number)}
-                    aria-label={`Play ayah ${ayah.numberInSurah}`}
+                    aria-label={playingAyah === ayah.number ? `Pause ayah ${ayah.numberInSurah}` : `Play ayah ${ayah.numberInSurah}`}
                     className={`mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors ${
                       playingAyah === ayah.number
                         ? "bg-dusk-teal text-white"

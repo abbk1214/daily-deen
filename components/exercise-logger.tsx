@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Plus, X } from "lucide-react";
+import { Plus } from "lucide-react";
 import db from "@/lib/db";
 import type { ExerciseEntry } from "@/lib/db";
-import { getToday } from "@/lib/utils";
+import { getToday, formatDuration } from "@/lib/utils";
+import { BottomSheet } from "@/components/ui/bottom-sheet";
 
 const EXERCISE_CATEGORIES = [
   { name: "Running", icon: "🏃", type: "cardio" },
@@ -33,13 +34,6 @@ const PRESETS: Record<string, { duration: number; calories: number }> = {
   "HIIT": { duration: 20, calories: 300 },
   "Sports": { duration: 60, calories: 400 },
 };
-
-function formatDuration(minutes: number): string {
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  if (h > 0) return `${h}h ${m}m`;
-  return `${m}m`;
-}
 
 export function ExerciseLogger() {
   const [entries, setEntries] = useState<ExerciseEntry[]>([]);
@@ -170,21 +164,7 @@ export function ExerciseLogger() {
       )}
 
       {/* Check-in modal */}
-      {showCheckin && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm">
-          <div className="w-full max-w-lg bg-card rounded-t-2xl p-5 space-y-4 max-h-[85vh] overflow-y-auto">
-            <div className="flex items-center justify-between">
-              <h3 className="text-foreground" style={{ fontSize: "var(--text-body)", fontWeight: 600 }}>
-                Log Exercise
-              </h3>
-              <button
-                onClick={() => setShowCheckin(false)}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
+      <BottomSheet open={showCheckin} onClose={() => setShowCheckin(false)} title="Log Exercise">
             {/* Exercise grid */}
             <div className="grid grid-cols-4 gap-2">
               {EXERCISE_CATEGORIES.map((exercise) => (
@@ -260,14 +240,12 @@ export function ExerciseLogger() {
             <button
               onClick={addEntry}
               disabled={!selectedExercise}
-              className="w-full py-3 rounded-xl bg-lantern-gold text-ink-night font-medium transition-colors hover:bg-lantern-gold/90 disabled:opacity-50"
+              className="w-full py-3 rounded-xl bg-dusk-teal text-white font-medium transition-colors hover:bg-dusk-teal/90 disabled:opacity-50"
               style={{ fontSize: "var(--text-body-sm)" }}
             >
               Save Workout
             </button>
-          </div>
-        </div>
-      )}
+      </BottomSheet>
     </div>
   );
 }

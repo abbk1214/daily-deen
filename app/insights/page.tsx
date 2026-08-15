@@ -37,7 +37,6 @@ export default function InsightsPage() {
           height: 'var(--space-12)',
           padding: 'var(--space-3) var(--space-5)',
         }}
-        role="banner"
       >
         <Link
           href="/"
@@ -105,7 +104,7 @@ export default function InsightsPage() {
 
         {/* Loading state */}
         {loading && (
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-3" aria-busy="true" aria-label="Loading insights">
             {[1, 2, 3].map((i) => (
               <div key={i} className="animate-pulse rounded-2xl border border-border bg-card p-4">
                 <div className="flex gap-3">

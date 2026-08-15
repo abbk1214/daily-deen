@@ -53,58 +53,65 @@ export default function WellnessPage() {
       <div
         role="tablist"
         aria-label="Wellness sections"
-        className="flex gap-1 p-2 border-b border-border overflow-x-auto"
+        className="flex border-b border-border overflow-x-auto"
       >
         {TABS.map((tab) => (
           <button
             key={tab.id}
+            id={`tab-${tab.id}`}
             role="tab"
             aria-selected={activeTab === tab.id}
             aria-controls={`wellness-${tab.id}`}
             onClick={() => setActiveTab(tab.id)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg whitespace-nowrap transition-colors"
+            className="relative flex items-center gap-1.5 px-4 py-3 whitespace-nowrap transition-colors"
             style={{
-              background: activeTab === tab.id
-                ? "color-mix(in srgb, var(--dusk-teal) 15%, var(--card))"
-                : "transparent",
               color: activeTab === tab.id ? "var(--dusk-teal)" : "var(--muted-foreground)",
-              fontSize: "var(--text-caption)",
+              fontSize: "var(--text-body-sm)",
               fontWeight: 500,
             }}
           >
             <tab.icon size={14} />
             {tab.label}
+            {activeTab === tab.id && (
+              <span
+                className="absolute bottom-0 left-2 right-2 h-[2px] rounded-full bg-dusk-teal"
+                aria-hidden="true"
+              />
+            )}
           </button>
         ))}
       </div>
 
-      <main
-        id="wellness-overview"
-        role="tabpanel"
-        className="flex flex-1 flex-col pb-24 lg:pb-8"
-        style={{
-          padding: "var(--space-5)",
-          paddingBottom: "calc(var(--space-14) + env(safe-area-inset-bottom, 0px) + var(--space-5))",
-          maxWidth: "var(--content-reading)",
-          marginLeft: "auto",
-          marginRight: "auto",
-          width: "100%",
-          gap: "var(--space-5)",
-        }}
-      >
+      <div className="flex flex-1 flex-col pb-24 lg:pb-8" style={{ padding: "var(--space-5)", paddingBottom: "calc(var(--space-14) + env(safe-area-inset-bottom, 0px) + var(--space-5))", maxWidth: "var(--content-reading)", marginLeft: "auto", marginRight: "auto", width: "100%", gap: "var(--space-5)" }}>
         {activeTab === "overview" && (
-          <>
+          <main id="wellness-overview" role="tabpanel" aria-labelledby="tab-overview" className="flex flex-col gap-5">
             <MoodTracker />
             <WaterTracker />
             <SleepLogger />
             <ExerciseLogger />
-          </>
+          </main>
         )}
-        {activeTab === "mood" && <MoodTracker />}
-        {activeTab === "water" && <WaterTracker />}
-        {activeTab === "sleep" && <SleepLogger />}
-        {activeTab === "exercise" && <ExerciseLogger />}
-      </main>
+        {activeTab === "mood" && (
+          <main id="wellness-mood" role="tabpanel" aria-labelledby="tab-mood" className="flex flex-col gap-5">
+            <MoodTracker />
+          </main>
+        )}
+        {activeTab === "water" && (
+          <main id="wellness-water" role="tabpanel" aria-labelledby="tab-water" className="flex flex-col gap-5">
+            <WaterTracker />
+          </main>
+        )}
+        {activeTab === "sleep" && (
+          <main id="wellness-sleep" role="tabpanel" aria-labelledby="tab-sleep" className="flex flex-col gap-5">
+            <SleepLogger />
+          </main>
+        )}
+        {activeTab === "exercise" && (
+          <main id="wellness-exercise" role="tabpanel" aria-labelledby="tab-exercise" className="flex flex-col gap-5">
+            <ExerciseLogger />
+          </main>
+        )}
+      </div>
     </div>
   );
 }

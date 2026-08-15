@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { Volume2, X } from "lucide-react";
 import { fetchAyahWords, type WordData } from "@/lib/quran/api";
 
@@ -17,6 +17,15 @@ export function WordByWord({ surahNumber, ayahNumber, ayahText: _ayahText, fontS
   const [expanded, setExpanded] = useState(false);
   const [selectedWord, setSelectedWord] = useState<WordData | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause()
+        audioRef.current = null
+      }
+    }
+  }, [])
 
   const loadWords = useCallback(async () => {
     if (expanded) {
@@ -159,6 +168,7 @@ export function WordByWord({ surahNumber, ayahNumber, ayahText: _ayahText, fontS
                 <button
                   type="button"
                   onClick={() => playWord(selectedWord)}
+                  aria-label="Play word audio"
                   className="flex h-8 w-8 items-center justify-center rounded-lg text-dusk-teal hover:bg-muted transition-colors"
                 >
                   <Volume2 size={16} />

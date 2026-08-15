@@ -8,6 +8,27 @@ import type {
   TimelineStats,
 } from './types'
 
+/* ──────────────────────────────────────────────
+   Simple TTL cache (60 seconds)
+   ────────────────────────────────────────────── */
+
+let timelineCache: { data: TimelineData; ts: number } | null = null
+let statsCache: { data: TimelineStats; ts: number } | null = null
+const CACHE_TTL = 60_000
+
+function invalidateTimelineCache(): void {
+  timelineCache = null
+  statsCache = null
+}
+
+// Invalidate cache when data changes
+if (typeof window !== "undefined") {
+  window.addEventListener("focus", () => {
+    timelineCache = null
+    statsCache = null
+  })
+}
+
 function getMonthLabel(year: number, month: number): string {
   return new Date(year, month - 1).toLocaleDateString('en-US', {
     month: 'long',
@@ -365,7 +386,7 @@ async function detectSleepMilestones(): Promise<TimelineEvent[]> {
 
 async function detectKhatmahCompletions(): Promise<TimelineEvent[]> {
   const events: TimelineEvent[] = []
-  const goals = await db.khatmahGoals.where('isCompleted').equals(1).toArray()
+  const goals = await db.khatmahGoals.where('isActive').equals(1).toArray()
 
   for (const goal of goals) {
     events.push({
@@ -426,6 +447,15 @@ export async function getTimeline(
   offset = 0,
   limit = 3,
 ): Promise<TimelineData> {
+  if (timelineCache && Date.now() - timelineCache.ts < CACHE_TTL) {
+    const { months, totalEvents, hasMore } = timelineCache.data
+    return {
+      months: months.slice(offset, offset + limit),
+      totalEvents,
+      hasMore,
+    }
+  }
+
   const allEvents: TimelineEvent[] = []
 
   const results = await Promise.all([
@@ -446,14 +476,15 @@ export async function getTimeline(
   const deduped = sortEventsByDate(deduplicateEvents(allEvents))
   const months = groupByMonth(deduped)
 
-  const slicedMonths = months.slice(offset, offset + limit)
   const hasMore = offset + limit < months.length
-
-  return {
-    months: slicedMonths,
+  const result: TimelineData = {
+    months: months.slice(offset, offset + limit),
     totalEvents: deduped.length,
     hasMore,
   }
+
+  timelineCache = { data: { months, totalEvents: deduped.length, hasMore: months.length > offset + limit }, ts: Date.now() }
+  return result
 }
 
 export async function searchTimeline(
@@ -507,12 +538,16 @@ export async function filterTimeline(
 }
 
 export async function getTimelineStats(): Promise<TimelineStats> {
+  if (statsCache && Date.now() - statsCache.ts < CACHE_TTL) {
+    return statsCache.data
+  }
+
   const [prayers, quran, journal, habits, khatmah] = await Promise.all([
     db.prayers.toArray(),
     db.khatmahProgress.toArray(),
     db.journal.toArray(),
     db.habitLogs.toArray(),
-    db.khatmahGoals.where('isCompleted').equals(1).toArray(),
+    db.khatmahGoals.where('isActive').equals(1).toArray(),
   ])
 
   let totalPrayerDays = 0
@@ -530,7 +565,7 @@ export async function getTimelineStats(): Promise<TimelineStats> {
     }
   }
 
-  return {
+  const result: TimelineStats = {
     totalPrayerDays,
     totalQuranPages: quran.reduce((sum, q) => sum + q.pagesRead, 0),
     totalJournalEntries: journal.length,
@@ -538,4 +573,7 @@ export async function getTimelineStats(): Promise<TimelineStats> {
     longestStreak,
     totalKhatmah: khatmah.length,
   }
+
+  statsCache = { data: result, ts: Date.now() }
+  return result
 }

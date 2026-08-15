@@ -121,6 +121,7 @@ export default function SettingsPage() {
                 value={settings.name}
                 onChange={(e) => update({ name: e.target.value })}
                 placeholder="Enter name"
+                aria-label="Your name"
                 className="w-32 rounded-lg border border-border bg-background px-3 py-1.5 text-right text-foreground focus:border-dusk-teal focus:outline-none"
                 style={{ fontSize: "var(--text-body-sm)" }}
               />
@@ -141,6 +142,7 @@ export default function SettingsPage() {
               <select
                 value={settings.calculationMethod}
                 onChange={(e) => update({ calculationMethod: e.target.value })}
+                aria-label="Calculation method"
                 className="rounded-lg border border-border bg-background px-3 py-1.5 text-foreground focus:border-dusk-teal focus:outline-none"
                 style={{ fontSize: "var(--text-body-sm)" }}
               >

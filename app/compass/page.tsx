@@ -45,8 +45,9 @@ export default function CompassPage() {
         <h1
           className="ml-3 text-foreground"
           style={{
-            fontSize: "var(--text-body)",
-            fontWeight: 500,
+            fontFamily: "var(--font-display)",
+            fontSize: "var(--text-h4)",
+            fontWeight: 600,
           }}
         >
           Qibla Compass
@@ -87,7 +88,7 @@ export default function CompassPage() {
 
         <Suspense
           fallback={
-            <div className="flex items-center justify-center h-80">
+            <div className="flex items-center justify-center h-80" aria-busy="true" aria-label="Loading compass">
               <div className="h-6 w-32 animate-pulse rounded bg-muted" />
             </div>
           }

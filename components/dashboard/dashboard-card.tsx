@@ -21,7 +21,7 @@ export const DashboardCard = memo(function DashboardCard({
     <section
       role="region"
       aria-label={ariaLabel || title}
-      className={`rounded-lg border border-border bg-card ${className}`}
+      className={`rounded-2xl border border-border bg-card ${className}`}
       style={{
         padding: "var(--space-5)",
         boxShadow: "var(--shadow-xs)",

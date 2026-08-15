@@ -4,7 +4,7 @@ import { memo, useEffect, useState } from "react"
 import Link from "next/link"
 import { Droplets, Moon, Activity, Smile, ChevronRight } from "lucide-react"
 import db from "@/lib/db"
-import { getToday } from "@/lib/utils"
+import { getToday, formatDuration } from "@/lib/utils"
 
 interface TodayHealth {
   mood: { emoji: string; label: string } | null
@@ -19,13 +19,6 @@ const MOOD_MAP: Record<string, { emoji: string; label: string }> = {
   Okay: { emoji: "\u{1F610}", label: "Okay" },
   Low: { emoji: "\u{1F61E}", label: "Low" },
   Bad: { emoji: "\u{1F622}", label: "Bad" },
-}
-
-function formatDuration(minutes: number): string {
-  const h = Math.floor(minutes / 60)
-  const m = minutes % 60
-  if (h === 0) return `${m}m`
-  return m > 0 ? `${h}h ${m}m` : `${h}h`
 }
 
 export const HealthSummary = memo(function HealthSummary() {
@@ -126,7 +119,7 @@ export const HealthSummary = memo(function HealthSummary() {
     <Link
       href="/wellness"
       aria-label="Today's health summary — open wellness trackers"
-      className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4 transition-colors hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+      className="flex items-center gap-3 rounded-2xl border border-border bg-card p-5 transition-colors hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
     >
       <div className="flex-1 min-w-0">
         <p className="text-muted-foreground mb-2" style={{ fontSize: "var(--text-caption)", fontWeight: 500 }}>

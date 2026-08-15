@@ -51,6 +51,8 @@ export function useHabits(date: string): UseHabitsReturn {
 
   const mountedRef = useRef(true);
   const dateRef = useRef(date);
+  const habitsRef = useRef<Habit[]>([]);
+  const logsRef = useRef<HabitLog[]>([]);
 
   /* ── Load habits + logs ── */
   const load = useCallback(async () => {
@@ -64,6 +66,8 @@ export function useHabits(date: string): UseHabitsReturn {
       if (!mountedRef.current) return;
       setHabits(habitsData);
       setHabitLogs(logsData);
+      habitsRef.current = habitsData;
+      logsRef.current = logsData;
       setError(false);
       setLoading(false);
     } catch (err) {
@@ -175,7 +179,7 @@ export function useHabits(date: string): UseHabitsReturn {
       unit: string;
       increment: number;
     }) => {
-      const prevHabits = habits;
+      const prevHabits = habitsRef.current;
 
       // Optimistic: add with temp id
       const tempId = -(Date.now());
@@ -185,27 +189,38 @@ export function useHabits(date: string): UseHabitsReturn {
       try {
         const id = await db.habits.add(habit as Habit);
         // Replace temp id with real id
-        setHabits((prev) =>
-          prev.map((h) => (h.id === tempId ? { ...h, id } : h)),
-        );
+        setHabits((prev) => {
+          const next = prev.map((h) => (h.id === tempId ? { ...h, id } : h));
+          habitsRef.current = next;
+          return next;
+        });
       } catch (err) {
         console.error("Failed to add habit:", err);
         // Rollback
         setHabits(prevHabits);
+        habitsRef.current = prevHabits;
       }
     },
-    [habits],
+    [],
   );
 
   /* ── Optimistic delete habit ── */
   const deleteHabit = useCallback(
     async (habitId: number) => {
-      const prevHabits = habits;
-      const prevLogs = habitLogs;
+      const prevHabits = habitsRef.current;
+      const prevLogs = logsRef.current;
 
       // Optimistic: remove
-      setHabits((prev) => prev.filter((h) => h.id !== habitId));
-      setHabitLogs((prev) => prev.filter((l) => l.habitId !== habitId));
+      setHabits((prev) => {
+        const next = prev.filter((h) => h.id !== habitId);
+        habitsRef.current = next;
+        return next;
+      });
+      setHabitLogs((prev) => {
+        const next = prev.filter((l) => l.habitId !== habitId);
+        logsRef.current = next;
+        return next;
+      });
 
       try {
         await db.habits.delete(habitId);
@@ -215,21 +230,25 @@ export function useHabits(date: string): UseHabitsReturn {
         console.error("Failed to delete habit:", err);
         // Rollback
         setHabits(prevHabits);
+        habitsRef.current = prevHabits;
         setHabitLogs(prevLogs);
+        logsRef.current = prevLogs;
       }
     },
-    [habits, habitLogs],
+    [],
   );
 
   /* ── Optimistic update habit ── */
   const updateHabit = useCallback(
     async (habitId: number, patch: Partial<Omit<Habit, "id">>) => {
-      const prevHabits = habits;
+      const prevHabits = habitsRef.current;
 
       // Optimistic: merge patch
-      setHabits((prev) =>
-        prev.map((h) => (h.id === habitId ? { ...h, ...patch } : h)),
-      );
+      setHabits((prev) => {
+        const next = prev.map((h) => (h.id === habitId ? { ...h, ...patch } : h));
+        habitsRef.current = next;
+        return next;
+      });
 
       try {
         await db.habits.update(habitId, patch);
@@ -237,9 +256,10 @@ export function useHabits(date: string): UseHabitsReturn {
         console.error("Failed to update habit:", err);
         // Rollback
         setHabits(prevHabits);
+        habitsRef.current = prevHabits;
       }
     },
-    [habits],
+    [],
   );
 
   return {

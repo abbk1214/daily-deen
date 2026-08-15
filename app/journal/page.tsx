@@ -231,7 +231,6 @@ export default function JournalPage() {
           height: "var(--space-12)",
           padding: "var(--space-3) var(--space-5)",
         }}
-        role="banner"
       >
         <Link
           href="/"
@@ -241,14 +240,24 @@ export default function JournalPage() {
           <ArrowLeft size={20} strokeWidth={1.5} />
         </Link>
         <h1
+          className="ml-3 text-foreground"
+          style={{
+            fontFamily: "var(--font-display)",
+            fontSize: "var(--text-h4)",
+            fontWeight: 600,
+          }}
+        >
+          Journal
+        </h1>
+        <span
           className="ml-3 text-muted-foreground"
           style={{
             fontFamily: "var(--font-mono)",
-            fontSize: "var(--text-body-sm)",
+            fontSize: "var(--text-caption)",
           }}
         >
           {today}
-        </h1>
+        </span>
       </header>
 
       {/* Main content */}

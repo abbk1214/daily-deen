@@ -1,11 +1,27 @@
 import type { Ayah, AyahTranslation } from "./types";
 import { getAyahMetadata } from "./metadata";
+import { SURAH_LIST } from "./data";
 
 const ARABIC_URL = "https://cdn.jsdelivr.net/gh/fawazahmed0/quran-api@1/editions/ara-quranuthmanienc.min.json";
 const ENGLISH_URL = "https://cdn.jsdelivr.net/gh/fawazahmed0/quran-api@1/editions/eng-mustafakhattaba.min.json";
 
 const CACHE_PREFIX = "quran-v3";
 const CACHE_TTL = 30 * 24 * 60 * 60 * 1000; // 30 days
+
+// Precompute cumulative ayah counts for correct global ayah numbering
+const CUMULATIVE_AYAHS: number[] = [];
+{
+  let total = 0;
+  for (const surah of SURAH_LIST) {
+    CUMULATIVE_AYAHS.push(total);
+    total += surah.numberOfAyahs;
+  }
+}
+
+/** Get the global ayah number (1-6236) for a given surah and ayah-in-surah. */
+export function getGlobalAyahNumber(surahNumber: number, ayahNumber: number): number {
+  return (CUMULATIVE_AYAHS[surahNumber - 1] ?? 0) + ayahNumber;
+}
 
 interface RawAyah {
   chapter: number;
@@ -22,6 +38,7 @@ function cacheKey(type: string, id: string): string {
 }
 
 function getCached<T>(key: string): T | null {
+  if (typeof window === "undefined") return null
   try {
     const raw = localStorage.getItem(key);
     if (!raw) return null;
@@ -37,6 +54,7 @@ function getCached<T>(key: string): T | null {
 }
 
 function setCache<T>(key: string, data: T): void {
+  if (typeof window === "undefined") return
   try {
     localStorage.setItem(key, JSON.stringify({ data, ts: Date.now() }));
   } catch {
@@ -78,7 +96,7 @@ async function ensureArabic(): Promise<void> {
       const meta = getAyahMetadata(a.chapter, a.verse);
       const existing = arabicCache.get(a.chapter) || [];
       existing.push({
-        number: (a.chapter - 1) * 1000 + a.verse,
+        number: getGlobalAyahNumber(a.chapter, a.verse),
         numberInSurah: a.verse,
         text: a.text,
         juz: meta.juz,
@@ -89,7 +107,10 @@ async function ensureArabic(): Promise<void> {
       arabicCache.set(a.chapter, existing);
     }
     allArabicLoaded = true;
-  })();
+  })().catch((err) => {
+    arabicPromise = null;
+    throw err;
+  });
   await arabicPromise;
 }
 
@@ -114,7 +135,10 @@ async function ensureEnglish(): Promise<void> {
       englishCache.set(a.chapter, existing);
     }
     allEnglishLoaded = true;
-  })();
+  })().catch((err) => {
+    englishPromise = null;
+    throw err;
+  });
   await englishPromise;
 }
 

@@ -153,12 +153,12 @@ export const PrayerDetails = memo(function PrayerDetails({ date, logs, scheduled
                     </span>
                   )}
                   {status === 'qaza' && (
-                    <span className="flex items-center gap-1 rounded-full px-2 py-0.5 text-xs" style={{ backgroundColor: 'oklch(0.55 0.14 85)', color: 'var(--primary-foreground)' }}>
+                    <span className="flex items-center gap-1 rounded-full px-2 py-0.5 text-xs"               style={{ backgroundColor: 'var(--dd-lantern-gold)', color: 'var(--primary-foreground)' }}>
                       <Clock size={12} /> Qaza
                     </span>
                   )}
                   {status === 'missed' && (
-                    <span className="flex items-center gap-1 rounded-full px-2 py-0.5 text-xs" style={{ backgroundColor: 'oklch(0.55 0.15 25)', color: 'white' }}>
+                    <span className="flex items-center gap-1 rounded-full px-2 py-0.5 text-xs"               style={{ backgroundColor: 'var(--destructive)', color: 'var(--destructive-foreground)' }}>
                       <X size={12} /> Missed
                     </span>
                   )}
@@ -194,7 +194,7 @@ export const PrayerDetails = memo(function PrayerDetails({ date, logs, scheduled
                   type="button"
                   onClick={() => handleMarkMissed(prayer)}
                   className="flex items-center gap-1 rounded border border-border px-2 py-1 text-xs transition-colors hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-                  style={{ color: 'oklch(0.55 0.15 25)' }}
+                  style={{ color: 'var(--destructive)' }}
                 >
                   <X size={12} /> Missed
                 </button>

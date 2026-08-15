@@ -11,10 +11,10 @@ interface HeatmapProps {
 
 function getIntensity(count: number): string {
   if (count === 0) return 'var(--border)'
-  if (count <= 1) return 'oklch(0.85 0.08 85)'
-  if (count <= 2) return 'oklch(0.75 0.10 85)'
-  if (count <= 3) return 'oklch(0.65 0.12 85)'
-  if (count <= 4) return 'oklch(0.55 0.14 85)'
+  if (count <= 1) return 'color-mix(in srgb, var(--dd-lantern-gold) 25%, var(--border))'
+  if (count <= 2) return 'color-mix(in srgb, var(--dd-lantern-gold) 45%, var(--border))'
+  if (count <= 3) return 'color-mix(in srgb, var(--dd-lantern-gold) 65%, var(--border))'
+  if (count <= 4) return 'color-mix(in srgb, var(--dd-lantern-gold) 85%, var(--border))'
   return 'var(--dd-lantern-gold)'
 }
 

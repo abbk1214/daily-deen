@@ -45,7 +45,7 @@ export const TimelineEventCard = memo(function TimelineEventCard({
 
   return (
     <article
-      className="flex gap-4 rounded-2xl border border-border bg-card p-4 transition-colors hover:bg-secondary"
+      className="flex gap-4 rounded-2xl border border-border bg-card p-5 transition-colors hover:bg-secondary"
       style={{ marginBottom: 'var(--space-3)' }}
       aria-label={event.title}
     >

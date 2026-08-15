@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -38,9 +38,30 @@ export default function KhatmahPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-dvh items-center justify-center">
-        <div className="text-muted-foreground" style={{ fontSize: "var(--text-body)" }}>
-          Loading...
+      <div className="flex min-h-dvh flex-col">
+        <div className="sticky top-0 z-30 flex items-center border-b border-border bg-background" style={{ height: "var(--space-12)", padding: "var(--space-3) var(--space-5)" }}>
+          <div className="h-11 w-11 animate-pulse rounded-md bg-muted" />
+          <div className="ml-3 h-5 w-32 animate-pulse rounded bg-muted" />
+        </div>
+        <div className="flex-1 p-5" aria-busy="true" aria-label="Loading khatmah">
+          <div className="animate-pulse rounded-2xl border border-border bg-card p-5 mb-4">
+            <div className="flex items-center gap-6">
+              <div className="h-20 w-20 animate-pulse rounded-full bg-muted" />
+              <div className="flex-1 space-y-2">
+                <div className="h-5 w-32 animate-pulse rounded bg-muted" />
+                <div className="h-3 w-24 animate-pulse rounded bg-muted" />
+              </div>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="animate-pulse rounded-2xl border border-border bg-card p-4">
+                <div className="h-3 w-16 animate-pulse rounded bg-muted mb-2" />
+                <div className="h-6 w-12 animate-pulse rounded bg-muted mb-1" />
+                <div className="h-3 w-20 animate-pulse rounded bg-muted" />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -90,7 +111,7 @@ export default function KhatmahPage() {
         {/* Progress ring */}
         <section
           aria-label="Overall progress"
-          className="rounded-xl border border-border bg-card mb-4"
+          className="rounded-2xl border border-border bg-card mb-4"
           style={{ padding: "var(--space-5)" }}
         >
           <div className="flex items-center gap-6">
@@ -169,22 +190,31 @@ export default function KhatmahPage() {
         </section>
 
         {/* Tabs */}
-        <div className="flex gap-1 mb-4 rounded-lg bg-secondary p-1" role="tablist">
+        <div className="flex border-b border-border mb-4" role="tablist" aria-label="Khatmah sections">
           {(["overview", "progress", "sessions"] as const).map((tab) => (
             <button
               key={tab}
               role="tab"
               aria-selected={selectedTab === tab}
+              aria-controls={`khatmah-${tab}`}
+              id={`khatmah-tab-${tab}`}
               type="button"
               onClick={() => setSelectedTab(tab)}
-              className={`flex-1 rounded-md py-2 text-center transition-colors ${
-                selectedTab === tab
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-              style={{ fontSize: "var(--text-body-sm)", fontWeight: 500, textTransform: "capitalize" }}
+              className="relative flex-1 py-3 text-center transition-colors"
+              style={{
+                color: selectedTab === tab ? "var(--dusk-teal)" : "var(--muted-foreground)",
+                fontSize: "var(--text-body-sm)",
+                fontWeight: 500,
+                textTransform: "capitalize",
+              }}
             >
               {tab}
+              {selectedTab === tab && (
+                <span
+                  className="absolute bottom-0 left-4 right-4 h-[2px] rounded-full bg-dusk-teal"
+                  aria-hidden="true"
+                />
+              )}
             </button>
           ))}
         </div>
@@ -222,7 +252,7 @@ export default function KhatmahPage() {
             {/* Prediction */}
             {khatmahStats.estimatedDaysToComplete > 0 && khatmahStats.percentComplete < 100 && (
               <div
-                className="rounded-xl border border-border bg-card"
+                className="rounded-2xl border border-border bg-card"
                 style={{ padding: "var(--space-4)" }}
               >
                 <div className="flex items-center gap-3">
@@ -245,7 +275,7 @@ export default function KhatmahPage() {
           <div className="flex flex-col gap-3">
             {progress.length === 0 ? (
               <div
-                className="rounded-xl border border-border bg-card text-center"
+                className="rounded-2xl border border-border bg-card text-center"
                 style={{ padding: "var(--space-8)" }}
               >
                 <BookOpen size={32} className="text-muted-foreground mx-auto mb-3" strokeWidth={1} />
@@ -281,7 +311,7 @@ export default function KhatmahPage() {
           <div className="flex flex-col gap-3">
             {sessions.length === 0 ? (
               <div
-                className="rounded-xl border border-border bg-card text-center"
+                className="rounded-2xl border border-border bg-card text-center"
                 style={{ padding: "var(--space-8)" }}
               >
                 <Clock size={32} className="text-muted-foreground mx-auto mb-3" strokeWidth={1} />
@@ -340,7 +370,7 @@ function StatCard({
 }) {
   return (
     <div
-      className="rounded-xl border border-border bg-card"
+      className="rounded-2xl border border-border bg-card"
       style={{ padding: "var(--space-4)" }}
     >
       <div className="flex items-center gap-2 mb-2">
@@ -375,6 +405,43 @@ function GoalSetupModal({
 }) {
   const [selectedType, setSelectedType] = useState<"pages_per_day" | "juz_per_week" | "surah_per_month" | "full_quran_per_year">("pages_per_day");
   const [target, setTarget] = useState(5);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    previousFocusRef.current = document.activeElement as HTMLElement;
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+
+    const focusable = dialog.querySelectorAll<HTMLElement>(
+      'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    );
+    if (focusable.length > 0) focusable[0].focus();
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+        return;
+      }
+      if (e.key === "Tab") {
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      previousFocusRef.current?.focus();
+    };
+  }, [onClose]);
 
   const goalOptions = [
     { type: "pages_per_day" as const, label: "Pages per Day", description: "Read a set number of pages daily", example: "5 pages/day = ~4 months" },
@@ -384,8 +451,9 @@ function GoalSetupModal({
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center" role="dialog" aria-modal="true" aria-label="Set Khatmah Goal" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div
+        ref={dialogRef}
         className="w-full max-w-md rounded-t-2xl bg-background sm:rounded-2xl"
         style={{ padding: "var(--space-6)" }}
       >
@@ -494,10 +562,48 @@ function LogProgressModal({
   const [ayahs, setAyahs] = useState(10);
   const [minutes, setMinutes] = useState(15);
   const [startPage, setStartPage] = useState(1);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    previousFocusRef.current = document.activeElement as HTMLElement;
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+
+    const focusable = dialog.querySelectorAll<HTMLElement>(
+      'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    );
+    if (focusable.length > 0) focusable[0].focus();
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+        return;
+      }
+      if (e.key === "Tab") {
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      previousFocusRef.current?.focus();
+    };
+  }, [onClose]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center" role="dialog" aria-modal="true" aria-label="Log Reading" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div
+        ref={dialogRef}
         className="w-full max-w-md rounded-t-2xl bg-background sm:rounded-2xl"
         style={{ padding: "var(--space-6)" }}
       >

@@ -6,8 +6,7 @@ import Link from "next/link";
 import { getToday } from "@/lib/utils";
 import { WeekStrip } from "@/components/week-strip";
 import { HabitRow } from "@/components/habit-row";
-import { AddHabitForm } from "@/components/add-habit-form";
-import { EditHabitForm } from "@/components/edit-habit-form";
+import { HabitForm } from "@/components/habit-form";
 import { useHabits } from "@/hooks/use-habits";
 import { useOnlineStatus } from "@/hooks/use-online-status";
 
@@ -111,7 +110,6 @@ export default function HabitsPage() {
           height: "var(--space-12)",
           padding: "var(--space-3) var(--space-5)",
         }}
-        role="banner"
       >
         <Link
           href="/"
@@ -121,13 +119,14 @@ export default function HabitsPage() {
           <ArrowLeft size={20} strokeWidth={1.5} />
         </Link>
         <h1
-          className="ml-3 text-muted-foreground"
+          className="ml-3 text-foreground"
           style={{
-            fontFamily: "var(--font-mono)",
-            fontSize: "var(--text-body-sm)",
+            fontFamily: "var(--font-display)",
+            fontSize: "var(--text-h4)",
+            fontWeight: 600,
           }}
         >
-          {today}
+          Habits
         </h1>
       </header>
 
@@ -307,8 +306,17 @@ export default function HabitsPage() {
                 {habits.map((habit, index) => (
                   editingHabit && editingHabit.id === habit.id ? (
                     <li key={habit.id}>
-                      <EditHabitForm
-                        habit={{ ...editingHabit, id: editingHabit.id! }}
+                      <HabitForm
+                        mode="edit"
+                        initialData={{
+                          id: editingHabit.id!,
+                          name: editingHabit.name,
+                          type: editingHabit.type,
+                          target: editingHabit.target,
+                          unit: editingHabit.unit,
+                          increment: editingHabit.increment,
+                        }}
+                        onSubmit={() => {}}
                         onUpdate={handleUpdateHabit}
                         onDelete={handleDeleteHabit}
                         onCancel={handleCancelEdit}
@@ -331,8 +339,9 @@ export default function HabitsPage() {
 
             {/* Add habit form or add button — always available */}
             {showAddForm ? (
-              <AddHabitForm
-                onAdd={handleAddHabit}
+              <HabitForm
+                mode="add"
+                onSubmit={handleAddHabit}
                 onCancel={handleCancelAdd}
               />
             ) : (

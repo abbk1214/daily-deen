@@ -17,7 +17,7 @@ export default function JuzReaderPage() {
   const juzId = Number(params.juzId)
 
   const [ayahs, setAyahs] = useState<Ayah[]>([])
-  const [translations, setTranslations] = useState<AyahTranslation[]>([])
+  const [translations, setTranslations] = useState<(AyahTranslation & { surahNumber: number })[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showTranslation, setShowTranslation] = useState(true)
@@ -86,7 +86,12 @@ export default function JuzReaderPage() {
       .then((results) => {
         if (cancelled) return
         const allAyahs = results.flatMap((r) => r.ayahs)
-        const allTrans = results.flatMap((r) => r.translations)
+        const allTrans = results.flatMap((r) =>
+          r.translations.map((t) => ({
+            ...t,
+            surahNumber: r.ayahs[0]?.surahNumber ?? 0,
+          }))
+        )
         setAyahs(allAyahs)
         setTranslations(allTrans)
         setIsLoading(false)
@@ -102,20 +107,8 @@ export default function JuzReaderPage() {
 
   const playAyah = useCallback((ayahNumber: number) => {
     if (audioRef.current) audioRef.current.pause()
-    const ayah = ayahsRef.current.find((a) => a.numberInSurah === ayahNumber && a.number === ayahNumber)
-    if (!ayah) {
-      // Find by global number
-      const found = ayahsRef.current.find((a) => a.number === ayahNumber)
-      if (!found) return
-      const reciter = RECITERS.find((r) => r.id === selectedReciter) || RECITERS[0]
-      const audio = new Audio(`${reciter.baseUrl}/${found.number}.mp3`)
-      audioRef.current = audio
-      setPlayingAyah(found.number)
-      audio.play().catch(() => setPlayingAyah(null))
-      audio.onerror = () => setPlayingAyah(null)
-      audio.onended = () => setPlayingAyah(null)
-      return
-    }
+    const ayah = ayahsRef.current.find((a) => a.number === ayahNumber)
+    if (!ayah) return
     const reciter = RECITERS.find((r) => r.id === selectedReciter) || RECITERS[0]
     const audio = new Audio(`${reciter.baseUrl}/${ayah.number}.mp3`)
     audioRef.current = audio
@@ -124,6 +117,15 @@ export default function JuzReaderPage() {
     audio.onerror = () => setPlayingAyah(null)
     audio.onended = () => setPlayingAyah(null)
   }, [selectedReciter])
+
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause()
+        audioRef.current = null
+      }
+    }
+  }, [])
 
   const stopPlayback = useCallback(() => {
     if (audioRef.current) {
@@ -163,7 +165,7 @@ export default function JuzReaderPage() {
     )
   }
 
-  const transMap = new Map(translations.map((t) => [t.ayahNumber, t.text]))
+  const transMap = new Map(translations.map((t) => [`${t.surahNumber}:${t.ayahNumber}`, t.text]))
   let lastSurah = 0
 
   return (
@@ -231,6 +233,7 @@ export default function JuzReaderPage() {
               type="button"
               role="switch"
               aria-checked={showTranslation}
+              aria-label="Show translation"
               onClick={() => {
                 const v = !showTranslation
                 setShowTranslation(v)
@@ -253,6 +256,7 @@ export default function JuzReaderPage() {
                 setSelectedTranslation(e.target.value)
                 saveQuranSettings({ selectedTranslation: e.target.value })
               }}
+              aria-label="Translation language"
               className="flex-1 rounded-lg border border-border bg-background px-3 py-1.5 text-sm text-foreground"
             >
               {TRANSLATIONS.map((t) => (
@@ -270,6 +274,7 @@ export default function JuzReaderPage() {
                 setSelectedReciter(e.target.value)
                 saveQuranSettings({ selectedReciter: e.target.value })
               }}
+              aria-label="Reciter"
               className="flex-1 rounded-lg border border-border bg-background px-3 py-1.5 text-sm text-foreground"
             >
               {RECITERS.map((r) => (
@@ -291,6 +296,7 @@ export default function JuzReaderPage() {
                 setFontSize(v)
                 saveQuranSettings({ fontSize: v })
               }}
+              aria-label="Arabic font size"
               className="flex-1 accent-[var(--dd-dusk-teal)]"
             />
             <span className="text-muted-foreground w-8 text-right" style={{ fontSize: "var(--text-caption)" }}>
@@ -313,7 +319,7 @@ export default function JuzReaderPage() {
             if (!ayah) return null
             const showSurahHeader = ayah.surahNumber !== lastSurah
             if (showSurahHeader) lastSurah = ayah.surahNumber
-            const trans = transMap.get(ayah.numberInSurah)
+            const trans = transMap.get(`${ayah.surahNumber}:${ayah.numberInSurah}`)
             const isPlaying = playingAyah === ayah.number
             const surahMeta = getSurahMeta(ayah.surahNumber)
 

@@ -109,7 +109,7 @@ export const HabitSummaryCard = memo(function HabitSummaryCard({
                   aria-valuemin={0}
                   aria-valuemax={habit.target}
                   aria-label={`${habit.name}: ${value} of ${habit.target} ${habit.unit}`}
-                  className="h-1.5 w-full overflow-hidden rounded-full bg-muted"
+                  className="h-[3px] w-full overflow-hidden rounded-full bg-muted"
                 >
                   <div
                     className="h-full rounded-full"

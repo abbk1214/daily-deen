@@ -23,7 +23,7 @@ export const RamadanBanner = memo(function RamadanBanner({
       className="rounded-2xl border p-4"
       style={{
         borderColor: 'var(--dd-lantern-gold)',
-        background: 'linear-gradient(135deg, oklch(0.25 0.02 80 / 0.05), oklch(0.76 0.14 85 / 0.08))',
+        background: 'linear-gradient(135deg, color-mix(in srgb, var(--dd-ink-night) 5%, transparent), color-mix(in srgb, var(--dd-lantern-gold) 8%, transparent))',
       }}
     >
       <div className="flex items-center gap-3">

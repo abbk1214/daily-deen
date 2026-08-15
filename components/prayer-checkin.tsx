@@ -108,7 +108,7 @@ export function PrayerCheckIn({ onToggle }: PrayerCheckInProps) {
       className="rounded-2xl border bg-card p-5 transition-colors duration-200"
       style={{
         borderColor: celebrating ? "var(--dd-lantern-gold)" : "var(--border)",
-        boxShadow: celebrating ? "0 0 20px oklch(0.76 0.14 85 / 0.15)" : undefined,
+        boxShadow: celebrating ? "0 0 20px color-mix(in srgb, var(--dd-lantern-gold) 15%, transparent)" : undefined,
       }}
     >
       {/* Prayer circles — Apple Watch style */}

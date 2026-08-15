@@ -54,7 +54,6 @@ export default function TimelinePage() {
           height: 'var(--space-12)',
           padding: 'var(--space-3) var(--space-5)',
         }}
-        role="banner"
       >
         <Link
           href="/"
@@ -108,7 +107,7 @@ export default function TimelinePage() {
 
         {/* Loading state */}
         {loading && (
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4" aria-busy="true" aria-label="Loading timeline">
             {[1, 2, 3].map((i) => (
               <div key={i} className="animate-pulse rounded-2xl border border-border bg-card p-4">
                 <div className="flex gap-4">

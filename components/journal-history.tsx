@@ -1,4 +1,4 @@
-import { memo, useCallback } from "react";
+import { memo } from "react";
 import { BookOpen } from "lucide-react";
 import type { JournalEntry } from "@/lib/db";
 import { formatHijriDate } from "@/lib/hijri-date";
@@ -75,19 +75,11 @@ const EntryCard = memo(function EntryCard({ entry }: { entry: JournalEntry }) {
   const visibleTags = entry.tags.slice(0, 3);
   const extraCount = entry.tags.length - 3;
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-    }
-  }, []);
-
   return (
-    <article
-      className="rounded-lg border border-border bg-card p-5 shadow-[var(--shadow-xs)] transition-all duration-[var(--duration-fast)] ease-[var(--ease-out)] hover:border-accent hover:shadow-[var(--shadow-sm)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring cursor-pointer"
-      tabIndex={0}
-      role="button"
+    <button
+      type="button"
+      className="rounded-lg border border-border bg-card p-5 shadow-[var(--shadow-xs)] text-left transition-all duration-[var(--duration-fast)] ease-[var(--ease-out)] hover:border-accent hover:shadow-[var(--shadow-sm)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring w-full cursor-pointer"
       aria-label={`Journal entry from ${formatDate(entry.date)}`}
-      onKeyDown={handleKeyDown}
     >
       <div className="flex items-start justify-between" style={{ marginBottom: "var(--space-2)" }}>
         <div>
@@ -170,7 +162,7 @@ const EntryCard = memo(function EntryCard({ entry }: { entry: JournalEntry }) {
           )}
         </div>
       )}
-    </article>
+    </button>
   );
 })
 

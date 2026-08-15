@@ -167,6 +167,15 @@ export default function SurahPage() {
   }, [selectedReciter]);
 
   useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause()
+        audioRef.current = null
+      }
+    }
+  }, [])
+
+  useEffect(() => {
     playAyahRef.current = playAyah;
   });
 
@@ -223,6 +232,7 @@ export default function SurahPage() {
             type="button"
             onClick={() => setShowSettings(!showSettings)}
             aria-label="Reading settings"
+            aria-expanded={showSettings}
             className="flex h-9 w-9 items-center justify-center rounded-md text-foreground transition-colors hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           >
             <Settings2 size={18} strokeWidth={1.5} />
@@ -244,6 +254,9 @@ export default function SurahPage() {
                 setShowTranslation(newValue);
                 saveQuranSettings({ showTranslation: newValue });
               }}
+              role="switch"
+              aria-checked={showTranslation}
+              aria-label="Show translation"
               className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                 showTranslation ? "bg-dusk-teal text-white" : "bg-secondary text-muted-foreground"
               }`}
@@ -264,6 +277,7 @@ export default function SurahPage() {
                 setSelectedTranslation(value);
                 saveQuranSettings({ selectedTranslation: value });
               }}
+              aria-label="Translation language"
               className="flex-1 rounded-lg border border-border bg-background px-3 py-1.5 text-sm text-foreground"
             >
               {TRANSLATIONS.map((t) => (
@@ -284,6 +298,7 @@ export default function SurahPage() {
                 setSelectedReciter(value);
                 saveQuranSettings({ selectedReciter: value });
               }}
+              aria-label="Reciter"
               className="flex-1 rounded-lg border border-border bg-background px-3 py-1.5 text-sm text-foreground"
             >
               {RECITERS.map((r) => (
@@ -306,6 +321,7 @@ export default function SurahPage() {
                 setFontSize(value);
                 saveQuranSettings({ fontSize: value });
               }}
+              aria-label="Arabic font size"
               className="flex-1 accent-[var(--dd-dusk-teal)]"
             />
             <span className="text-muted-foreground w-8 text-right" style={{ fontSize: "var(--text-caption)" }}>

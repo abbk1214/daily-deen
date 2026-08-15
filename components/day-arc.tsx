@@ -42,7 +42,7 @@ export const DayArc = memo(function DayArc({ prayers, loading }: DayArcProps) {
     };
   }, [now]);
 
-  const hijriDate = useMemo(() => getHijriDateString(), []);
+  const hijriDate = useMemo(() => getHijriDateString(), [now]);
   const gregorianDate = useMemo(
     () =>
       new Date().toLocaleDateString("en-US", {
@@ -50,7 +50,7 @@ export const DayArc = memo(function DayArc({ prayers, loading }: DayArcProps) {
         month: "long",
         day: "numeric",
       }),
-    [],
+    [now],
   );
 
   if (loading || !prayers) {

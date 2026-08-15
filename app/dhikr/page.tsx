@@ -143,7 +143,7 @@ export default function DhikrPage() {
               type="button"
               onClick={resetTasbeeh}
               aria-label="Reset"
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-muted-foreground transition-colors hover:bg-secondary/80"
+              className="flex h-11 w-11 items-center justify-center rounded-full bg-secondary text-muted-foreground transition-colors hover:bg-secondary/80"
             >
               <RotateCcw size={16} strokeWidth={1.5} />
             </button>
@@ -167,7 +167,7 @@ export default function DhikrPage() {
                 resetTasbeeh();
               }}
               aria-label={`Target: ${tasbeehTarget}`}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-muted-foreground transition-colors hover:bg-secondary/80"
+              className="flex h-11 w-11 items-center justify-center rounded-full bg-secondary text-muted-foreground transition-colors hover:bg-secondary/80"
               style={{
                 fontFamily: "var(--font-mono)",
                 fontSize: "var(--text-caption)",

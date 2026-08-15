@@ -111,7 +111,7 @@ function Sidebar({
       style={{
         width: isCollapsed ? "64px" : "200px",
         padding: "var(--space-6)",
-        transition: "none",
+        transition: "width 200ms ease-in-out",
       }}
     >
       <div className="flex flex-1 flex-col">

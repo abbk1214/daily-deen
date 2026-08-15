@@ -27,7 +27,7 @@ export const JournalPrompt = memo(function JournalPrompt({
     return (
       <Link
         href="/journal"
-        className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4 transition-colors hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+        className="flex items-center gap-4 rounded-2xl border border-border bg-card p-5 transition-colors hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
       >
         <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-quiet-sage/10">
           <Check size={20} className="text-quiet-sage" strokeWidth={1.5} />
@@ -47,7 +47,7 @@ export const JournalPrompt = memo(function JournalPrompt({
   return (
     <Link
       href="/journal"
-      className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4 transition-colors hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+      className="flex items-center gap-4 rounded-2xl border border-border bg-card p-5 transition-colors hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
     >
       <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-lantern-gold/10">
         <PenLine size={20} className="text-lantern-gold" strokeWidth={1.5} />

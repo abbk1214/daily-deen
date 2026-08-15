@@ -37,7 +37,7 @@ export const CompassArrow = memo(function CompassArrow({
             style={{
               borderLeft: "6px solid transparent",
               borderRight: "6px solid transparent",
-              borderBottom: "10px solid oklch(0.55 0.14 85)",
+              borderBottom: "10px solid var(--dd-lantern-gold)",
             }}
           />
         </div>

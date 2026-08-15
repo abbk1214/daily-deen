@@ -43,9 +43,9 @@ function StatusDot({ status }: { status: "complete" | "partial" | "missed" | "no
     status === "complete"
       ? "var(--dd-lantern-gold)"
       : status === "partial"
-        ? "oklch(0.75 0.12 85)"
+        ? "color-mix(in srgb, var(--dd-lantern-gold) 60%, var(--border))"
         : status === "missed"
-          ? "oklch(0.55 0.15 25)"
+          ? "var(--destructive)"
           : "var(--border)"
 
   return (

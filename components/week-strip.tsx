@@ -1,6 +1,7 @@
 "use client";
 
 import { memo, useCallback, useMemo, useRef } from "react";
+import { getToday } from "@/lib/utils";
 
 interface WeekStripProps {
   selectedDate: string;
@@ -25,8 +26,8 @@ function getWeekDates(): string[] {
 const DAY_LABELS = ["S", "M", "T", "W", "T", "F", "S"];
 
 export const WeekStrip = memo(function WeekStrip({ selectedDate, onSelectDate }: WeekStripProps) {
-  const weekDates = useMemo(() => getWeekDates(), []);
-  const today = useMemo(() => new Date().toISOString().split("T")[0], []);
+  const today = getToday();
+  const weekDates = useMemo(() => getWeekDates(), [today]);
   const tabsRef = useRef<HTMLButtonElement[]>([]);
 
   const handleKeyDown = useCallback(

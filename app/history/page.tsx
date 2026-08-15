@@ -144,7 +144,11 @@ export default function HistoryPage() {
         </Link>
         <h1
           className="ml-3 text-foreground"
-          style={{ fontSize: 'var(--text-body)', fontWeight: 500 }}
+          style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: 'var(--text-h4)',
+            fontWeight: 600,
+          }}
         >
           Prayer History
         </h1>
@@ -187,7 +191,7 @@ export default function HistoryPage() {
 
         {/* Filters */}
         {showFilters && (
-          <div className="rounded-lg border border-border bg-card" style={{ padding: 'var(--space-4)' }}>
+          <div className="rounded-2xl border border-border bg-card" style={{ padding: 'var(--space-4)' }}>
             <div className="flex flex-wrap gap-2" style={{ marginBottom: 'var(--space-3)' }}>
               {FILTER_OPTIONS.map((opt) => (
                 <button
@@ -227,7 +231,7 @@ export default function HistoryPage() {
 
         {/* Stats cards */}
         <div className="grid grid-cols-3 gap-3">
-          <div className="rounded-lg border border-border bg-card" style={{ padding: 'var(--space-4)', textAlign: 'center' }}>
+          <div className="rounded-2xl border border-border bg-card" style={{ padding: 'var(--space-4)', textAlign: 'center' }}>
             <div className="text-muted-foreground" style={{ fontSize: 'var(--text-caption)', letterSpacing: 'var(--tracking-wide)' }}>
               STREAK
             </div>
@@ -236,7 +240,7 @@ export default function HistoryPage() {
             </div>
             <div className="text-muted-foreground" style={{ fontSize: 'var(--text-caption)' }}>days</div>
           </div>
-          <div className="rounded-lg border border-border bg-card" style={{ padding: 'var(--space-4)', textAlign: 'center' }}>
+          <div className="rounded-2xl border border-border bg-card" style={{ padding: 'var(--space-4)', textAlign: 'center' }}>
             <div className="text-muted-foreground" style={{ fontSize: 'var(--text-caption)', letterSpacing: 'var(--tracking-wide)' }}>
               COMPLETED
             </div>
@@ -245,7 +249,7 @@ export default function HistoryPage() {
             </div>
             <div className="text-muted-foreground" style={{ fontSize: 'var(--text-caption)' }}>overall</div>
           </div>
-          <div className="rounded-lg border border-border bg-card" style={{ padding: 'var(--space-4)', textAlign: 'center' }}>
+          <div className="rounded-2xl border border-border bg-card" style={{ padding: 'var(--space-4)', textAlign: 'center' }}>
             <div className="text-muted-foreground" style={{ fontSize: 'var(--text-caption)', letterSpacing: 'var(--tracking-wide)' }}>
               THIS WEEK
             </div>
@@ -299,7 +303,7 @@ export default function HistoryPage() {
         />
 
         {/* History list */}
-        <div className="rounded-lg border border-border bg-card" style={{ padding: 'var(--space-4)' }}>
+        <div className="rounded-2xl border border-border bg-card" style={{ padding: 'var(--space-4)' }}>
           <h3
             className="text-foreground"
             style={{
@@ -312,7 +316,7 @@ export default function HistoryPage() {
             Recent Activity
           </h3>
           {loading ? (
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2" aria-busy="true" aria-label="Loading prayer history">
               {[1, 2, 3].map((i) => (
                 <div key={i} className="h-12 animate-pulse rounded bg-muted" />
               ))}
@@ -350,12 +354,12 @@ export default function HistoryPage() {
                       </span>
                     )}
                     {log.qaza && (
-                      <span className="rounded-full px-2 py-0.5 text-xs" style={{ backgroundColor: 'oklch(0.55 0.14 85)', color: 'var(--primary-foreground)' }}>
+                      <span className="rounded-full px-2 py-0.5 text-xs" style={{ backgroundColor: 'var(--dd-lantern-gold)', color: 'var(--primary-foreground)' }}>
                         Qaza
                       </span>
                     )}
                     {log.missed && (
-                      <span className="rounded-full px-2 py-0.5 text-xs" style={{ backgroundColor: 'oklch(0.55 0.15 25)', color: 'white' }}>
+                      <span className="rounded-full px-2 py-0.5 text-xs" style={{ backgroundColor: 'var(--destructive)', color: 'var(--destructive-foreground)' }}>
                         Missed
                       </span>
                     )}

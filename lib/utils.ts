@@ -119,3 +119,44 @@ export function toYearMonth(dateStr: string): string {
 export function toYear(dateStr: string): string {
   return dateStr.slice(0, 4)
 }
+
+/* ─── Shared formatting utilities ─── */
+
+/** Formats duration in minutes to "Xh Ym" or "Xm" */
+export function formatDuration(minutes: number): string {
+  const h = Math.floor(minutes / 60)
+  const m = minutes % 60
+  if (h === 0) return `${m}m`
+  return m > 0 ? `${h}h ${m}m` : `${h}h`
+}
+
+/** Formats a date string to short format: "Jan 15" */
+export function formatDateShort(dateStr: string): string {
+  return new Date(dateStr + "T00:00:00").toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+  })
+}
+
+/** Formats a date string to long format: "January 15, 2024" */
+export function formatDateLong(dateStr: string): string {
+  return new Date(dateStr + "T00:00:00").toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  })
+}
+
+/** Formats a date string to weekday + month + day: "Monday, January 15" */
+export function formatDateWithWeekday(dateStr: string): string {
+  return new Date(dateStr + "T00:00:00").toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  })
+}
+
+/** Clamp a number between min and max */
+export function clamp(value: number, min: number, max: number): number {
+  return Math.min(Math.max(value, min), max)
+}

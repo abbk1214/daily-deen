@@ -1,21 +1,16 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Moon, Plus, X, Star } from "lucide-react";
+import { Moon, Plus, Star } from "lucide-react";
 import db from "@/lib/db";
 import type { SleepEntry } from "@/lib/db";
-import { getToday } from "@/lib/utils";
+import { getToday, formatDuration } from "@/lib/utils";
+import { BottomSheet } from "@/components/ui/bottom-sheet";
 
 const SLEEP_TAGS = [
   "Caffeine", "Exercise", "Stress", "Screen time", "Late meal",
   "Meditation", "Reading", "Cool room", "Noisy", "Comfortable",
 ];
-
-function formatDuration(minutes: number): string {
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  return `${h}h ${m}m`;
-}
 
 function timeToMinutes(time: string): number {
   const [h, m] = time.split(":").map(Number);
@@ -149,21 +144,7 @@ export function SleepLogger() {
       )}
 
       {/* Check-in modal */}
-      {showCheckin && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm">
-          <div className="w-full max-w-lg bg-card rounded-t-2xl p-5 space-y-4 max-h-[85vh] overflow-y-auto">
-            <div className="flex items-center justify-between">
-              <h3 className="text-foreground" style={{ fontSize: "var(--text-body)", fontWeight: 600 }}>
-                Log Sleep
-              </h3>
-              <button
-                onClick={() => setShowCheckin(false)}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
+      <BottomSheet open={showCheckin} onClose={() => setShowCheckin(false)} title="Log Sleep">
             {/* Bedtime & Wake time */}
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -272,14 +253,12 @@ export function SleepLogger() {
             {/* Submit */}
             <button
               onClick={addEntry}
-              className="w-full py-3 rounded-xl bg-accent text-accent-foreground font-medium transition-colors hover:bg-accent/90"
+              className="w-full py-3 rounded-xl bg-dusk-teal text-white font-medium transition-colors hover:bg-dusk-teal/90"
               style={{ fontSize: "var(--text-body-sm)" }}
             >
               Save Sleep Log
             </button>
-          </div>
-        </div>
-      )}
+      </BottomSheet>
     </div>
   );
 }

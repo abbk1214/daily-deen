@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useMemo } from "react";
 import Link from "next/link";
-import { ArrowLeft, Search } from "lucide-react";
+import { ArrowLeft, Search, BookOpen } from "lucide-react";
 import { searchSurahs } from "@/lib/quran/data";
 
 export default function QuranSearchPage() {
@@ -65,8 +65,19 @@ export default function QuranSearchPage() {
       </div>
 
       <main className="flex-1 pb-24 lg:pb-8">
-        <ul aria-label="Search results" className="flex flex-col">
-          {results.map((surah) => (
+        {results.length === 0 && query.trim() ? (
+          <div className="flex flex-col items-center py-24 text-center px-5">
+            <BookOpen size={48} strokeWidth={1.5} className="text-muted-foreground" style={{ marginBottom: "var(--space-4)" }} />
+            <h2 className="text-foreground" style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-h3)", fontWeight: 600, marginBottom: "var(--space-2)" }}>
+              No surahs found
+            </h2>
+            <p className="text-muted-foreground" style={{ fontSize: "var(--text-body-sm)", maxWidth: "30ch" }}>
+              Try searching by name, number, or meaning.
+            </p>
+          </div>
+        ) : (
+          <ul aria-label="Search results" className="flex flex-col">
+            {results.map((surah) => (
             <li key={surah.number}>
               <Link
                 href={`/quran/${surah.number}`}
@@ -93,7 +104,8 @@ export default function QuranSearchPage() {
               </Link>
             </li>
           ))}
-        </ul>
+          </ul>
+        )}
       </main>
     </div>
   );

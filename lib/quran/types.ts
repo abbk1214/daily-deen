@@ -30,39 +30,6 @@ export interface AyahTransliteration {
   text: string;
 }
 
-export interface Bookmark {
-  id?: number;
-  surahNumber: number;
-  ayahNumber: number;
-  surahName: string;
-  ayahText: string;
-  note?: string;
-  createdAt: number;
-}
-
-export interface ReadingProgress {
-  id?: number;
-  surahNumber: number;
-  ayahNumber: number;
-  lastReadAt: number;
-}
-
-export interface ReadingSession {
-  id?: number;
-  surahNumber: number;
-  ayahNumber: number;
-  duration: number;
-  date: string;
-}
-
-export interface QuranSettings {
-  selectedTranslation: string;
-  selectedReciter: string;
-  fontSize: number;
-  showTranslation: boolean;
-  showTransliteration: boolean;
-}
-
 export type Reciter = {
   id: string;
   name: string;
@@ -83,27 +50,6 @@ export const TRANSLATIONS = [
   { id: "en.yusufali", name: "Yusuf Ali", language: "en" },
 ];
 
-export interface KhatmahGoal {
-  id?: number;
-  type: "pages_per_day" | "juz_per_week" | "surah_per_month" | "full_quran_per_year";
-  target: number;
-  startDate: string;
-  endDate?: string;
-  isActive: boolean;
-  createdAt: number;
-}
-
-export interface KhatmahProgress {
-  id?: number;
-  date: string;
-  pagesRead: number;
-  juzRead: number;
-  ayahsRead: number;
-  duration: number;
-  lastPage: number;
-  lastJuz: number;
-}
-
 export interface KhatmahStats {
   totalPagesRead: number;
   totalAyahsRead: number;
@@ -114,16 +60,4 @@ export interface KhatmahStats {
   pagesPerDay: number;
   estimatedDaysToComplete: number;
   percentComplete: number;
-}
-
-export interface ReadingSessionLog {
-  id?: number;
-  date: string;
-  startTime: number;
-  endTime: number;
-  duration: number;
-  pagesRead: number;
-  ayahsRead: number;
-  startPage: number;
-  endPage: number;
 }

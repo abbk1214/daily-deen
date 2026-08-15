@@ -22,7 +22,7 @@ export const TimelineStatsBar = memo(function TimelineStatsBar({
 
   return (
     <div
-      className="grid grid-cols-3 gap-4 rounded-2xl border border-border bg-card p-4"
+      className="grid grid-cols-3 gap-4 rounded-2xl border border-border bg-card p-5"
       role="region"
       aria-label="Timeline statistics"
     >

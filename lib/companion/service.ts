@@ -13,6 +13,7 @@ function generateId(): string {
 }
 
 function getConversations(): CompanionConversation[] {
+  if (typeof window === "undefined") return []
   try {
     const raw = localStorage.getItem(`${STORAGE_PREFIX}:conversations`)
     return raw ? JSON.parse(raw) : []
@@ -22,6 +23,7 @@ function getConversations(): CompanionConversation[] {
 }
 
 function saveConversations(convs: CompanionConversation[]): void {
+  if (typeof window === "undefined") return
   try {
     localStorage.setItem(`${STORAGE_PREFIX}:conversations`, JSON.stringify(convs))
   } catch {
@@ -30,6 +32,13 @@ function saveConversations(convs: CompanionConversation[]): void {
 }
 
 function getConfig(): CompanionConfig {
+  if (typeof window === "undefined") {
+    return {
+      enabled: true,
+      provider: "local",
+      systemPrompt: DEFAULT_SYSTEM_PROMPT,
+    }
+  }
   try {
     const raw = localStorage.getItem(`${STORAGE_PREFIX}:config`)
     return raw ? JSON.parse(raw) : {
@@ -47,6 +56,7 @@ function getConfig(): CompanionConfig {
 }
 
 export function saveConfig(config: CompanionConfig): void {
+  if (typeof window === "undefined") return
   try {
     localStorage.setItem(`${STORAGE_PREFIX}:config`, JSON.stringify(config))
   } catch {
@@ -286,6 +296,7 @@ function generateLocalResponse(message: string): string {
       "Being Muslim is a journey, not a destination. Every step counts, no matter how small. What would you like to work on?",
       "The beauty of Islam is that it encompasses every aspect of life. What part of your deen would you like to explore?",
     ]
+    return responses[Math.floor(Math.random() * responses.length)]
   }
 
   // Default responses
@@ -296,8 +307,4 @@ function generateLocalResponse(message: string): string {
     "That's an interesting thought. The Prophet (ﷺ) said: 'Seek knowledge from the cradle to the grave.' What aspect of knowledge or practice are you curious about?",
   ]
   return defaults[Math.floor(Math.random() * defaults.length)]
-}
-
-export function getConfig_(): CompanionConfig {
-  return getConfig()
 }

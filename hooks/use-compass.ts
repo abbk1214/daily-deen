@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
   isCompassSupported,
   requestCompassPermission,
@@ -65,11 +65,11 @@ export function useCompass(smoothing?: number): UseCompassReturn {
     }
   }, [])
 
-  const compass: CompassState = {
+  const compass: CompassState = useMemo(() => ({
     ...getCompassState(heading, isSupported),
     permissionState,
     isCalibrated,
-  }
+  }), [heading, isSupported, permissionState, isCalibrated])
 
   return {
     compass,
