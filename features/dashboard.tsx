@@ -6,6 +6,7 @@ import { BookOpen, ChevronRight, ArrowRight } from "lucide-react";
 import { useDashboardData } from "@/hooks/use-dashboard-data";
 import { useOnlineStatus } from "@/hooks/use-online-status";
 import { useSettings } from "@/hooks/use-settings";
+import { useScrollReveal } from "@/hooks/use-scroll-reveal";
 import { getToday } from "@/lib/utils";
 import { formatHijriDate } from "@/lib/hijri-date";
 import { DateHeader, NextPrayerCard } from "@/components/dashboard";
@@ -69,10 +70,18 @@ const ContinueReading = memo(function ContinueReading() {
   return (
     <Link
       href={`/quran/${lastRead.surahNumber}?ayah=${lastRead.ayahNumber}`}
-      className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4 transition-colors hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+      className="flex items-center gap-4 rounded-2xl border border-border bg-card transition-colors hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+      style={{ padding: "var(--space-4)", boxShadow: "var(--shadow-xs)" }}
     >
-      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-dusk-teal/10">
-        <BookOpen size={20} className="text-dusk-teal" strokeWidth={1.5} />
+      <div
+        className="flex items-center justify-center rounded-xl"
+        style={{
+          width: 44,
+          height: 44,
+          background: "color-mix(in srgb, var(--dd-dusk-teal) 8%, transparent)",
+        }}
+      >
+        <BookOpen size={18} className="text-dusk-teal" strokeWidth={1.5} />
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-foreground" style={{ fontSize: "var(--text-body-sm)", fontWeight: 500 }}>
@@ -100,6 +109,7 @@ export function Dashboard() {
   const isOnline = useOnlineStatus();
   const { settings } = useSettings();
   const [streakRefreshKey, setStreakRefreshKey] = useState(0);
+  const scrollRef = useScrollReveal();
 
   const today = useMemo(() => getToday(), []);
   const affirmation = useMemo(() => getTodayAffirmation(), []);
@@ -125,7 +135,7 @@ export function Dashboard() {
           }}
         >
           <h1
-            className="font-display text-foreground"
+            className="text-foreground"
             style={{
               fontFamily: "var(--font-display)",
               fontSize: "var(--text-h4)",
@@ -153,7 +163,7 @@ export function Dashboard() {
         }}
       >
         <h1
-          className="font-display text-foreground"
+          className="text-foreground"
           style={{
             fontFamily: "var(--font-display)",
             fontSize: "var(--text-h4)",
@@ -166,21 +176,34 @@ export function Dashboard() {
       </header>
 
       <main
+        ref={scrollRef}
         id="main"
         className="flex flex-1 flex-col pb-24 lg:pb-8"
         style={{
-          padding: "var(--space-6)",
+          paddingInline: "var(--space-6)",
+          paddingTop: "var(--space-8)",
           paddingBottom: "calc(var(--space-16) + env(safe-area-inset-bottom, 0px) + var(--space-6))",
           maxWidth: "var(--content-reading)",
           marginLeft: "auto",
           marginRight: "auto",
           width: "100%",
-          gap: "var(--space-8)",
+          gap: "var(--space-10)",
         }}
       >
-        {/* Greeting + Date — calm, minimal */}
-        <section aria-label="Date and greeting" style={{ paddingTop: "var(--space-2)" }}>
-          <p className="text-muted-foreground" style={{ fontSize: "var(--text-body-sm)", marginBottom: "var(--space-1)" }}>
+        {/* Greeting — editorial opening moment */}
+        <section aria-label="Date and greeting" style={{ paddingBottom: "var(--space-2)" }}>
+          <p
+            className="text-foreground"
+            style={{
+              fontFamily: "var(--font-display)",
+              fontSize: "clamp(28px, 5vw, 40px)",
+              fontWeight: 500,
+              fontStyle: "italic",
+              lineHeight: "var(--leading-tight)",
+              letterSpacing: "-0.02em",
+              marginBottom: "var(--space-4)",
+            }}
+          >
             {greeting}
           </p>
           <DateHeader
@@ -194,12 +217,12 @@ export function Dashboard() {
         </section>
 
         {/* Prayer Check-in — primary action */}
-        <section aria-label="Mark prayers as completed">
+        <section aria-label="Mark prayers as completed" className="dd-reveal">
           <PrayerCheckIn onToggle={() => setStreakRefreshKey((k) => k + 1)} />
         </section>
 
         {/* Journal Prompt — contextual, appears after all prayers done */}
-        <section aria-label="Journal prompt">
+        <section aria-label="Journal prompt" className="dd-reveal">
           <JournalPrompt
             allPrayersCompleted={
               prayers
@@ -210,22 +233,22 @@ export function Dashboard() {
         </section>
 
         {/* Weekly Summary — progress overview */}
-        <section aria-label="Weekly summary">
+        <section aria-label="Weekly summary" className="dd-reveal">
           <WeeklySummary />
         </section>
 
         {/* Health Summary — today's wellness at a glance */}
-        <section aria-label="Health summary">
+        <section aria-label="Health summary" className="dd-reveal">
           <HealthSummary />
         </section>
 
         {/* Streak — visible progress */}
-        <section aria-label="Prayer streak">
+        <section aria-label="Prayer streak" className="dd-reveal">
           <StreakCard loading={loading} refreshKey={streakRefreshKey} />
         </section>
 
         {/* Today's Habits — quick log */}
-        <section aria-label="Today's habits">
+        <section aria-label="Today's habits" className="dd-reveal">
           <TodayHabits
             habits={habits}
             habitLogs={habitLogs}
@@ -234,7 +257,7 @@ export function Dashboard() {
         </section>
 
         {/* Next Prayer + Continue Reading — task-oriented */}
-        <section aria-label="Next prayer and reading" className="flex flex-col" style={{ gap: "var(--space-3)" }}>
+        <section aria-label="Next prayer and reading" className="dd-reveal flex flex-col" style={{ gap: "var(--space-3)" }}>
           <ContinueReading />
           <NextPrayerCard
             nextPrayer={nextPrayer}
@@ -245,17 +268,17 @@ export function Dashboard() {
         </section>
 
         {/* Today's Focus — one contextual card */}
-        <section aria-label="Today's focus">
+        <section aria-label="Today's focus" className="dd-reveal">
           <AdhkarTracker />
         </section>
 
         {/* Deen Guide — spiritual companion */}
-        <section aria-label="Deen Guide">
+        <section aria-label="Deen Guide" className="dd-reveal">
           <CompanionCard />
         </section>
 
         {/* Weather + Quote — ambient context */}
-        <section aria-label="Weather and inspiration" className="flex flex-col" style={{ gap: "var(--space-3)" }}>
+        <section aria-label="Weather and inspiration" className="dd-reveal flex flex-col" style={{ gap: "var(--space-3)" }}>
           <WeatherWidget />
           <DailyQuote />
         </section>
@@ -263,16 +286,31 @@ export function Dashboard() {
         {/* Daily Affirmation — closing thought */}
         <aside
           aria-label="Daily reflection"
-          className="flex flex-col items-center text-center"
-          style={{ paddingTop: "var(--space-6)", paddingBottom: "var(--space-4)", maxWidth: "40ch", marginInline: "auto" }}
+          className="dd-reveal flex flex-col items-center text-center"
+          style={{
+            paddingTop: "var(--space-8)",
+            paddingBottom: "var(--space-4)",
+            maxWidth: "36ch",
+            marginInline: "auto",
+          }}
         >
+          <div
+            style={{
+              width: "24px",
+              height: "1px",
+              background: "var(--border)",
+              marginBottom: "var(--space-6)",
+            }}
+            aria-hidden="true"
+          />
           <p
             className="text-foreground"
             style={{
               fontFamily: "var(--font-display)",
-              fontSize: "clamp(18px, 3vw, 24px)",
+              fontSize: "clamp(18px, 3vw, 22px)",
               fontWeight: 500,
-              lineHeight: 1.5,
+              fontStyle: "italic",
+              lineHeight: 1.6,
               letterSpacing: "-0.01em",
             }}
           >
@@ -280,7 +318,11 @@ export function Dashboard() {
           </p>
           <p
             className="text-muted-foreground"
-            style={{ fontSize: "var(--text-caption)", marginTop: "var(--space-2)" }}
+            style={{
+              fontSize: "var(--text-caption)",
+              marginTop: "var(--space-3)",
+              letterSpacing: "var(--tracking-wide)",
+            }}
           >
             — {affirmation.source}
           </p>
@@ -290,7 +332,8 @@ export function Dashboard() {
         <Link
           href="/wellness"
           aria-label="Explore all wellness trackers"
-          className="flex items-center justify-center gap-2 rounded-2xl border border-border bg-card py-4 transition-colors hover:bg-secondary"
+          className="dd-reveal flex items-center justify-center gap-2 rounded-2xl border border-border bg-card transition-colors hover:bg-secondary"
+          style={{ padding: "var(--space-4)", boxShadow: "var(--shadow-xs)" }}
         >
           <span className="text-muted-foreground" style={{ fontSize: "var(--text-body-sm)", fontWeight: 500 }}>
             Explore all trackers

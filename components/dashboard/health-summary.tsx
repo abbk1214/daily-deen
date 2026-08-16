@@ -119,7 +119,8 @@ export const HealthSummary = memo(function HealthSummary() {
     <Link
       href="/wellness"
       aria-label="Today's health summary — open wellness trackers"
-      className="flex items-center gap-3 rounded-2xl border border-border bg-card p-5 transition-colors hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+      className="flex items-center gap-3 rounded-2xl border border-border bg-card transition-colors hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+      style={{ padding: "var(--space-4)", boxShadow: "var(--shadow-xs)" }}
     >
       <div className="flex-1 min-w-0">
         <p className="text-muted-foreground mb-2" style={{ fontSize: "var(--text-caption)", fontWeight: 500 }}>
@@ -130,7 +131,7 @@ export const HealthSummary = memo(function HealthSummary() {
             const Icon = m.icon
             return (
               <div key={m.key} className="flex items-center gap-1.5">
-                <Icon size={14} className="text-muted-foreground" strokeWidth={1.5} aria-hidden="true" />
+                <Icon size={13} className="text-muted-foreground" strokeWidth={1.5} aria-hidden="true" />
                 <span className="text-foreground" style={{ fontSize: "var(--text-body-sm)", fontWeight: 500 }}>
                   {m.value}
                 </span>

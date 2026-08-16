@@ -27,10 +27,18 @@ export const JournalPrompt = memo(function JournalPrompt({
     return (
       <Link
         href="/journal"
-        className="flex items-center gap-4 rounded-2xl border border-border bg-card p-5 transition-colors hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+        className="flex items-center gap-4 rounded-2xl border border-border bg-card transition-colors hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+        style={{ padding: "var(--space-5)", boxShadow: "var(--shadow-xs)" }}
       >
-        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-quiet-sage/10">
-          <Check size={20} className="text-quiet-sage" strokeWidth={1.5} />
+        <div
+          className="flex items-center justify-center rounded-xl"
+          style={{
+            width: 44,
+            height: 44,
+            background: "color-mix(in srgb, var(--dd-quiet-sage) 10%, transparent)",
+          }}
+        >
+          <Check size={18} className="text-quiet-sage" strokeWidth={1.5} />
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-foreground" style={{ fontSize: "var(--text-body-sm)", fontWeight: 500 }}>
@@ -47,10 +55,18 @@ export const JournalPrompt = memo(function JournalPrompt({
   return (
     <Link
       href="/journal"
-      className="flex items-center gap-4 rounded-2xl border border-border bg-card p-5 transition-colors hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+      className="flex items-center gap-4 rounded-2xl border border-border bg-card transition-colors hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+      style={{ padding: "var(--space-5)", boxShadow: "var(--shadow-xs)" }}
     >
-      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-lantern-gold/10">
-        <PenLine size={20} className="text-lantern-gold" strokeWidth={1.5} />
+      <div
+        className="flex items-center justify-center rounded-xl"
+        style={{
+          width: 44,
+          height: 44,
+          background: "color-mix(in srgb, var(--dd-lantern-gold) 10%, transparent)",
+        }}
+      >
+        <PenLine size={18} className="text-lantern-gold" strokeWidth={1.5} />
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-foreground" style={{ fontSize: "var(--text-body-sm)", fontWeight: 500 }}>

@@ -58,21 +58,40 @@ export function DailyQuote() {
   }, []);
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-5">
-      <blockquote
-        className="text-foreground"
+    <div
+      className="rounded-2xl border border-border bg-card"
+      style={{ padding: "var(--space-5)" }}
+    >
+      <div
         style={{
-          fontFamily: "var(--font-display)",
-          fontSize: "var(--text-body)",
-          lineHeight: 1.6,
-          fontStyle: "italic",
+          borderLeft: "2px solid var(--dd-dusk-teal)",
+          paddingLeft: "var(--space-5)",
         }}
       >
-        &ldquo;{quote.text}&rdquo;
-      </blockquote>
-      <p className="text-muted-foreground" style={{ fontSize: "var(--text-caption)", marginTop: "var(--space-3)" }}>
-        — {quote.author}
-      </p>
+        <blockquote
+          className="text-foreground"
+          style={{
+            fontFamily: "var(--font-display)",
+            fontSize: "clamp(16px, 2.5vw, 20px)",
+            fontWeight: 500,
+            fontStyle: "italic",
+            lineHeight: 1.55,
+            letterSpacing: "-0.01em",
+          }}
+        >
+          &ldquo;{quote.text}&rdquo;
+        </blockquote>
+        <p
+          className="text-muted-foreground"
+          style={{
+            fontSize: "var(--text-caption)",
+            marginTop: "var(--space-3)",
+            letterSpacing: "var(--tracking-wide)",
+          }}
+        >
+          — {quote.author}
+        </p>
+      </div>
     </div>
   );
 }

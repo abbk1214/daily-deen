@@ -51,28 +51,32 @@ export const NextPrayerCard = memo(function NextPrayerCard({
   if (!nextPrayer || !computedTimes) return null
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-5">
+    <div
+      className="rounded-2xl border border-border bg-card"
+      style={{ padding: "var(--space-5)", boxShadow: "var(--shadow-xs)" }}
+    >
       {/* Main info */}
       <div className="flex items-center gap-4">
         <div
           className="flex items-center justify-center rounded-full"
           style={{
-            width: 48,
-            height: 48,
+            width: 44,
+            height: 44,
             background: "var(--muted)",
             color: "var(--foreground)",
           }}
         >
-          <Clock size={22} strokeWidth={1.5} />
+          <Clock size={20} strokeWidth={1.5} />
         </div>
         <div>
           <span
             className="text-foreground"
             style={{
               fontFamily: "var(--font-display)",
-              fontSize: "var(--text-h4)",
+              fontSize: "var(--text-h3)",
               fontWeight: 600,
               lineHeight: 1.1,
+              letterSpacing: "-0.01em",
             }}
           >
             {nextPrayer.name}

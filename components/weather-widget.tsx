@@ -137,10 +137,22 @@ export function WeatherWidget() {
   const { Icon: WeatherIcon, className: iconClass } = getWeatherIconProps(weather.weatherCode);
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-4">
+    <div
+      className="rounded-2xl border border-border bg-card"
+      style={{ padding: "var(--space-4)", boxShadow: "var(--shadow-xs)" }}
+    >
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-foreground" style={{ fontSize: "28px", fontWeight: 600, lineHeight: 1, letterSpacing: "-0.02em" }}>
+          <p
+            className="text-foreground"
+            style={{
+              fontFamily: "var(--font-display)",
+              fontSize: "28px",
+              fontWeight: 600,
+              lineHeight: 1,
+              letterSpacing: "-0.02em",
+            }}
+          >
             {weather.temperature}&deg;
           </p>
           <p className="text-muted-foreground" style={{ fontSize: "var(--text-caption)", marginTop: "2px" }}>

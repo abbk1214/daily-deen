@@ -17,10 +17,18 @@ export const CompanionCard = memo(function CompanionCard() {
     <Link
       href="/companion"
       aria-label="Open Deen Guide companion"
-      className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4 transition-colors hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+      className="flex items-center gap-4 rounded-2xl border border-border bg-card transition-colors hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+      style={{ padding: "var(--space-4)", boxShadow: "var(--shadow-xs)" }}
     >
-      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-dusk-teal/10">
-        <MessageCircle size={20} className="text-dusk-teal" strokeWidth={1.5} />
+      <div
+        className="flex items-center justify-center rounded-xl"
+        style={{
+          width: 44,
+          height: 44,
+          background: "color-mix(in srgb, var(--dd-dusk-teal) 8%, transparent)",
+        }}
+      >
+        <MessageCircle size={18} className="text-dusk-teal" strokeWidth={1.5} />
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-foreground" style={{ fontSize: "var(--text-body-sm)", fontWeight: 500 }}>

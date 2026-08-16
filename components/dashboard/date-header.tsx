@@ -25,53 +25,62 @@ export const DateHeader = memo(function DateHeader({
     : null
 
   return (
-    <div className="flex flex-col gap-3">
-      {/* Date row */}
-      <div className="flex items-baseline gap-3 flex-wrap">
-        {hijriDate && (
-          <span
-            className="text-foreground"
-            style={{
-              fontFamily: "var(--font-display)",
-              fontSize: "var(--text-body)",
-              fontWeight: 600,
-            }}
-          >
-            {hijriDate}
-          </span>
-        )}
-        <span
-          className="text-muted-foreground"
-          style={{ fontSize: "var(--text-body-sm)" }}
+    <div className="flex flex-col" style={{ gap: "var(--space-2)" }}>
+      {/* Hijri date — prominent, editorial */}
+      {hijriDate && (
+        <p
+          className="text-foreground"
+          style={{
+            fontFamily: "var(--font-display)",
+            fontSize: "var(--text-h2)",
+            fontWeight: 500,
+            letterSpacing: "-0.015em",
+            lineHeight: "var(--leading-tight)",
+          }}
         >
-          {gregorianDate}
-        </span>
-      </div>
+          {hijriDate}
+        </p>
+      )}
 
-      {/* Location + status row */}
-      <div className="flex items-center gap-3 flex-wrap">
+      {/* Gregorian date — refined, smaller */}
+      <p
+        className="text-muted-foreground"
+        style={{
+          fontSize: "var(--text-body-sm)",
+          fontWeight: 400,
+          letterSpacing: "var(--tracking-wide)",
+        }}
+      >
+        {gregorianDate}
+      </p>
+
+      {/* Location + status row — compact metadata */}
+      <div
+        className="flex items-center flex-wrap"
+        style={{ gap: "var(--space-3)", marginTop: "var(--space-1)" }}
+      >
         {city && (
           <span className="flex items-center gap-1 text-muted-foreground" style={{ fontSize: "var(--text-caption)" }}>
-            <MapPin size={12} strokeWidth={1.5} />
+            <MapPin size={11} strokeWidth={1.5} />
             {city}{country ? `, ${country}` : ""}
           </span>
         )}
         <span className="flex items-center gap-1 text-muted-foreground" style={{ fontSize: "var(--text-caption)" }}>
           {isOnline ? (
             <>
-              <Wifi size={12} strokeWidth={1.5} />
+              <Wifi size={11} strokeWidth={1.5} />
               Online
             </>
           ) : (
             <>
-              <WifiOff size={12} strokeWidth={1.5} />
+              <WifiOff size={11} strokeWidth={1.5} />
               Offline
             </>
           )}
         </span>
         {lastSyncStr && (
           <span className="flex items-center gap-1 text-muted-foreground" style={{ fontSize: "var(--text-caption)" }}>
-            <Clock size={12} strokeWidth={1.5} />
+            <Clock size={11} strokeWidth={1.5} />
             Last sync {lastSyncStr}
           </span>
         )}

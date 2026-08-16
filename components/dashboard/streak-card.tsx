@@ -71,32 +71,33 @@ export const StreakCard = memo(function StreakCard({ loading, refreshKey }: Stre
     <DashboardCard title="Streak" ariaLabel={`Streak: ${streaks.current} day streak`}>
       <div className="flex gap-4">
         {stats.map(({ icon: Icon, value, label, color }) => (
-          <div key={label} className="flex flex-col items-center gap-1 flex-1">
+          <div key={label} className="flex flex-col items-center gap-1.5 flex-1">
             <div
               className="flex items-center justify-center rounded-lg"
               style={{
-                width: 40,
-                height: 40,
+                width: 36,
+                height: 36,
                 backgroundColor: color,
                 color: "var(--primary-foreground)",
               }}
             >
-              <Icon size={20} strokeWidth={1.5} />
+              <Icon size={18} strokeWidth={1.5} />
             </div>
             <span
-              className="font-mono text-foreground"
+              className="text-foreground"
               style={{
-                fontFamily: "var(--font-mono)",
-                fontSize: "var(--text-h4)",
+                fontFamily: "var(--font-display)",
+                fontSize: "var(--text-h3)",
                 fontWeight: 600,
                 lineHeight: "var(--leading-tight)",
+                letterSpacing: "-0.02em",
               }}
             >
               {value}
             </span>
             <span
               className="text-muted-foreground"
-              style={{ fontSize: "var(--text-caption)" }}
+              style={{ fontSize: "var(--text-caption)", letterSpacing: "0.01em" }}
             >
               {label}
             </span>

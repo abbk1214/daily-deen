@@ -147,7 +147,7 @@ function Sidebar({
             className="text-foreground"
             style={{
               fontFamily: "var(--font-display)",
-              fontSize: "16px",
+              fontSize: "17px",
               fontWeight: 600,
               letterSpacing: "-0.01em",
               marginBottom: "var(--space-6)",

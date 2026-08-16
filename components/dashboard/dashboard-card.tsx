@@ -27,16 +27,14 @@ export const DashboardCard = memo(function DashboardCard({
         boxShadow: "var(--shadow-xs)",
       }}
     >
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center justify-between" style={{ marginBottom: "var(--space-4)" }}>
         <h2
-          className="font-display text-foreground"
+          className="text-muted-foreground"
           style={{
             fontFamily: "var(--font-display)",
             fontSize: "var(--text-body-sm)",
             fontWeight: 600,
-            letterSpacing: "var(--tracking-wide)",
-            textTransform: "uppercase",
-            color: "var(--muted-foreground)",
+            letterSpacing: "0.01em",
           }}
         >
           {title}

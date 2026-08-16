@@ -105,64 +105,86 @@ export function PrayerCheckIn({ onToggle }: PrayerCheckInProps) {
 
   return (
     <div
-      className="rounded-2xl border bg-card p-5 transition-colors duration-200"
+      className="rounded-2xl border bg-card transition-colors duration-200"
       style={{
         borderColor: celebrating ? "var(--dd-lantern-gold)" : "var(--border)",
-        boxShadow: celebrating ? "0 0 20px color-mix(in srgb, var(--dd-lantern-gold) 15%, transparent)" : undefined,
+        boxShadow: celebrating
+          ? "0 0 24px color-mix(in srgb, var(--dd-lantern-gold) 12%, transparent)"
+          : "var(--shadow-xs)",
+        padding: "var(--space-5)",
       }}
     >
-      {/* Prayer circles — Apple Watch style */}
+      {/* Prayer circles — refined, horizontal */}
       <div className="flex items-center justify-between">
-        {PRAYERS.map((p) => {
+        {PRAYERS.map((p, i) => {
           const isCompleted = prayers?.completed[p.key] ?? false;
           const isToggling = toggling === p.key;
 
           return (
-            <button
-              key={p.key}
-              onClick={() => handleToggle(p.key)}
-              disabled={isToggling}
-              aria-label={`${p.label} prayer ${isCompleted ? "completed" : "not completed"}`}
-              className="flex flex-col items-center gap-2"
-              style={{ opacity: isToggling ? 0.5 : 1 }}
-            >
-              <div
-                className="flex items-center justify-center rounded-full transition-all duration-200"
+            <div key={p.key} className="flex items-center">
+              <button
+                onClick={() => handleToggle(p.key)}
+                disabled={isToggling}
+                aria-label={`${p.label} prayer ${isCompleted ? "completed" : "not completed"}`}
+                className="flex flex-col items-center"
                 style={{
-                  width: 52,
-                  height: 52,
-                  border: isCompleted
-                    ? celebrating
-                      ? "2.5px solid var(--dd-lantern-gold)"
-                      : "2.5px solid var(--dd-dusk-teal)"
-                    : "2px solid var(--border)",
-                  background: isCompleted
-                    ? celebrating
-                      ? "var(--dd-lantern-gold)"
-                      : "var(--dd-dusk-teal)"
-                    : "transparent",
-                  color: isCompleted ? "white" : "var(--muted-foreground)",
-                  transform: celebrating && isCompleted ? "scale(1.08)" : "scale(1)",
-                  transition: "all 200ms cubic-bezier(0.16, 1, 0.3, 1)",
+                  opacity: isToggling ? 0.5 : 1,
+                  gap: "var(--space-2)",
                 }}
               >
-                {isCompleted ? (
-                  <Check size={20} strokeWidth={2.5} />
-                ) : (
-                  <p.Icon size={20} strokeWidth={1.5} />
-                )}
-              </div>
-              <span
-                style={{
-                  fontSize: "11px",
-                  fontWeight: 500,
-                  color: isCompleted ? "var(--dd-dusk-teal)" : "var(--muted-foreground)",
-                  letterSpacing: "0.01em",
-                }}
-              >
-                {p.label}
-              </span>
-            </button>
+                <div
+                  className="flex items-center justify-center rounded-full transition-all duration-300"
+                  style={{
+                    width: 48,
+                    height: 48,
+                    border: isCompleted
+                      ? celebrating
+                        ? "1.5px solid var(--dd-lantern-gold)"
+                        : "1.5px solid var(--dd-dusk-teal)"
+                      : "1px solid var(--border)",
+                    background: isCompleted
+                      ? celebrating
+                        ? "var(--dd-lantern-gold)"
+                        : "var(--dd-dusk-teal)"
+                      : "transparent",
+                    color: isCompleted ? "white" : "var(--muted-foreground)",
+                    transform: celebrating && isCompleted ? "scale(1.06)" : "scale(1)",
+                  }}
+                >
+                  {isCompleted ? (
+                    <Check size={18} strokeWidth={2.5} />
+                  ) : (
+                    <p.Icon size={18} strokeWidth={1.5} />
+                  )}
+                </div>
+                <span
+                  style={{
+                    fontSize: "11px",
+                    fontWeight: 500,
+                    letterSpacing: "0.02em",
+                    color: isCompleted
+                      ? "var(--dd-dusk-teal)"
+                      : "var(--muted-foreground)",
+                    transition: "color 200ms ease-out",
+                  }}
+                >
+                  {p.label}
+                </span>
+              </button>
+              {/* Subtle separator between circles */}
+              {i < PRAYERS.length - 1 && (
+                <div
+                  aria-hidden="true"
+                  style={{
+                    width: "1px",
+                    height: "24px",
+                    background: "var(--border)",
+                    marginInline: "var(--space-3)",
+                    opacity: 0.5,
+                  }}
+                />
+              )}
+            </div>
           );
         })}
       </div>
@@ -179,15 +201,17 @@ export function PrayerCheckIn({ onToggle }: PrayerCheckInProps) {
         >
           <p
             style={{
+              fontFamily: "var(--font-display)",
               fontSize: "var(--text-body-sm)",
               fontWeight: 600,
+              fontStyle: "italic",
               color: celebrating ? "var(--dd-lantern-gold)" : "var(--dd-dusk-teal)",
               transition: "color 400ms ease-out",
             }}
           >
             {celebrating && settings.name
               ? `MashaAllah, ${settings.name}!`
-              : "All prayers completed \u2014 MashaAllah"}
+              : "All prayers completed — MashaAllah"}
           </p>
           {celebrating && (
             <p
@@ -196,9 +220,10 @@ export function PrayerCheckIn({ onToggle }: PrayerCheckInProps) {
                 color: "var(--muted-foreground)",
                 marginTop: "var(--space-1)",
                 fontStyle: "italic",
+                fontFamily: "var(--font-display)",
               }}
             >
-              &ldquo;Indeed, prayer prohibits immorality&rdquo; \u2014 Quran 29:45
+              &ldquo;Indeed, prayer prohibits immorality&rdquo; — Quran 29:45
             </p>
           )}
         </div>

@@ -85,8 +85,20 @@
 .dd-card-9 { animation-delay: 400ms; }
 .dd-card-10 { animation-delay: 450ms; }
 
+/* Scroll-triggered reveal — IntersectionObserver adds .dd-revealed */
+.dd-reveal {
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 500ms var(--ease-out), transform 500ms var(--ease-out);
+}
+.dd-revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .dd-card { animation: none; opacity: 1; transform: none; }
+  .dd-reveal { opacity: 1; transform: none; transition: none; }
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;

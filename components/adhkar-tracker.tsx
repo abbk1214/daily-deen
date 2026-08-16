@@ -163,14 +163,17 @@ export function AdhkarTracker() {
   }, []);
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-4">
+    <div
+      className="rounded-2xl border border-border bg-card"
+      style={{ padding: "var(--space-4)", boxShadow: "var(--shadow-xs)" }}
+    >
       {/* Header */}
       <div className="flex items-center justify-between" style={{ marginBottom: "var(--space-3)" }}>
         <div>
           <p className="text-foreground" style={{ fontSize: "var(--text-body-sm)", fontWeight: 500 }}>
             {isEvening ? "Evening" : "Morning"} Adhkar
           </p>
-          <p className="text-muted-foreground" style={{ fontSize: "var(--text-caption)" }}>
+          <p className="text-muted-foreground" style={{ fontSize: "var(--text-caption)", marginTop: "2px" }}>
             {totalCurrent}/{totalTarget}
           </p>
         </div>

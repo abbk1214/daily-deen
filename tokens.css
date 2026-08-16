@@ -93,7 +93,7 @@
   --radius-full: 9999px;
 
   /* ---- Typography ---- */
-  --font-display: 'Fraunces', Georgia, serif;
+  --font-display: 'Cormorant Garamond', 'Cormorant', Georgia, serif;
   --font-body: 'Inter', system-ui, -apple-system, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
 
