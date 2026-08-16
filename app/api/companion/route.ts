@@ -14,14 +14,36 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No messages" }, { status: 400 })
     }
 
-    const systemPrompt = config.systemPrompt || DEFAULT_SYSTEM_PROMPT
+    // Validate message content lengths
+    const MAX_MESSAGE_LENGTH = 4000
+    const MAX_MESSAGES = 50
+    if (messages.length > MAX_MESSAGES) {
+      return NextResponse.json({ error: "Too many messages" }, { status: 400 })
+    }
+    for (const msg of messages) {
+      if (!msg.content || typeof msg.content !== "string") {
+        return NextResponse.json({ error: "Invalid message content" }, { status: 400 })
+      }
+      if (msg.content.length > MAX_MESSAGE_LENGTH) {
+        return NextResponse.json({ error: "Message too long" }, { status: 400 })
+      }
+    }
 
-    if (config.provider === "openai" && config.apiKey) {
+    const systemPrompt = config.systemPrompt || DEFAULT_SYSTEM_PROMPT
+    const provider = config.provider || "openai"
+
+    // Use server-side environment variables for API keys — never accept from client
+    if (provider === "openai") {
+      const apiKey = process.env.OPENAI_API_KEY
+      if (!apiKey) {
+        return NextResponse.json({ error: "OpenAI not configured" }, { status: 503 })
+      }
+
       const res = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${config.apiKey}`,
+          Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
           model: config.model || "gpt-4o-mini",
@@ -44,12 +66,17 @@ export async function POST(request: Request) {
       })
     }
 
-    if (config.provider === "anthropic" && config.apiKey) {
+    if (provider === "anthropic") {
+      const apiKey = process.env.ANTHROPIC_API_KEY
+      if (!apiKey) {
+        return NextResponse.json({ error: "Anthropic not configured" }, { status: 503 })
+      }
+
       const res = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-api-key": config.apiKey,
+          "x-api-key": apiKey,
           "anthropic-version": "2023-06-01",
         },
         body: JSON.stringify({

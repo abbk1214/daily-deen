@@ -168,7 +168,7 @@ describe("hijri-date", () => {
 
     it("isoDate is today", () => {
       const result = getHijriToday();
-      const today = new Date().toISOString().slice(0, 10);
+      const today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD in local timezone
       expect(result.isoDate).toBe(today);
     });
   });
