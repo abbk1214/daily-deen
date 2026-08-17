@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
 import { createClient } from "@/lib/supabase/client"
+import { syncAllToCloud } from "@/lib/supabase/sync"
 import type { User, Session } from "@supabase/supabase-js"
 
 interface AuthContextType {
@@ -10,6 +11,7 @@ interface AuthContextType {
   loading: boolean
   signInWithEmail: (email: string) => Promise<{ error?: string }>
   signOut: () => Promise<void>
+  syncing: boolean
 }
 
 const AuthContext = createContext<AuthContextType | null>(null)
@@ -18,14 +20,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
+  const [syncing, setSyncing] = useState(false)
   const supabase = createClient()
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, sess) => {
+      async (event, sess) => {
         setSession(sess)
         setUser(sess?.user ?? null)
         setLoading(false)
+
+        // Auto-sync data to cloud on sign-in
+        if (event === "SIGNED_IN" && sess?.user) {
+          setSyncing(true)
+          try {
+            await syncAllToCloud()
+          } catch (e) {
+            console.warn("Auto-sync failed:", e)
+          } finally {
+            setSyncing(false)
+          }
+        }
       },
     )
 
@@ -51,7 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signInWithEmail, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, signInWithEmail, signOut, syncing }}>
       {children}
     </AuthContext.Provider>
   )
