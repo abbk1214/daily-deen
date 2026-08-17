@@ -3,12 +3,13 @@
 import { memo } from "react"
 import { Clock, Check } from "lucide-react"
 import type { PrayerTimes } from "@/lib/prayer"
-import type { Prayer } from "@/lib/db"
+
+type PrayerName = 'fajr' | 'dhuhr' | 'asr' | 'maghrib' | 'isha'
 
 interface NextPrayerCardProps {
   nextPrayer: { name: string; minutesUntil: number } | null
   computedTimes: PrayerTimes | null
-  prayers: Prayer | undefined
+  prayerStatus: Record<PrayerName, boolean>
   loading: boolean
 }
 
@@ -31,7 +32,7 @@ const PRAYER_DISPLAY: Record<string, string> = {
 export const NextPrayerCard = memo(function NextPrayerCard({
   nextPrayer,
   computedTimes,
-  prayers,
+  prayerStatus,
   loading,
 }: NextPrayerCardProps) {
   if (loading) {
@@ -107,7 +108,7 @@ export const NextPrayerCard = memo(function NextPrayerCard({
           const displayH = h % 12 || 12
           const timeStr = `${displayH}:${String(m).padStart(2, "0")}`
           const isNext = nextPrayer.name.toLowerCase() === key
-          const isCompleted = prayers?.completed[key] ?? false
+          const isCompleted = prayerStatus[key] ?? false
 
           return (
             <div

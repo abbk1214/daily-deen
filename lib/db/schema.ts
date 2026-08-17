@@ -171,6 +171,65 @@ class DailyDeenDB extends Dexie {
       taraweeh: '++id, &date',
       quranSettings: '++id',
     })
+
+    // Version 11: Migrate old prayers table data into prayerLogs
+    this.version(11).stores({
+      prayers: '++id, &date',
+      habits: '++id, &name, type',
+      habitLogs: '++id, date, &[habitId+date]',
+      journal: '++id, &date',
+      settings: '++id',
+      prayerLogs: '++id, &[date+prayer], date, prayer, status',
+      quranBookmarks: '++id, &[surahNumber+ayahNumber], surahNumber, createdAt',
+      quranProgress: '++id, surahNumber, lastReadAt',
+      khatmahGoals: '++id, isActive, type, createdAt',
+      khatmahProgress: '++id, &date, lastPage, lastJuz',
+      readingSessionLogs: '++id, date, startPage, endPage',
+      goals: '++id, type, category, startDate, endDate, isCompleted, createdAt',
+      goalCheckIns: '++id, &[goalId+date], goalId, date',
+      moodEntries: '++id, date, &[date+time], createdAt',
+      waterEntries: '++id, date, timestamp',
+      sleepEntries: '++id, &date, createdAt',
+      exerciseEntries: '++id, date, type, createdAt',
+      dailyQuotes: '++id, &date, createdAt',
+      taraweeh: '++id, &date',
+      quranSettings: '++id',
+    }).upgrade(async (tx) => {
+      // Migrate old prayers table records into prayerLogs
+      const prayers = await (tx.table('prayers') as any).toArray()
+      const existingLogs = await (tx.table('prayerLogs') as any).toArray()
+      const existingKeys = new Set(existingLogs.map((l: any) => `${l.date}+${l.prayer}`))
+
+      const PRAYERS = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'] as const
+      const toAdd: any[] = []
+
+      for (const p of prayers) {
+        for (const prayer of PRAYERS) {
+          const key = `${p.date}+${prayer}`
+          if (existingKeys.has(key)) continue
+
+          toAdd.push({
+            date: p.date,
+            prayer,
+            scheduledTime: p[prayer] || '',
+            completedAt: p.completed?.[prayer] ? new Date(p.date + 'T12:00:00').toISOString() : null,
+            status: p.completed?.[prayer] ? 'completed' : 'pending',
+            completed: !!p.completed?.[prayer],
+            late: false,
+            missed: false,
+            jamaah: false,
+            qaza: false,
+            notes: '',
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          })
+        }
+      }
+
+      if (toAdd.length > 0) {
+        await (tx.table('prayerLogs') as any).bulkAdd(toAdd)
+      }
+    })
   }
 }
 

@@ -3,6 +3,7 @@
 import { memo, useEffect, useState } from "react"
 import { DashboardCard } from "./dashboard-card"
 import { getToday, daysAgo } from "@/lib/utils"
+import { getWeek } from "@/lib/prayer/history-service"
 import db from "@/lib/db"
 
 interface WeeklyStats {
@@ -27,19 +28,13 @@ export const WeeklySummary = memo(function WeeklySummary() {
         const today = getToday()
         const weekStart = daysAgo(6)
 
-        // Prayer data
-        const prayers = await db.prayers
-          .where("date")
-          .between(weekStart, today, true, true)
-          .toArray()
+        // Prayer data from prayerLogs (single source of truth)
+        const weekLogs = await getWeek(weekStart)
+        const todayLogs = weekLogs.filter(l => l.date <= today)
 
         let prayersCompleted = 0
-        let prayersTotal = 0
-        for (const p of prayers) {
-          const completed = Object.values(p.completed).filter(Boolean).length
-          prayersCompleted += completed
-          prayersTotal += 5
-        }
+        prayersCompleted = todayLogs.filter(l => l.completed).length
+        const prayersTotal = todayLogs.length || 5 * 7 // fallback if no logs yet
 
         // Habit data
         const habitLogs = await db.habitLogs

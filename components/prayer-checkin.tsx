@@ -2,11 +2,8 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Check, Sunrise, Sun, Sunset, Moon, CloudMoon } from "lucide-react";
-import { togglePrayer, getTodaysPrayers } from "@/lib/prayer-actions";
-import { markCompleted, markMissed } from "@/lib/prayer/history-service";
+import { togglePrayer, getTodaysPrayerStatus } from "@/lib/prayer-actions";
 import { useSettings } from "@/hooks/use-settings";
-import { getToday } from "@/lib/utils";
-import type { Prayer } from "@/lib/db";
 
 const PRAYERS = [
   { key: "fajr" as const, label: "Fajr", Icon: CloudMoon },
@@ -21,7 +18,7 @@ interface PrayerCheckInProps {
 }
 
 export function PrayerCheckIn({ onToggle }: PrayerCheckInProps) {
-  const [prayers, setPrayers] = useState<Prayer | null>(null);
+  const [completed, setCompleted] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
   const [toggling, setToggling] = useState<string | null>(null);
   const [celebrating, setCelebrating] = useState(false);
@@ -32,8 +29,8 @@ export function PrayerCheckIn({ onToggle }: PrayerCheckInProps) {
     let cancelled = false;
     (async () => {
       try {
-        const data = await getTodaysPrayers();
-        if (!cancelled) setPrayers(data || null);
+        const status = await getTodaysPrayerStatus();
+        if (!cancelled) setCompleted(status);
       } catch {
         // silent
       } finally {
@@ -47,37 +44,16 @@ export function PrayerCheckIn({ onToggle }: PrayerCheckInProps) {
     setToggling(prayer);
     try {
       const newValue = await togglePrayer(prayer);
-      setPrayers((prev) => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          completed: {
-            ...prev.completed,
-            [prayer]: newValue,
-          },
-        };
-      });
-
-      // Sync to prayerLogs so StreakCard sees the update
-      const date = getToday();
-      const scheduledTime = prayers?.[prayer] ?? "";
-      if (newValue) {
-        await markCompleted(date, prayer, scheduledTime);
-      } else {
-        await markMissed(date, prayer);
-      }
-
+      setCompleted((prev) => ({ ...prev, [prayer]: newValue }));
       onToggle?.();
     } catch {
       // silent
     } finally {
       setToggling(null);
     }
-  }, [prayers, onToggle]);
+  }, [onToggle]);
 
-  const completedCount = prayers
-    ? Object.values(prayers.completed).filter(Boolean).length
-    : 0;
+  const completedCount = Object.values(completed).filter(Boolean).length;
   const totalPrayers = 5;
   const allDone = completedCount === totalPrayers;
 
@@ -117,7 +93,7 @@ export function PrayerCheckIn({ onToggle }: PrayerCheckInProps) {
       {/* Prayer circles — refined, horizontal */}
       <div className="flex items-center justify-between">
         {PRAYERS.map((p, i) => {
-          const isCompleted = prayers?.completed[p.key] ?? false;
+          const isCompleted = completed[p.key] ?? false;
           const isToggling = toggling === p.key;
 
           return (

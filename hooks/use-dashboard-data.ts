@@ -2,18 +2,19 @@
 
 import { useEffect, useRef, useState, useMemo } from "react";
 import {
-  type Prayer,
   type Habit,
   type HabitLog,
 } from "@/lib/db";
-import { getTodaysPrayers, seedTodaysPrayers } from "@/lib/prayer-actions";
+import { getTodaysPrayerStatus } from "@/lib/prayer-actions";
 import { useHabits } from "@/hooks/use-habits";
 import { usePrayerTimes } from "@/hooks/use-prayer-times";
 import { getToday, formatTimeFromMinutes } from "@/lib/utils";
 import type { PrayerTimes } from "@/lib/prayer";
 
+type PrayerName = 'fajr' | 'dhuhr' | 'asr' | 'maghrib' | 'isha'
+
 interface DashboardData {
-  prayers: Prayer | undefined;
+  prayerStatus: Record<PrayerName, boolean>;
   computedTimes: PrayerTimes | null;
   habits: Habit[];
   habitLogs: HabitLog[];
@@ -42,16 +43,18 @@ export function useDashboardData(): DashboardData & {
     refresh: refreshPrayers,
   } = usePrayerTimes();
 
-  const [prayers, setPrayers] = useState<Prayer | undefined>(undefined);
+  const [prayerStatus, setPrayerStatus] = useState<Record<PrayerName, boolean>>({
+    fajr: false, dhuhr: false, asr: false, maghrib: false, isha: false,
+  });
   const mountedRef = useRef(true);
 
   useEffect(() => {
     mountedRef.current = true;
 
-    getTodaysPrayers()
+    getTodaysPrayerStatus()
       .then((data) => {
         if (mountedRef.current) {
-          setPrayers(data);
+          setPrayerStatus(data);
         }
       })
       .catch((error) => {
@@ -76,36 +79,17 @@ export function useDashboardData(): DashboardData & {
     return () => clearInterval(interval);
   }, [currentDate]);
 
-  const mergedPrayers = useMemo(() => {
-    if (!prayers || !computedTimes) return prayers;
-    return {
-      ...prayers,
-      fajr: formatTimeFromMinutes(computedTimes.fajr),
-      dhuhr: formatTimeFromMinutes(computedTimes.dhuhr),
-      asr: formatTimeFromMinutes(computedTimes.asr),
-      maghrib: formatTimeFromMinutes(computedTimes.maghrib),
-      isha: formatTimeFromMinutes(computedTimes.isha),
-    };
-  }, [prayers, computedTimes]);
-
-  // Seed computed prayer times to IndexedDB for offline persistence
-  useEffect(() => {
-    if (!computedTimes) return;
-    seedTodaysPrayers({
-      fajr: formatTimeFromMinutes(computedTimes.fajr),
-      dhuhr: formatTimeFromMinutes(computedTimes.dhuhr),
-      asr: formatTimeFromMinutes(computedTimes.asr),
-      maghrib: formatTimeFromMinutes(computedTimes.maghrib),
-      isha: formatTimeFromMinutes(computedTimes.isha),
-    }).catch((err) => console.error("Failed to seed prayer data:", err));
-  }, [computedTimes]);
+  // Merge scheduled times from computed times into status (for display)
+  const mergedStatus = useMemo(() => {
+    return prayerStatus;
+  }, [prayerStatus]);
 
   return {
-    prayers: mergedPrayers,
+    prayerStatus: mergedStatus,
     computedTimes,
     habits,
     habitLogs,
-    loading: prayerLoading && !prayers,
+    loading: prayerLoading && Object.values(prayerStatus).every(v => !v),
     nextPrayer,
     incrementHabit: increment,
     decrementHabit: decrement,

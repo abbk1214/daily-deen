@@ -1,75 +1,52 @@
-import db, { type Prayer } from './db'
+import db from './db'
+import { markCompleted, markMissed, getDay } from './prayer/history-service'
 import { getToday } from './utils'
 
-/** Returns today's prayer times from IndexedDB, or undefined if not yet seeded. */
-export async function getTodaysPrayers(): Promise<Prayer | undefined> {
+type PrayerName = 'fajr' | 'dhuhr' | 'asr' | 'maghrib' | 'isha'
+
+/** Returns today's prayer completion status derived from prayerLogs (single source of truth). */
+export async function getTodaysPrayerStatus(): Promise<Record<PrayerName, boolean>> {
   const dateStr = getToday()
-  return db.prayers.where('date').equals(dateStr).first()
+  const logs = await getDay(dateStr)
+  const result: Record<string, boolean> = { fajr: false, dhuhr: false, asr: false, maghrib: false, isha: false }
+  for (const log of logs) {
+    if (log.prayer in result) {
+      result[log.prayer] = log.completed
+    }
+  }
+  return result as Record<PrayerName, boolean>
 }
 
-/** Seeds today's computed prayer times into IndexedDB for offline persistence. */
-export async function seedTodaysPrayers(times: {
-  fajr: string
-  dhuhr: string
-  asr: string
-  maghrib: string
-  isha: string
-}): Promise<void> {
+/** Toggle a prayer for today. Returns the new boolean value. */
+export async function togglePrayer(prayer: PrayerName): Promise<boolean> {
   const dateStr = getToday()
+  const logs = await getDay(dateStr)
+  const existing = logs.find((l) => l.prayer === prayer)
+  const wasCompleted = existing?.completed ?? false
+  const scheduledTime = existing?.scheduledTime ?? ''
 
-  const existing = await db.prayers.where('date').equals(dateStr).first()
-  if (existing) return
+  if (wasCompleted) {
+    await markMissed(dateStr, prayer)
+    return false
+  } else {
+    await markCompleted(dateStr, prayer, scheduledTime)
+    return true
+  }
+}
 
-  await db.prayers.put({
+/** Legacy compat — reads from prayerLogs and returns Prayer-shaped object. */
+export async function getTodaysPrayers() {
+  const status = await getTodaysPrayerStatus()
+  const dateStr = getToday()
+  const logs = await getDay(dateStr)
+  const findTime = (p: string) => logs.find((l) => l.prayer === p)?.scheduledTime ?? ''
+  return {
     date: dateStr,
-    fajr: times.fajr,
-    dhuhr: times.dhuhr,
-    asr: times.asr,
-    maghrib: times.maghrib,
-    isha: times.isha,
-    completed: {
-      fajr: false,
-      dhuhr: false,
-      asr: false,
-      maghrib: false,
-      isha: false,
-    },
-  })
-}
-
-/** Toggles a prayer's completion status for today. */
-export async function togglePrayer(
-  prayer: 'fajr' | 'dhuhr' | 'asr' | 'maghrib' | 'isha',
-): Promise<boolean> {
-  const dateStr = getToday()
-  const existing = await db.prayers.where('date').equals(dateStr).first()
-
-  if (!existing) return false
-
-  const newValue = !existing.completed[prayer]
-  await db.prayers.update(existing.id!, {
-    completed: {
-      ...existing.completed,
-      [prayer]: newValue,
-    },
-  })
-
-  return newValue
-}
-
-/** Marks a specific prayer as completed for a given date. */
-export async function markPrayer(
-  date: string,
-  prayer: 'fajr' | 'dhuhr' | 'asr' | 'maghrib' | 'isha',
-  completed: boolean,
-): Promise<void> {
-  const existing = await db.prayers.where('date').equals(date).first()
-  if (!existing) return
-
-  await db.prayers.update(existing.id!, {
-    completed: {
-      ...existing.completed,
-      [prayer]: completed,
-    },
-  })
+    fajr: findTime('fajr'),
+    dhuhr: findTime('dhuhr'),
+    asr: findTime('asr'),
+    maghrib: findTime('maghrib'),
+    isha: findTime('isha'),
+    completed: status,
+  }
 }

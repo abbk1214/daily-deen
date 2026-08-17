@@ -98,7 +98,7 @@ const ContinueReading = memo(function ContinueReading() {
 
 export function Dashboard() {
   const {
-    prayers,
+    prayerStatus,
     computedTimes,
     habits,
     habitLogs,
@@ -225,9 +225,7 @@ export function Dashboard() {
         <section aria-label="Journal prompt" className="dd-reveal">
           <JournalPrompt
             allPrayersCompleted={
-              prayers
-                ? Object.values(prayers.completed).every(Boolean)
-                : false
+              Object.values(prayerStatus).every(Boolean)
             }
           />
         </section>
@@ -262,7 +260,7 @@ export function Dashboard() {
           <NextPrayerCard
             nextPrayer={nextPrayer}
             computedTimes={computedTimes}
-            prayers={prayers}
+            prayerStatus={prayerStatus}
             loading={loading}
           />
         </section>
