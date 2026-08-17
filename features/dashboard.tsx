@@ -2,11 +2,12 @@
 
 import { memo, useMemo, useEffect, useState } from "react";
 import Link from "next/link";
-import { BookOpen, ChevronRight, ArrowRight } from "lucide-react";
+import { BookOpen, ChevronRight, ArrowRight, LogOut, User } from "lucide-react";
 import { useDashboardData } from "@/hooks/use-dashboard-data";
 import { useOnlineStatus } from "@/hooks/use-online-status";
 import { useSettings } from "@/hooks/use-settings";
 import { useScrollReveal } from "@/hooks/use-scroll-reveal";
+import { useAuth } from "@/lib/supabase/auth-context";
 import { getToday } from "@/lib/utils";
 import { formatHijriDate } from "@/lib/hijri-date";
 import { DateHeader, NextPrayerCard } from "@/components/dashboard";
@@ -108,6 +109,7 @@ export function Dashboard() {
   } = useDashboardData();
   const isOnline = useOnlineStatus();
   const { settings } = useSettings();
+  const { user, signOut } = useAuth();
   const [streakRefreshKey, setStreakRefreshKey] = useState(0);
   const scrollRef = useScrollReveal();
 
@@ -128,7 +130,7 @@ export function Dashboard() {
     return (
       <>
         <header
-          className="sticky top-0 z-30 flex items-center border-b border-border bg-background"
+          className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-background"
           style={{
             height: "var(--space-12)",
             padding: "var(--space-3) var(--space-5)",
@@ -156,7 +158,7 @@ export function Dashboard() {
   return (
     <>
       <header
-        className="sticky top-0 z-30 flex items-center border-b border-border bg-background"
+        className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-background"
         style={{
           height: "var(--space-12)",
           padding: "var(--space-3) var(--space-5)",
@@ -173,6 +175,26 @@ export function Dashboard() {
         >
           Daily Deen
         </h1>
+        {user && (
+          <div className="flex items-center" style={{ gap: "var(--space-2)" }}>
+            <Link
+              href="/settings"
+              className="flex items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted"
+              style={{ width: 32, height: 32 }}
+              aria-label="Settings"
+            >
+              <User size={16} strokeWidth={1.5} />
+            </Link>
+            <button
+              onClick={signOut}
+              className="flex items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted"
+              style={{ width: 32, height: 32 }}
+              aria-label="Sign out"
+            >
+              <LogOut size={16} strokeWidth={1.5} />
+            </button>
+          </div>
+        )}
       </header>
 
       <main

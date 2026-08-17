@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@ducanh2912/next-pwa": "^10.2.9",
+    "@supabase/ssr": "^0.12.4",
+    "@supabase/supabase-js": "^2.112.3",
     "@tanstack/react-virtual": "^3.14.6",
     "adhan": "^4.4.4",
     "date-fns": "^4.4.0",
