@@ -25,6 +25,7 @@ import { JournalPrompt } from "@/components/dashboard/journal-prompt";
 import { WeeklySummary } from "@/components/dashboard/weekly-summary";
 import { HealthSummary } from "@/components/dashboard/health-summary";
 import { CompanionCard } from "@/components/companion/companion-card";
+import { PWAInstallPrompt } from "@/components/pwa-install-prompt";
 
 const AFFIRMATIONS = [
   { text: "And He found you lost and guided.", source: "Quran 93:7" },
@@ -363,6 +364,8 @@ export function Dashboard() {
           <ArrowRight size={16} className="text-muted-foreground" />
         </Link>
       </main>
+
+      <PWAInstallPrompt />
     </>
   );
 }
