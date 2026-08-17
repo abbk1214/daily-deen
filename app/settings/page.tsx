@@ -214,6 +214,7 @@ export default function SettingsPage() {
             Notifications
           </h2>
           <div className="rounded-xl border border-border bg-card divide-y divide-border">
+            {/* Master toggle */}
             <div className="flex items-center justify-between p-4">
               <div className="flex items-center gap-3">
                 <Bell size={18} className="text-muted-foreground" strokeWidth={1.5} />
@@ -236,6 +237,113 @@ export default function SettingsPage() {
                 />
               </button>
             </div>
+
+            {/* Reminder offset */}
+            {settings.notificationsEnabled && (
+              <>
+                <div className="p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-foreground" style={{ fontSize: "var(--text-body-sm)", fontWeight: 500 }}>Remind before</p>
+                    <span className="text-muted-foreground" style={{ fontSize: "var(--text-caption)", fontFamily: "var(--font-mono)" }}>
+                      {settings.reminderOffset} min
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min={5}
+                    max={30}
+                    step={5}
+                    value={settings.reminderOffset}
+                    onChange={(e) => updateImmediate({ reminderOffset: Number(e.target.value) })}
+                    className="w-full accent-dusk-teal"
+                    aria-label="Reminder offset in minutes"
+                  />
+                  <div className="flex justify-between mt-1">
+                    {[5, 10, 15, 20, 30].map((v) => (
+                      <button
+                        key={v}
+                        onClick={() => updateImmediate({ reminderOffset: v })}
+                        className={`rounded px-2 py-0.5 text-xs transition-colors ${
+                          settings.reminderOffset === v
+                            ? "bg-dusk-teal text-white"
+                            : "text-muted-foreground hover:bg-muted"
+                        }`}
+                      >
+                        {v}m
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Adhan sound */}
+                <div className="flex items-center justify-between p-4">
+                  <p className="text-foreground" style={{ fontSize: "var(--text-body-sm)", fontWeight: 500 }}>Adhan sound</p>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={settings.adhanSound}
+                    aria-label="Adhan sound"
+                    onClick={() => updateImmediate({ adhanSound: !settings.adhanSound })}
+                    className={`relative h-6 w-11 rounded-full transition-colors ${
+                      settings.adhanSound ? "bg-dusk-teal" : "bg-secondary"
+                    }`}
+                  >
+                    <span
+                      className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
+                        settings.adhanSound ? "translate-x-5" : "translate-x-0.5"
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {/* Vibrate */}
+                <div className="flex items-center justify-between p-4">
+                  <p className="text-foreground" style={{ fontSize: "var(--text-body-sm)", fontWeight: 500 }}>Vibrate</p>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={settings.vibrate}
+                    aria-label="Vibrate"
+                    onClick={() => updateImmediate({ vibrate: !settings.vibrate })}
+                    className={`relative h-6 w-11 rounded-full transition-colors ${
+                      settings.vibrate ? "bg-dusk-teal" : "bg-secondary"
+                    }`}
+                  >
+                    <span
+                      className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
+                        settings.vibrate ? "translate-x-5" : "translate-x-0.5"
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {/* Silent mode */}
+                <div className="flex items-center justify-between p-4">
+                  <div>
+                    <p className="text-foreground" style={{ fontSize: "var(--text-body-sm)", fontWeight: 500 }}>Silent mode</p>
+                    <p className="text-muted-foreground" style={{ fontSize: "var(--text-caption)" }}>
+                      Notifications without sound
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={settings.silentMode}
+                    aria-label="Silent mode"
+                    onClick={() => updateImmediate({ silentMode: !settings.silentMode })}
+                    className={`relative h-6 w-11 rounded-full transition-colors ${
+                      settings.silentMode ? "bg-dusk-teal" : "bg-secondary"
+                    }`}
+                  >
+                    <span
+                      className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
+                        settings.silentMode ? "translate-x-5" : "translate-x-0.5"
+                      }`}
+                    />
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </section>
 

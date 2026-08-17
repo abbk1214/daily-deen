@@ -8,6 +8,7 @@ import { useOnlineStatus } from "@/hooks/use-online-status";
 import { useSettings } from "@/hooks/use-settings";
 import { useScrollReveal } from "@/hooks/use-scroll-reveal";
 import { useAuth } from "@/lib/supabase/auth-context";
+import { useNotifications } from "@/hooks/use-notifications";
 import { getToday } from "@/lib/utils";
 import { formatHijriDate } from "@/lib/hijri-date";
 import { DateHeader, NextPrayerCard } from "@/components/dashboard";
@@ -110,6 +111,7 @@ export function Dashboard() {
   const isOnline = useOnlineStatus();
   const { settings } = useSettings();
   const { user, signOut } = useAuth();
+  useNotifications(computedTimes);
   const [streakRefreshKey, setStreakRefreshKey] = useState(0);
   const scrollRef = useScrollReveal();
 
