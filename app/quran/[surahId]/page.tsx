@@ -11,6 +11,8 @@ import { addQuranBookmark, removeQuranBookmark, getBookmarks, updateReadingProgr
 import type { Ayah, AyahTranslation } from "@/lib/quran/types";
 import { RECITERS, TRANSLATIONS } from "@/lib/quran/types";
 import { WordByWord } from "@/components/word-by-word";
+import { useQuranAudio } from "@/hooks/use-quran-audio";
+import { AudioPlayerBar } from "@/components/quran/audio-player-bar";
 
 export default function SurahPage() {
   const params = useParams();
@@ -25,16 +27,25 @@ export default function SurahPage() {
   const [error, setError] = useState<string | null>(null);
   const [showTranslation, setShowTranslation] = useState(true);
   const [fontSize, setFontSize] = useState(28);
-  const [selectedReciter, setSelectedReciter] = useState("ar.alafasy");
   const [selectedTranslation, setSelectedTranslation] = useState("en.sahih");
-  const [playingAyah, setPlayingAyah] = useState<number | null>(null);
   const [bookmarkedAyahs, setBookmarkedAyahs] = useState<Set<number>>(new Set());
   const [showSettings, setShowSettings] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
   const ayahRefs = useRef<Map<number, HTMLDivElement>>(new Map());
   const ayahsRef = useRef<Ayah[]>([]);
   const surahRef = useRef(surah);
   const parentRef = useRef<HTMLDivElement>(null);
+
+  // Shared audio hook with auto-advance
+  const audio = useQuranAudio({
+    onAyahEnd: useCallback((ayahGlobalNumber: number) => {
+      const currentSurah = surahRef.current;
+      const currentAyahs = ayahsRef.current;
+      const endedAyah = currentAyahs.find((a) => a.number === ayahGlobalNumber);
+      if (endedAyah && currentSurah && endedAyah.numberInSurah < currentSurah.numberOfAyahs) {
+        audio.playAyah(currentAyahs[endedAyah.numberInSurah].number);
+      }
+    }, []),
+  });
 
   // Virtualizer for long ayah lists
   const virtualizer = useVirtualizer({
@@ -52,7 +63,7 @@ export default function SurahPage() {
   // Load Quran settings from database
   useEffect(() => {
     getQuranSettings().then((settings) => {
-      setSelectedReciter(settings.selectedReciter);
+      if (settings.selectedReciter) audio.setReciter(settings.selectedReciter);
       setSelectedTranslation(settings.selectedTranslation);
       setFontSize(settings.fontSize);
       setShowTranslation(settings.showTranslation);
@@ -140,52 +151,7 @@ export default function SurahPage() {
     }
   }, [surahNumber, ayahs]);
 
-  const playAyahRef = useRef<(ayahNumber: number) => void>(() => {});
-
-  const playAyah = useCallback((ayahNumber: number) => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-    }
-    const ayah = ayahsRef.current.find((a) => a.numberInSurah === ayahNumber);
-    if (!ayah) return;
-
-    const reciter = RECITERS.find((r) => r.id === selectedReciter) || RECITERS[0];
-    const url = `${reciter.baseUrl}/${ayah.number}.mp3`;
-
-    const audio = new Audio(url);
-    audioRef.current = audio;
-    setPlayingAyah(ayahNumber);
-    audio.play().catch(() => setPlayingAyah(null));
-    audio.onerror = () => setPlayingAyah(null);
-    audio.onended = () => {
-      setPlayingAyah(null);
-      const currentSurah = surahRef.current;
-      if (ayahNumber < (currentSurah?.numberOfAyahs || 0)) {
-        playAyahRef.current(ayahNumber + 1);
-      }
-    };
-  }, [selectedReciter]);
-
-  useEffect(() => {
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause()
-        audioRef.current = null
-      }
-    }
-  }, [])
-
-  useEffect(() => {
-    playAyahRef.current = playAyah;
-  });
-
-  const stopPlayback = useCallback(() => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current = null;
-    }
-    setPlayingAyah(null);
-  }, []);
+  const stopPlayback = audio.stop;
 
   if (!surah) {
     return (
@@ -292,12 +258,8 @@ export default function SurahPage() {
               Reciter
             </label>
             <select
-              value={selectedReciter}
-              onChange={(e) => {
-                const value = e.target.value;
-                setSelectedReciter(value);
-                saveQuranSettings({ selectedReciter: value });
-              }}
+              value={audio.reciter.id}
+              onChange={(e) => audio.setReciter(e.target.value)}
               aria-label="Reciter"
               className="flex-1 rounded-lg border border-border bg-background px-3 py-1.5 text-sm text-foreground"
             >
@@ -404,7 +366,7 @@ export default function SurahPage() {
               {virtualizer.getVirtualItems().map((virtualRow) => {
                 const ayah = ayahs[virtualRow.index];
                 const trans = translations.find((t) => t.ayahNumber === ayah.numberInSurah);
-                const isPlaying = playingAyah === ayah.numberInSurah;
+                const isPlaying = audio.playingAyah === ayah.number;
                 const isBm = bookmarkedAyahs.has(ayah.numberInSurah);
                 return (
                   <div
@@ -441,11 +403,11 @@ export default function SurahPage() {
                       <div className="flex items-center gap-1">
                         <button
                           type="button"
-                          onClick={() => isPlaying ? stopPlayback() : playAyah(ayah.numberInSurah)}
-                          aria-label={isPlaying ? "Pause" : "Play"}
+                          onClick={() => audio.toggleAyah(ayah.number)}
+                          aria-label={audio.isPlaying && audio.playingAyah === ayah.number ? "Pause" : "Play"}
                           className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                         >
-                          {isPlaying ? <Pause size={16} strokeWidth={1.5} /> : <Play size={16} strokeWidth={1.5} />}
+                          {audio.isPlaying && audio.playingAyah === ayah.number ? <Pause size={16} strokeWidth={1.5} /> : <Play size={16} strokeWidth={1.5} />}
                         </button>
                         <button
                           type="button"
