@@ -215,30 +215,29 @@ function SkeletonCard() {
 
 function EmptyState() {
   return (
-    <div className="flex flex-col items-center py-16 text-center">
+    <div className="flex flex-col items-center py-12 text-center">
       <BookOpen
         size={32}
         strokeWidth={1.5}
         className="text-muted-foreground"
-        style={{ marginBottom: "var(--space-4)" }}
+        style={{ marginBottom: "var(--space-3)" }}
       />
       <h3
         className="text-foreground"
         style={{
           fontFamily: "var(--font-display)",
-          fontSize: "var(--text-h3)",
+          fontSize: "var(--text-body-sm)",
           fontWeight: 600,
-          letterSpacing: "var(--tracking-h3)",
-          marginBottom: "var(--space-2)",
+          marginBottom: "var(--space-1)",
         }}
       >
-        No entries yet
+        Your journal awaits
       </h3>
       <p
         className="text-muted-foreground"
-        style={{ fontSize: "var(--text-body-sm)" }}
+        style={{ fontSize: "var(--text-caption)" }}
       >
-        Start writing to see your journal entries here.
+        Write your first entry above to begin reflecting.
       </p>
     </div>
   );

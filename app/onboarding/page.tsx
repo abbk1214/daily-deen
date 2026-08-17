@@ -217,7 +217,7 @@ export default function OnboardingPage() {
         key={`desc-${screen}`}
       >
         {screen === "welcome"
-          ? "Build consistent spiritual habits with daily prayer times, journaling, and mindful tracking."
+          ? "Your daily companion for prayer, reflection, and growth. Built for those who seek consistency in their deen."
           : screen === "location"
             ? "We use your location to calculate accurate prayer times for your area. Your location is never shared."
             : "Choose targets that feel right for you. You can always adjust these later in Settings."}
@@ -423,13 +423,14 @@ export default function OnboardingPage() {
             {[0, 1, 2].map((i) => (
               <li key={i}>
                 <span
-                  className="block rounded-full"
+                  className="block rounded-full transition-all duration-300"
                   style={{
-                    width: "8px",
+                    width: i === screenIndex ? "24px" : "8px",
                     height: "8px",
-                    background: i === screenIndex ? "var(--dd-dusk-teal)" : "var(--border)",
+                    background: i === screenIndex ? "var(--dd-dusk-teal)" : i < screenIndex ? "var(--dd-dusk-teal)" : "var(--border)",
+                    opacity: i < screenIndex ? 0.5 : 1,
                   }}
-                  aria-label={`Step ${i + 1} of 3`}
+                  aria-label={`Step ${i + 1} of 3${i === screenIndex ? ' (current)' : ''}`}
                 />
               </li>
             ))}

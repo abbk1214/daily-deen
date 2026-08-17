@@ -2,7 +2,7 @@
 
 import { memo } from "react"
 import Link from "next/link"
-import { ChevronRight, Check } from "lucide-react"
+import { ChevronRight, Check, Plus } from "lucide-react"
 import { DashboardCard } from "./dashboard-card"
 import { formatValue } from "@/lib/utils"
 import type { Habit, HabitLog } from "@/lib/db"
@@ -18,7 +18,40 @@ export const TodayHabits = memo(function TodayHabits({
   habitLogs,
   onIncrement,
 }: TodayHabitsProps) {
-  if (habits.length === 0) return null
+  if (habits.length === 0) {
+    return (
+      <DashboardCard
+        title="Today's Habits"
+        ariaLabel="No habits yet"
+      >
+        <Link
+          href="/habits"
+          className="flex items-center gap-3 rounded-xl border border-dashed border-border transition-colors hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+          style={{ padding: "var(--space-4)" }}
+        >
+          <div
+            className="flex items-center justify-center rounded-lg"
+            style={{
+              width: 36,
+              height: 36,
+              background: "color-mix(in srgb, var(--dd-dusk-teal) 8%, transparent)",
+            }}
+          >
+            <Plus size={16} className="text-dusk-teal" strokeWidth={2} />
+          </div>
+          <div className="flex-1">
+            <p className="text-foreground" style={{ fontSize: "var(--text-body-sm)", fontWeight: 500 }}>
+              Create your first habit
+            </p>
+            <p className="text-muted-foreground" style={{ fontSize: "var(--text-caption)" }}>
+              Track daily routines like water, exercise, or dhikr
+            </p>
+          </div>
+          <ChevronRight size={14} className="text-muted-foreground flex-shrink-0" />
+        </Link>
+      </DashboardCard>
+    )
+  }
 
   const logMap = new Map<number, HabitLog>()
   for (const log of habitLogs) {

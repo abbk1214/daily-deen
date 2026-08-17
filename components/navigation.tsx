@@ -21,7 +21,7 @@ function BottomNav({
   return (
     <nav
       aria-label="Primary navigation"
-      className="fixed bottom-0 inset-x-0 z-30 border-t border-border bg-background"
+      className="fixed bottom-0 inset-x-0 z-30 border-t border-border bg-background/80 backdrop-blur-xl"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
       <NavigationList
@@ -44,33 +44,38 @@ function BottomNav({
                   paddingBottom: "var(--space-2)",
                 }}
               >
-                <Icon
-                  size={20}
-                  strokeWidth={1.5}
-                  className={isActive ? "text-dusk-teal" : ""}
-                />
+                <div className="relative">
+                  <Icon
+                    size={20}
+                    strokeWidth={isActive ? 2 : 1.5}
+                    className={isActive ? "text-dusk-teal" : "text-muted-foreground"}
+                    style={{
+                      transition: "all 200ms var(--ease-out)",
+                    }}
+                  />
+                  {isActive && (
+                    <span
+                      className="absolute -bottom-1 left-1/2 -translate-x-1/2 rounded-full bg-dusk-teal"
+                      style={{
+                        width: "4px",
+                        height: "4px",
+                      }}
+                      aria-hidden="true"
+                    />
+                  )}
+                </div>
                 <span
                   className="max-w-16 truncate"
                   style={{
-                    fontSize: "var(--text-caption)",
-                    fontWeight: 500,
+                    fontSize: "11px",
+                    fontWeight: isActive ? 600 : 500,
                     letterSpacing: "var(--tracking-wide)",
-                    color: isActive ? "var(--dd-dusk-teal)" : undefined,
+                    color: isActive ? "var(--dd-dusk-teal)" : "var(--muted-foreground)",
+                    transition: "color 200ms var(--ease-out)",
                   }}
                 >
                   {item.label}
                 </span>
-                {isActive && (
-                  <span
-                    className="rounded-full bg-dusk-teal"
-                    style={{
-                      width: "4px",
-                      height: "4px",
-                      marginTop: "var(--space-0-5)",
-                    }}
-                    aria-hidden="true"
-                  />
-                )}
               </div>
             </>
           );
@@ -107,7 +112,7 @@ function Sidebar({
   return (
     <nav
       aria-label="Sidebar navigation"
-      className="fixed top-0 left-0 z-20 hidden h-full flex-col border-r border-border bg-background lg:flex"
+      className="fixed top-0 left-0 z-20 hidden h-full flex-col border-r border-border bg-background/80 backdrop-blur-xl lg:flex"
       style={{
         width: isCollapsed ? "64px" : "200px",
         padding: "var(--space-6)",
@@ -185,28 +190,23 @@ function Sidebar({
             const Icon = item.icon;
             return (
               <div
-                className="flex items-center"
+                className="flex items-center rounded-lg transition-colors"
                 style={{
                   gap: isCollapsed ? 0 : "var(--space-3)",
                   padding: isCollapsed
                     ? "var(--space-2)"
-                    : "var(--space-1) var(--space-2)",
+                    : "var(--space-2) var(--space-3)",
                   minHeight: "36px",
                   justifyContent: isCollapsed ? "center" : "flex-start",
                   fontSize: isCollapsed ? undefined : "var(--text-body-sm)",
                   fontWeight: isActive ? 600 : 500,
+                  background: isActive ? "var(--secondary)" : "transparent",
                 }}
               >
-                {isActive && !isCollapsed && (
-                  <span
-                    className="h-1 w-1 shrink-0 rounded-full bg-dusk-teal"
-                    aria-hidden="true"
-                  />
-                )}
                 <Icon
                   size={20}
-                  strokeWidth={1.5}
-                  className={isActive ? "text-dusk-teal" : ""}
+                  strokeWidth={isActive ? 2 : 1.5}
+                  className={isActive ? "text-dusk-teal" : "text-muted-foreground"}
                   style={isCollapsed && isActive ? { marginLeft: "-12px" } : undefined}
                 />
                 {!isCollapsed && (

@@ -228,7 +228,7 @@ export function CompanionPanel() {
       </main>
 
       {/* Input */}
-      <div className="fixed bottom-0 left-0 right-0 z-20">
+      <div className="fixed bottom-0 left-0 right-0 z-20" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
         <ChatInput onSend={handleSend} disabled={isLoading} />
       </div>
     </div>

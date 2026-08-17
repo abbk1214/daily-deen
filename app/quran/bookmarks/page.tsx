@@ -62,12 +62,12 @@ export default function BookmarksPage() {
           </div>
         ) : bookmarks.length === 0 ? (
           <div className="flex flex-col items-center py-24 text-center">
-            <Bookmark size={48} strokeWidth={1.5} className="text-muted-foreground" style={{ marginBottom: "var(--space-4)" }} />
-            <h2 className="text-foreground" style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-h3)", fontWeight: 600, marginBottom: "var(--space-2)" }}>
-              No bookmarks yet
+            <Bookmark size={40} strokeWidth={1.5} className="text-muted-foreground" style={{ marginBottom: "var(--space-4)" }} />
+            <h2 className="text-foreground" style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-h4)", fontWeight: 600, marginBottom: "var(--space-2)" }}>
+              Save ayahs that speak to you
             </h2>
             <p className="text-muted-foreground" style={{ fontSize: "var(--text-body-sm)", maxWidth: "30ch" }}>
-              Bookmark ayahs to save them here for quick access.
+              Tap the bookmark icon while reading to save ayahs here.
             </p>
           </div>
         ) : (

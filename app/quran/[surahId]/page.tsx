@@ -294,9 +294,9 @@ export default function SurahPage() {
       )}
 
       {/* Surah header */}
-      <div className="px-5 py-8 text-center border-b border-border">
+      <div className="px-5 py-10 text-center border-b border-border">
         <p
-          className="text-foreground mb-2"
+          className="text-foreground mb-3"
           style={{
             fontFamily: "var(--font-display)",
             fontSize: "clamp(28px, 5vw, 40px)",
@@ -307,7 +307,7 @@ export default function SurahPage() {
         >
           بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ
         </p>
-        <p className="text-muted-foreground" style={{ fontSize: "var(--text-caption)" }}>
+        <p className="text-muted-foreground" style={{ fontSize: "var(--text-body-sm)", fontStyle: "italic" }}>
           In the name of Allah, the Entirely Merciful, the Especially Merciful
         </p>
       </div>
@@ -355,7 +355,7 @@ export default function SurahPage() {
             </button>
           </div>
         ) : (
-          <div ref={parentRef} className="flex-1 overflow-auto" style={{ height: "calc(100vh - 200px)" }}>
+          <div ref={parentRef} className="flex-1 overflow-auto" style={{ minHeight: "calc(100vh - 200px)" }}>
             <div
               style={{
                 height: `${virtualizer.getTotalSize()}px`,
@@ -379,7 +379,7 @@ export default function SurahPage() {
                     }}
                     data-ayah={ayah.numberInSurah}
                     data-index={virtualRow.index}
-                    className="border-b border-border px-5 py-6"
+                    className="border-b border-border px-5 py-8"
                     style={{
                       position: "absolute",
                       top: 0,
@@ -389,7 +389,7 @@ export default function SurahPage() {
                     }}
                   >
                     {/* Ayah number badge */}
-                    <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-start justify-between mb-5">
                       <div
                         className="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-secondary"
                         style={{
@@ -426,14 +426,14 @@ export default function SurahPage() {
 
                     {/* Arabic text */}
                     <p
-                      className="text-foreground text-center mb-4"
+                      className="text-foreground text-center mb-5"
                       style={{
                         fontSize: `${fontSize}px`,
                         fontFamily: "var(--font-display)",
                         fontWeight: 400,
-                        lineHeight: 1.8,
+                        lineHeight: 2,
                         direction: "rtl",
-                        wordSpacing: "0.1em",
+                        wordSpacing: "0.12em",
                       }}
                     >
                       {ayah.text}
@@ -445,7 +445,10 @@ export default function SurahPage() {
                         className="text-muted-foreground"
                         style={{
                           fontSize: "var(--text-body-sm)",
-                          lineHeight: 1.6,
+                          lineHeight: 1.7,
+                          fontStyle: "italic",
+                          paddingLeft: "var(--space-4)",
+                          borderLeft: "2px solid var(--border)",
                         }}
                       >
                         {trans.text}
@@ -468,8 +471,8 @@ export default function SurahPage() {
       </main>
 
       {/* Navigation footer */}
-      <div className="fixed bottom-0 inset-x-0 z-30 border-t border-border bg-background flex items-center justify-between px-5"
-        style={{ height: "var(--space-14)" }}
+      <div className="fixed bottom-0 inset-x-0 z-30 border-t border-border bg-background/80 backdrop-blur-xl flex items-center justify-between px-5"
+        style={{ height: "var(--space-14)", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
       >
         {surahNumber > 1 ? (
           <Link

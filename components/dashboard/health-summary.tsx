@@ -126,7 +126,7 @@ export const HealthSummary = memo(function HealthSummary() {
         <p className="text-muted-foreground mb-2" style={{ fontSize: "var(--text-caption)", fontWeight: 500 }}>
           Today&apos;s Health
         </p>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center flex-wrap gap-3">
           {metrics.map((m) => {
             const Icon = m.icon
             return (
@@ -136,7 +136,7 @@ export const HealthSummary = memo(function HealthSummary() {
                   {m.value}
                 </span>
                 {m.sub && (
-                  <span className="text-muted-foreground" style={{ fontSize: "10px" }}>
+                  <span className="text-muted-foreground" style={{ fontSize: "var(--text-caption)" }}>
                     {m.sub}
                   </span>
                 )}

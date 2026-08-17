@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { ArrowLeft, Search, Filter } from "lucide-react"
+import { ArrowLeft, Search, Filter, BookOpen } from "lucide-react"
 import Link from "next/link"
 import type { PrayerLog, PrayerStatus } from "@/lib/db"
 import {
@@ -322,9 +322,21 @@ export default function HistoryPage() {
               ))}
             </div>
           ) : logs.length === 0 ? (
-            <p className="text-muted-foreground" style={{ fontSize: 'var(--text-body-sm)' }}>
-              No prayer logs found for this period.
-            </p>
+            <div className="flex flex-col items-center py-12 text-center">
+              <BookOpen size={32} strokeWidth={1.5} className="text-muted-foreground"
+                style={{ marginBottom: "var(--space-3)" }} />
+              <p className="text-foreground" style={{
+                fontFamily: "var(--font-display)",
+                fontSize: "var(--text-body-sm)",
+                fontWeight: 600,
+                marginBottom: "var(--space-1)",
+              }}>
+                No prayer logs for this period
+              </p>
+              <p className="text-muted-foreground" style={{ fontSize: "var(--text-caption)" }}>
+                Start marking prayers on the dashboard to build your history.
+              </p>
+            </div>
           ) : (
             <div className="flex flex-col" style={{ gap: 'var(--space-2)' }}>
               {logs.slice(0, 30).map((log) => (

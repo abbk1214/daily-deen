@@ -90,6 +90,32 @@ export function PrayerCheckIn({ onToggle }: PrayerCheckInProps) {
         padding: "var(--space-5)",
       }}
     >
+      {/* Progress bar */}
+      <div
+        className="rounded-full overflow-hidden"
+        style={{
+          height: "3px",
+          background: "var(--border)",
+          marginBottom: "var(--space-5)",
+        }}
+        role="progressbar"
+        aria-valuenow={completedCount}
+        aria-valuemin={0}
+        aria-valuemax={totalPrayers}
+        aria-label={`${completedCount} of ${totalPrayers} prayers completed`}
+      >
+        <div
+          className="rounded-full transition-all duration-500"
+          style={{
+            height: "100%",
+            width: `${(completedCount / totalPrayers) * 100}%`,
+            background: allDone
+              ? "var(--dd-lantern-gold)"
+              : "var(--dd-dusk-teal)",
+          }}
+        />
+      </div>
+
       {/* Prayer circles — refined, horizontal */}
       <div className="flex items-center justify-between">
         {PRAYERS.map((p, i) => {

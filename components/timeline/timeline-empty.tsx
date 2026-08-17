@@ -13,7 +13,7 @@ export const TimelineEmpty = memo(function TimelineEmpty({
   return (
     <div className="flex flex-col items-center py-24 text-center">
       <Sparkles
-        size={48}
+        size={40}
         strokeWidth={1}
         className="text-muted-foreground"
         style={{ marginBottom: 'var(--space-4)' }}
@@ -22,9 +22,8 @@ export const TimelineEmpty = memo(function TimelineEmpty({
         className="text-foreground"
         style={{
           fontFamily: 'var(--font-display)',
-          fontSize: 'var(--text-h3)',
+          fontSize: 'var(--text-h4)',
           fontWeight: 600,
-          letterSpacing: 'var(--tracking-h3)',
           marginBottom: 'var(--space-2)',
         }}
       >
@@ -39,7 +38,7 @@ export const TimelineEmpty = memo(function TimelineEmpty({
       >
         {isSearch
           ? 'Try a different search term.'
-          : 'As you use Daily Deen, your story will unfold here — streaks, milestones, and memories.'}
+          : 'Prayers, habits, and milestones will appear here as you use Daily Deen.'}
       </p>
     </div>
   )

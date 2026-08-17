@@ -215,14 +215,14 @@ export function MoodTracker() {
             </div>
 
             {/* Mood selection */}
-            <div className="flex justify-center gap-3">
+            <div className="flex justify-center flex-wrap gap-2">
               {MOODS.map((m) => (
                 <button
                   key={m.label}
                   onClick={() => setSelectedMood(m)}
                   aria-pressed={selectedMood?.label === m.label}
                   aria-label={m.label}
-                  className="flex flex-col items-center gap-2 p-4 rounded-2xl transition-all duration-300"
+                  className="flex flex-col items-center gap-1 p-3 rounded-2xl transition-all duration-300"
                   style={{
                     background: selectedMood?.label === m.label
                       ? `linear-gradient(135deg, ${m.color}20, ${m.color}10)`
@@ -233,7 +233,7 @@ export function MoodTracker() {
                     transform: selectedMood?.label === m.label ? "scale(1.05)" : "scale(1)",
                   }}
                 >
-                  <span style={{ fontSize: "36px" }}>{m.emoji}</span>
+                  <span style={{ fontSize: "28px" }}>{m.emoji}</span>
                   <span className="text-foreground" style={{ fontSize: "11px", fontWeight: 600, letterSpacing: "0.02em" }}>
                     {m.label}
                   </span>
