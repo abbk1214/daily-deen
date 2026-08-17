@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import withPWAInit from "@ducanh2912/next-pwa";
+import { getCSP } from "./lib/security/csp";
 
 const withPWA = withPWAInit({
   dest: "public",
@@ -139,6 +140,27 @@ const config: NextConfig = {
   },
   transpilePackages: ["workbox-sw"],
   turbopack: {},
+  headers: async () => [
+    {
+      source: "/(.*)",
+      headers: [
+        { key: "Content-Security-Policy", value: getCSP() },
+        { key: "X-Frame-Options", value: "DENY" },
+        { key: "X-Content-Type-Options", value: "nosniff" },
+        { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+        { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(self), browsing-topics=()" },
+        { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
+        { key: "X-DNS-Prefetch-Control", value: "on" },
+      ],
+    },
+    {
+      source: "/api/(.*)",
+      headers: [
+        { key: "Cache-Control", value: "no-store, no-cache, must-revalidate" },
+        { key: "Pragma", value: "no-cache" },
+      ],
+    },
+  ],
 };
 
 export default withPWA(config);

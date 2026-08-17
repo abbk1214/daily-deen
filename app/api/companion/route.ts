@@ -1,22 +1,58 @@
 import { NextResponse } from "next/server"
-import type { CompanionConfig } from "@/lib/companion/types"
+import { createClient } from "@/lib/supabase/server"
 import { DEFAULT_SYSTEM_PROMPT } from "@/lib/companion/types"
+
+// ─── Rate limiting (in-memory, per-user) ───
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
+const RATE_LIMIT_WINDOW = 60_000 // 1 minute
+const RATE_LIMIT_MAX = 15 // requests per window
+
+function checkRateLimit(userId: string): boolean {
+  const now = Date.now()
+  const entry = rateLimitMap.get(userId)
+
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(userId, { count: 1, resetAt: now + RATE_LIMIT_WINDOW })
+    return true
+  }
+
+  entry.count++
+  return entry.count <= RATE_LIMIT_MAX
+}
+
+// ─── Allowed models (server-side whitelist) ───
+const ALLOWED_MODELS: Record<string, string[]> = {
+  openai: ["gpt-4o-mini"],
+  anthropic: ["claude-3-5-sonnet-20241022"],
+}
 
 export async function POST(request: Request) {
   try {
+    // ─── Auth check ───
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    // ─── Rate limit ───
+    if (!checkRateLimit(user.id)) {
+      return NextResponse.json({ error: "Rate limit exceeded. Try again in a minute." }, { status: 429 })
+    }
+
     const body = await request.json()
     const { messages, config } = body as {
       messages: { role: string; content: string }[]
-      config: CompanionConfig
+      config: { provider?: string; model?: string }
     }
 
     if (!messages?.length) {
       return NextResponse.json({ error: "No messages" }, { status: 400 })
     }
 
-    // Validate message content lengths
-    const MAX_MESSAGE_LENGTH = 4000
-    const MAX_MESSAGES = 50
+    // ─── Input validation ───
+    const MAX_MESSAGE_LENGTH = 2000
+    const MAX_MESSAGES = 20
     if (messages.length > MAX_MESSAGES) {
       return NextResponse.json({ error: "Too many messages" }, { status: 400 })
     }
@@ -29,10 +65,20 @@ export async function POST(request: Request) {
       }
     }
 
-    const systemPrompt = config.systemPrompt || DEFAULT_SYSTEM_PROMPT
-    const provider = config.provider || "openai"
+    // ─── NEVER trust client system prompt — use server-side constant only ───
+    const systemPrompt = DEFAULT_SYSTEM_PROMPT
 
-    // Use server-side environment variables for API keys — never accept from client
+    // ─── Whitelist provider and model ───
+    const provider = config?.provider === "anthropic" ? "anthropic" : "openai"
+    const allowedModels = ALLOWED_MODELS[provider]
+    const model = allowedModels.includes(config?.model || "") ? config.model! : allowedModels[0]
+
+    // ─── Sanitize message roles (prevent system-role injection) ───
+    const sanitizedMessages = messages.map((m) => ({
+      role: m.role === "assistant" ? "assistant" : "user",
+      content: m.content,
+    }))
+
     if (provider === "openai") {
       const apiKey = process.env.OPENAI_API_KEY
       if (!apiKey) {
@@ -46,10 +92,10 @@ export async function POST(request: Request) {
           Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-          model: config.model || "gpt-4o-mini",
+          model,
           messages: [
             { role: "system", content: systemPrompt },
-            ...messages,
+            ...sanitizedMessages,
           ],
           max_tokens: 300,
           temperature: 0.7,
@@ -57,7 +103,7 @@ export async function POST(request: Request) {
       })
 
       if (!res.ok) {
-        return NextResponse.json({ error: "OpenAI API error" }, { status: 502 })
+        return NextResponse.json({ error: "AI service error" }, { status: 502 })
       }
 
       const data = await res.json()
@@ -80,18 +126,15 @@ export async function POST(request: Request) {
           "anthropic-version": "2023-06-01",
         },
         body: JSON.stringify({
-          model: config.model || "claude-3-5-sonnet-20241022",
+          model,
           max_tokens: 300,
           system: systemPrompt,
-          messages: messages.map((m) => ({
-            role: m.role === "assistant" ? "assistant" : "user",
-            content: m.content,
-          })),
+          messages: sanitizedMessages,
         }),
       })
 
       if (!res.ok) {
-        return NextResponse.json({ error: "Anthropic API error" }, { status: 502 })
+        return NextResponse.json({ error: "AI service error" }, { status: 502 })
       }
 
       const data = await res.json()
@@ -100,10 +143,7 @@ export async function POST(request: Request) {
       })
     }
 
-    // Fallback: no provider configured
-    return NextResponse.json({
-      response: "AI provider not configured. Using local responses.",
-    })
+    return NextResponse.json({ error: "AI provider not configured" }, { status: 503 })
   } catch {
     return NextResponse.json({ error: "Internal error" }, { status: 500 })
   }
