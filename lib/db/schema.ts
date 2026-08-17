@@ -4,7 +4,7 @@ import type {
   PrayerLog, QuranBookmark, QuranProgress, KhatmahGoal,
   KhatmahProgress, ReadingSessionLog, Goal, GoalCheckIn,
   MoodEntry, WaterEntry, SleepEntry, ExerciseEntry,
-  DailyQuote, TaraweehLog, QuranSettings,
+  DailyQuote, TaraweehLog, QuranSettings, TasbeehCount,
 } from './types'
 
 class DailyDeenDB extends Dexie {
@@ -28,6 +28,7 @@ class DailyDeenDB extends Dexie {
   dailyQuotes!: Table<DailyQuote, number>
   taraweeh!: Table<TaraweehLog, number>
   quranSettings!: Table<QuranSettings, number>
+  tasbeehCounts!: Table<TasbeehCount, number>
 
   constructor() {
     super('DailyDeenDB')
@@ -172,7 +173,7 @@ class DailyDeenDB extends Dexie {
       quranSettings: '++id',
     })
 
-    // Version 11: Migrate old prayers table data into prayerLogs
+    // Version 11: Migrate old prayers table data into prayerLogs + add tasbeehCounts
     this.version(11).stores({
       prayers: '++id, &date',
       habits: '++id, &name, type',
@@ -194,6 +195,7 @@ class DailyDeenDB extends Dexie {
       dailyQuotes: '++id, &date, createdAt',
       taraweeh: '++id, &date',
       quranSettings: '++id',
+      tasbeehCounts: '++id, &[dhikrId+date], dhikrId, date',
     }).upgrade(async (tx) => {
       // Migrate old prayers table records into prayerLogs
       const prayers = await (tx.table('prayers') as any).toArray()

@@ -13,7 +13,7 @@ export type {
   ReadingSessionLog, QuranSettings, Goal, GoalCheckIn,
   MoodEntry, WaterEntry, SleepEntry, ExerciseEntry,
   DailyQuote, TaraweehLog, PrayerAdjustments, AppSettings,
-  DatabaseExport,
+  DatabaseExport, TasbeehCount,
 } from './types'
 export {
   DEFAULT_QURAN_SETTINGS, DEFAULT_ADJUSTMENTS, DEFAULT_SETTINGS,

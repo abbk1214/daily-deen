@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { ChevronDown, ChevronUp, RotateCcw, CheckCircle2, Circle } from "lucide-react";
+import { getTodaysDhikrProgress, incrementDhikr, resetDhikr } from "@/lib/dhikr/actions";
 
 interface AdhkarItem {
   id: string;
@@ -119,12 +120,20 @@ export function AdhkarTracker() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   useEffect(() => {
-    const today = new Date().toISOString().split("T")[0];
-    const saved = localStorage.getItem(`adhkar-${today}`);
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      queueMicrotask(() => setProgress(parsed));
-    }
+    let cancelled = false;
+    getTodaysDhikrProgress()
+      .then((logs) => {
+        if (cancelled) return;
+        const map: AdhkarProgress = {};
+        for (const log of logs) {
+          if (log.dhikrId && log.current > 0) {
+            map[log.dhikrId] = log.current;
+          }
+        }
+        setProgress(map);
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
   }, []);
 
   const adhkars = isEvening ? EVENING_ADHKAR : MORNING_ADHKAR;
@@ -140,27 +149,25 @@ export function AdhkarTracker() {
   const completionPercent = Math.round((totalCurrent / totalTarget) * 100);
 
   const incrementAdhkar = useCallback(
-    (id: string) => {
+    async (id: string) => {
       const adhkar = adhkars.find((a) => a.id === id);
       if (!adhkar) return;
 
       const current = progress[id] || 0;
       if (current >= adhkar.targetCount) return;
 
-      const next = { ...progress, [id]: current + 1 };
-      setProgress(next);
-
-      const today = new Date().toISOString().split("T")[0];
-      localStorage.setItem(`adhkar-${today}`, JSON.stringify(next));
+      setProgress((prev) => ({ ...prev, [id]: current + 1 }));
+      await incrementDhikr(id, adhkar.targetCount);
     },
     [adhkars, progress],
   );
 
-  const resetAdhkar = useCallback(() => {
+  const resetAdhkar = useCallback(async () => {
     setProgress({});
-    const today = new Date().toISOString().split("T")[0];
-    localStorage.removeItem(`adhkar-${today}`);
-  }, []);
+    for (const adhkar of adhkars) {
+      await resetDhikr(adhkar.id);
+    }
+  }, [adhkars]);
 
   return (
     <div

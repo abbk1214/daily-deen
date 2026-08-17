@@ -4,6 +4,14 @@ import type { Table } from 'dexie'
    Core types
    ────────────────────────────────────────────── */
 
+export interface TasbeehCount {
+  id?: number
+  dhikrId: string
+  target: number
+  current: number
+  date: string
+}
+
 export interface Prayer {
   id?: number
   date: string
@@ -365,4 +373,5 @@ export interface DatabaseExport {
   sleepEntries?: SleepEntry[]
   exerciseEntries?: ExerciseEntry[]
   dailyQuotes?: DailyQuote[]
+  tasbeehCounts?: TasbeehCount[]
 }
