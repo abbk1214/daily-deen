@@ -30,7 +30,8 @@ export function CompanionPanel() {
   }, [])
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    messagesEndRef.current?.scrollIntoView({ behavior: prefersReduced ? "auto" : "smooth" })
   }, [activeConversation?.messages.length])
 
   const handleNew = useCallback(() => {

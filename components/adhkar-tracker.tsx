@@ -229,6 +229,7 @@ export function AdhkarTracker() {
                 <button
                   onClick={() => incrementAdhkar(adhkar.id)}
                   disabled={isComplete}
+                  aria-label={`Increment ${adhkar.transliteration} (${current}/${adhkar.targetCount})`}
                   className="flex-shrink-0"
                 >
                   {isComplete ? (
@@ -240,6 +241,8 @@ export function AdhkarTracker() {
 
                 <button
                   onClick={() => setExpandedId(isExpanded ? null : adhkar.id)}
+                  aria-expanded={isExpanded}
+                  aria-label={isExpanded ? "Collapse dhikr details" : "Expand dhikr details"}
                   className="flex-1 text-left"
                 >
                   <p
@@ -255,6 +258,8 @@ export function AdhkarTracker() {
 
                 <button
                   onClick={() => setExpandedId(isExpanded ? null : adhkar.id)}
+                  aria-label={isExpanded ? "Collapse" : "Expand"}
+                  aria-expanded={isExpanded}
                   className="flex-shrink-0 text-muted-foreground"
                 >
                   {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}

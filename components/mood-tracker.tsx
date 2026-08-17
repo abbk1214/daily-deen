@@ -189,14 +189,25 @@ export function MoodTracker() {
 
       {/* Check-in modal */}
       {showCheckin && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-md">
-          <div className="w-full max-w-lg bg-card rounded-t-3xl p-6 space-y-5 max-h-[85vh] overflow-y-auto" style={{ boxShadow: "var(--shadow-elevated)" }}>
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-md"
+          onClick={(e) => { if (e.target === e.currentTarget) setShowCheckin(false); }}
+          onKeyDown={(e) => { if (e.key === "Escape") setShowCheckin(false); }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="How are you feeling?"
+            className="w-full max-w-lg bg-card rounded-t-3xl p-6 space-y-5 max-h-[85vh] overflow-y-auto"
+            style={{ boxShadow: "var(--shadow-elevated)" }}
+          >
             <div className="flex items-center justify-between">
               <h3 className="text-foreground" style={{ fontSize: "var(--text-h4)", fontWeight: 600, letterSpacing: "var(--tracking-h3)" }}>
                 How are you feeling?
               </h3>
               <button
                 onClick={() => setShowCheckin(false)}
+                aria-label="Close"
                 className="text-muted-foreground hover:text-foreground transition-colors"
               >
                 <X size={20} />
@@ -209,6 +220,8 @@ export function MoodTracker() {
                 <button
                   key={m.label}
                   onClick={() => setSelectedMood(m)}
+                  aria-pressed={selectedMood?.label === m.label}
+                  aria-label={m.label}
                   className="flex flex-col items-center gap-2 p-4 rounded-2xl transition-all duration-300"
                   style={{
                     background: selectedMood?.label === m.label
@@ -238,6 +251,8 @@ export function MoodTracker() {
                   <button
                     key={e.value}
                     onClick={() => setEnergy(e.value)}
+                    aria-pressed={energy === e.value}
+                    aria-label={`Energy level ${e.value}: ${e.label}`}
                     className="flex-1 py-2.5 rounded-xl text-foreground transition-all duration-200"
                     style={{
                       background: energy === e.value
@@ -291,6 +306,7 @@ export function MoodTracker() {
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 placeholder="What's on your mind?"
+                aria-label="Mood note"
                 className="w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none"
                 style={{ fontSize: "var(--text-body-sm)" }}
                 rows={2}
