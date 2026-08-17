@@ -2,20 +2,43 @@
 
 ## Architecture
 
-Daily Deen is a client-side PWA. All data lives in IndexedDB via Dexie.js. There is no backend database, no user authentication, and no server-side data storage.
+Daily Deen is a Progressive Web App built with Next.js 16. Local data is stored in IndexedDB via Dexie.js. Authentication and optional cloud sync use Supabase. The AI companion API route runs server-side with environment variables.
+
+## Authentication
+
+- **Magic link authentication** via Supabase Auth.
+- Sessions are managed via secure HTTP-only cookies.
+- The `proxy.ts` file refreshes Supabase sessions on every request.
+- Unauthenticated users can use all local features; authentication enables cloud sync and the AI companion.
 
 ## Data Privacy
 
-- **All data stays on-device.** No user data is transmitted to any server.
+- **Local-first architecture.** All core data lives in IndexedDB on-device.
+- **Cloud sync is optional.** Users must sign in to enable sync to Supabase.
 - **No analytics tracking.** No third-party analytics SDKs.
 - **No telemetry.** No usage data is collected.
 - **No ads.** No advertising networks.
 
 ## API Keys
 
-- API keys for AI companion features are stored in `localStorage` (encrypted at rest by the browser).
-- API keys are forwarded to the provider API route (`/api/companion`) which proxies requests.
-- **Recommendation:** For production, API keys should be managed server-side via environment variables, not client-side storage.
+- AI companion API keys (OpenAI, Anthropic) are stored as server-side environment variables.
+- API keys are **never** exposed to the client.
+- The `/api/companion` route proxies requests using server-side keys.
+
+## API Security
+
+- **Authentication required.** The companion API route requires a valid Supabase session.
+- **Rate limiting.** In-memory rate limiting (15 requests per minute per user).
+- **Input validation.** Message length and count limits enforced server-side.
+- **Model whitelisting.** Only approved AI models can be used.
+- **Message role sanitization.** Server-side validation of message roles.
+- **System prompt isolation.** Server-side system prompt cannot be overridden by the client.
+
+## Content Security Policy
+
+- CSP headers configured in `lib/security/csp.ts`.
+- Restrictions on script, style, image, and connect sources.
+- Frame-ancestors set to `none` (no iframe embedding).
 
 ## Input Validation
 
@@ -29,18 +52,11 @@ Daily Deen is a client-side PWA. All data lives in IndexedDB via Dexie.js. There
 - No `dangerouslySetInnerHTML` usage.
 - No user-generated HTML rendering.
 
-## Content Security
-
-- External content is loaded from trusted CDNs (jsdelivr, islamic.network, open-meteo.com).
-- No inline scripts.
-- Service worker only caches known-origin assets.
-
 ## Known Limitations
 
-- **localStorage is not encrypted.** API keys and conversation history are stored in plaintext. For production, consider Web Crypto API encryption.
+- **In-memory rate limiting** resets on serverless cold starts. For production, consider Redis or an external rate-limiting service.
+- **localStorage is not encrypted.** Conversation history is stored in plaintext. For production, consider Web Crypto API encryption.
 - **Feature flags are client-side.** Premium feature gating must be enforced server-side.
-- **No CSRF protection.** The app has no mutating API routes that require CSRF tokens.
-- **No rate limiting.** The companion API route has no rate limiting. For production, implement server-side rate limiting.
 
 ## Reporting Security Issues
 
