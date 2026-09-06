@@ -237,6 +237,16 @@ export function Dashboard() {
           />
         </section>
 
+        {/* Next Prayer — primary action, always visible */}
+        <section aria-label="Next prayer" className="dd-reveal">
+          <NextPrayerCard
+            nextPrayer={nextPrayer}
+            computedTimes={computedTimes}
+            prayerStatus={prayerStatus}
+            loading={loading}
+          />
+        </section>
+
         {/* Prayer Check-in — primary action */}
         <section aria-label="Mark prayers as completed" className="dd-reveal">
           <PrayerCheckIn onToggle={() => setStreakRefreshKey((k) => k + 1)} />
@@ -270,15 +280,9 @@ export function Dashboard() {
           />
         </section>
 
-        {/* Next Prayer + Continue Reading — task-oriented */}
-        <section aria-label="Next prayer and reading" className="dd-reveal flex flex-col" style={{ gap: "var(--space-3)" }}>
+        {/* Continue Reading — next action */}
+        <section aria-label="Continue reading" className="dd-reveal">
           <ContinueReading />
-          <NextPrayerCard
-            nextPrayer={nextPrayer}
-            computedTimes={computedTimes}
-            prayerStatus={prayerStatus}
-            loading={loading}
-          />
         </section>
 
         {/* Today's Focus — one contextual card */}

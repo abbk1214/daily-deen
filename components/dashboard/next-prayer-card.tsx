@@ -1,6 +1,6 @@
 "use client"
 
-import { memo } from "react"
+import { memo, useMemo } from "react"
 import { Clock, Check } from "lucide-react"
 import type { PrayerTimes } from "@/lib/prayer"
 
@@ -51,11 +51,66 @@ export const NextPrayerCard = memo(function NextPrayerCard({
 
   if (!nextPrayer || !computedTimes) return null
 
+  // Calculate progress from last prayer to next prayer
+  const progress = useMemo(() => {
+    if (!computedTimes || !nextPrayer) return 0
+
+    const nowMinutes = Math.floor(Date.now() / 60000) % 1440
+    const PRAYER_KEYS = ["fajr", "dhuhr", "asr", "maghrib", "isha"] as const
+
+    // Find the last prayer time
+    let lastPrayerTime = 0
+    for (const key of PRAYER_KEYS) {
+      const time = computedTimes[key]
+      if (time <= nowMinutes) {
+        lastPrayerTime = time
+      }
+    }
+
+    // Find the next prayer time
+    const nextPrayerTime = computedTimes[nextPrayer.name.toLowerCase() as PrayerName] || 0
+
+    // Calculate total duration and elapsed
+    const totalDuration = nextPrayerTime > lastPrayerTime
+      ? nextPrayerTime - lastPrayerTime
+      : (1440 - lastPrayerTime) + nextPrayerTime
+
+    const elapsed = nowMinutes > lastPrayerTime
+      ? nowMinutes - lastPrayerTime
+      : (1440 - lastPrayerTime) + nowMinutes
+
+    return Math.min(100, Math.round((elapsed / totalDuration) * 100))
+  }, [computedTimes, nextPrayer])
+
   return (
     <div
       className="rounded-2xl border border-border bg-card"
       style={{ padding: "var(--space-5)", boxShadow: "var(--shadow-xs)" }}
     >
+      {/* Progress bar */}
+      <div
+        role="progressbar"
+        aria-valuenow={progress}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        className="w-full rounded-full"
+        style={{
+          height: 3,
+          background: "var(--muted)",
+          marginBottom: "var(--space-4)",
+        }}
+      >
+        <div
+          className="h-full rounded-full transition-all duration-300"
+          style={{
+            width: `${progress}%`,
+            background: progress >= 80
+              ? "var(--dd-lantern-gold)"
+              : "var(--dd-dusk-teal)",
+          }}
+        />
+      </div>
+
       {/* Main info */}
       <div className="flex items-center gap-4">
         <div
