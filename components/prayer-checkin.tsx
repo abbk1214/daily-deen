@@ -90,30 +90,41 @@ export function PrayerCheckIn({ onToggle }: PrayerCheckInProps) {
         padding: "var(--space-5)",
       }}
     >
-      {/* Progress bar */}
+      {/* Progress bar with count */}
       <div
-        className="rounded-full overflow-hidden"
-        style={{
-          height: "3px",
-          background: "var(--border)",
-          marginBottom: "var(--space-5)",
-        }}
-        role="progressbar"
-        aria-valuenow={completedCount}
-        aria-valuemin={0}
-        aria-valuemax={totalPrayers}
-        aria-label={`${completedCount} of ${totalPrayers} prayers completed`}
+        className="flex items-center justify-between"
+        style={{ marginBottom: "var(--space-4)" }}
       >
+        <span
+          className="text-muted-foreground"
+          style={{ fontSize: "var(--text-caption)" }}
+        >
+          {completedCount}/{totalPrayers} completed
+        </span>
         <div
-          className="rounded-full transition-all duration-500"
+          className="rounded-full overflow-hidden"
           style={{
-            height: "100%",
-            width: `${(completedCount / totalPrayers) * 100}%`,
-            background: allDone
-              ? "var(--dd-lantern-gold)"
-              : "var(--dd-dusk-teal)",
+            height: "3px",
+            background: "var(--border)",
+            width: "60%",
           }}
-        />
+          role="progressbar"
+          aria-valuenow={completedCount}
+          aria-valuemin={0}
+          aria-valuemax={totalPrayers}
+          aria-label={`${completedCount} of ${totalPrayers} prayers completed`}
+        >
+          <div
+            className="rounded-full transition-all duration-500"
+            style={{
+              height: "100%",
+              width: `${(completedCount / totalPrayers) * 100}%`,
+              background: allDone
+                ? "var(--dd-lantern-gold)"
+                : "var(--dd-dusk-teal)",
+            }}
+          />
+        </div>
       </div>
 
       {/* Prayer circles — refined, horizontal */}
