@@ -3,7 +3,6 @@ import type {
   Prayer, Habit, HabitLog, JournalEntry, AppSettings,
   PrayerLog, QuranBookmark, QuranProgress, KhatmahGoal,
   KhatmahProgress, ReadingSessionLog, Goal, GoalCheckIn,
-  MoodEntry, WaterEntry, SleepEntry, ExerciseEntry,
   DailyQuote, TaraweehLog, QuranSettings, TasbeehCount,
 } from './types'
 
@@ -21,10 +20,6 @@ class DailyDeenDB extends Dexie {
   readingSessionLogs!: Table<ReadingSessionLog, number>
   goals!: Table<Goal, number>
   goalCheckIns!: Table<GoalCheckIn, number>
-  moodEntries!: Table<MoodEntry, number>
-  waterEntries!: Table<WaterEntry, number>
-  sleepEntries!: Table<SleepEntry, number>
-  exerciseEntries!: Table<ExerciseEntry, number>
   dailyQuotes!: Table<DailyQuote, number>
   taraweeh!: Table<TaraweehLog, number>
   quranSettings!: Table<QuranSettings, number>
@@ -231,6 +226,33 @@ class DailyDeenDB extends Dexie {
       if (toAdd.length > 0) {
         await (tx.table('prayerLogs') as any).bulkAdd(toAdd)
       }
+    })
+
+    // Version 12: Drop wellness tables (companion, mood, water, sleep, exercise)
+    this.version(12).stores({
+      prayers: '++id, &date',
+      habits: '++id, &name, type',
+      habitLogs: '++id, date, &[habitId+date]',
+      journal: '++id, &date',
+      settings: '++id',
+      prayerLogs: '++id, &[date+prayer], date, prayer, status',
+      quranBookmarks: '++id, &[surahNumber+ayahNumber], surahNumber, createdAt',
+      quranProgress: '++id, surahNumber, lastReadAt',
+      khatmahGoals: '++id, isActive, type, createdAt',
+      khatmahProgress: '++id, &date, lastPage, lastJuz',
+      readingSessionLogs: '++id, date, startPage, endPage',
+      goals: '++id, type, category, startDate, endDate, isCompleted, createdAt',
+      goalCheckIns: '++id, &[goalId+date], goalId, date',
+      dailyQuotes: '++id, &date, createdAt',
+      taraweeh: '++id, &date',
+      quranSettings: '++id',
+      tasbeehCounts: '++id, &[dhikrId+date], dhikrId, date',
+    }).upgrade(async (tx) => {
+      // Drop wellness tables
+      try { await (tx.table('moodEntries') as any).clear() } catch {}
+      try { await (tx.table('waterEntries') as any).clear() } catch {}
+      try { await (tx.table('sleepEntries') as any).clear() } catch {}
+      try { await (tx.table('exerciseEntries') as any).clear() } catch {}
     })
   }
 }

@@ -11,10 +11,6 @@ function makeExport(overrides: Partial<DatabaseExport> = {}): DatabaseExport {
     habits: [],
     habitLogs: [],
     journal: [],
-    moodEntries: [],
-    waterEntries: [],
-    sleepEntries: [],
-    exerciseEntries: [],
     quranBookmarks: [],
     khatmahProgress: [],
     settings: {

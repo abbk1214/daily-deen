@@ -9,16 +9,12 @@ export interface FeatureFlags {
   quran: boolean
   habits: boolean
   journal: boolean
-  wellness: boolean
   timeline: boolean
   insights: boolean
-  companion: boolean
   dhikr: boolean
-  zakat: boolean
   compass: boolean
 
   // Premium features
-  ai_companion: boolean
   cloud_sync: boolean
   family_sharing: boolean
   widgets: boolean
@@ -45,16 +41,12 @@ const DEFAULT_FLAGS: FeatureFlags = {
   quran: true,
   habits: true,
   journal: true,
-  wellness: true,
   timeline: true,
   insights: true,
-  companion: true,
   dhikr: true,
-  zakat: true,
   compass: true,
 
   // Premium — disabled by default
-  ai_companion: false,
   cloud_sync: false,
   family_sharing: false,
   widgets: false,

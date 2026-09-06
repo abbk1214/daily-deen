@@ -379,25 +379,6 @@ export default function SettingsPage() {
           </div>
         </section>
 
-        {/* Tools */}
-        <section className="mb-8">
-          <h2 className="text-muted-foreground mb-3" style={{ fontSize: "var(--text-caption)", fontWeight: 500, letterSpacing: "var(--tracking-wide)", textTransform: "uppercase" }}>
-            Tools
-          </h2>
-          <div className="rounded-xl border border-border bg-card divide-y divide-border">
-            <Link
-              href="/zakat"
-              className="flex items-center justify-between p-4 transition-colors hover:bg-secondary"
-            >
-              <div className="flex items-center gap-3">
-                <Calculator size={18} className="text-muted-foreground" strokeWidth={1.5} />
-                <p className="text-foreground" style={{ fontSize: "var(--text-body-sm)", fontWeight: 500 }}>Zakat Calculator</p>
-              </div>
-              <ChevronRight size={16} className="text-muted-foreground" />
-            </Link>
-          </div>
-        </section>
-
         {/* Data */}
         <section className="mb-8">
           <h2 className="text-muted-foreground mb-3" style={{ fontSize: "var(--text-caption)", fontWeight: 500, letterSpacing: "var(--tracking-wide)", textTransform: "uppercase" }}>

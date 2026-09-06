@@ -174,14 +174,6 @@ export const ISLAMIC_LIFE_HABITS: IslamicLifeHabit[] = [
     description: "Voluntary charity",
   },
   {
-    id: "zakat",
-    name: "Zakat",
-    categoryId: "charity",
-    defaultTarget: 1,
-    unit: "obligation",
-    description: "Obligatory charity (if applicable)",
-  },
-  {
     id: "monday_thursday_fast",
     name: "Monday/Thursday Fast",
     categoryId: "fasting",

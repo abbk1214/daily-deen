@@ -103,27 +103,6 @@ export async function syncAllToCloud(): Promise<{ synced: number; errors: string
     errors.push(`journal: ${e.message}`)
   }
 
-  // Sync mood entries
-  try {
-    const moods = await db.moodEntries.toArray()
-    if (moods.length > 0) {
-      const rows = moods.map((m) => ({
-        user_id: user.id,
-        date: m.date,
-        time: m.time,
-        mood: m.mood,
-        notes: m.note,
-      }))
-      const { error } = await supabase
-        .from("mood_entries")
-        .insert(rows)
-      if (error) errors.push(`mood_entries: ${error.message}`)
-      else synced += rows.length
-    }
-  } catch (e: any) {
-    errors.push(`mood_entries: ${e.message}`)
-  }
-
   // Sync dhikr progress
   try {
     const dhikr = await db.tasbeehCounts.toArray()
@@ -143,68 +122,6 @@ export async function syncAllToCloud(): Promise<{ synced: number; errors: string
     }
   } catch (e: any) {
     errors.push(`dhikr_progress: ${e.message}`)
-  }
-
-  // Sync water entries
-  try {
-    const water = await db.waterEntries.toArray()
-    if (water.length > 0) {
-      const rows = water.map((w) => ({
-        user_id: user.id,
-        date: w.date,
-        amount: w.amount,
-        timestamp: w.timestamp,
-      }))
-      const { error } = await supabase
-        .from("water_entries")
-        .insert(rows)
-      if (error) errors.push(`water_entries: ${error.message}`)
-      else synced += rows.length
-    }
-  } catch (e: any) {
-    errors.push(`water_entries: ${e.message}`)
-  }
-
-  // Sync sleep entries
-  try {
-    const sleep = await db.sleepEntries.toArray()
-    if (sleep.length > 0) {
-      const rows = sleep.map((s) => ({
-        user_id: user.id,
-        date: s.date,
-        duration: s.duration,
-        quality: s.quality,
-        notes: s.notes,
-      }))
-      const { error } = await supabase
-        .from("sleep_entries")
-        .insert(rows)
-      if (error) errors.push(`sleep_entries: ${error.message}`)
-      else synced += rows.length
-    }
-  } catch (e: any) {
-    errors.push(`sleep_entries: ${e.message}`)
-  }
-
-  // Sync exercise entries
-  try {
-    const exercise = await db.exerciseEntries.toArray()
-    if (exercise.length > 0) {
-      const rows = exercise.map((e) => ({
-        user_id: user.id,
-        date: e.date,
-        type: e.type,
-        duration: e.duration,
-        notes: e.notes,
-      }))
-      const { error } = await supabase
-        .from("exercise_entries")
-        .insert(rows)
-      if (error) errors.push(`exercise_entries: ${error.message}`)
-      else synced += rows.length
-    }
-  } catch (e: any) {
-    errors.push(`exercise_entries: ${e.message}`)
   }
 
   // Sync settings

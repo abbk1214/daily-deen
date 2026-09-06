@@ -17,7 +17,6 @@ export interface SeasonalFeatures {
   khatmahPlanner: boolean
   dailyDuas: boolean
   charityTracker: boolean
-  zakatReminder: boolean
   laylatulQadrTracker: boolean
   hajjChecklist: boolean
   tawafCounter: boolean
@@ -35,6 +34,6 @@ export interface CharityLog {
   id?: number
   date: string
   amount: number
-  type: 'sadaqah' | 'zakat' | 'waqf'
+  type: 'sadaqah' | 'waqf'
   note: string
 }

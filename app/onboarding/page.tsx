@@ -217,7 +217,7 @@ export default function OnboardingPage() {
         key={`desc-${screen}`}
       >
         {screen === "welcome"
-          ? "Your daily companion for prayer, reflection, and growth. Built for those who seek consistency in their deen."
+          ? "Prayer, reflection, and growth. Built for those who seek consistency in their deen."
           : screen === "location"
             ? "We use your location to calculate accurate prayer times for your area. Your location is never shared."
             : "Choose targets that feel right for you. You can always adjust these later in Settings."}

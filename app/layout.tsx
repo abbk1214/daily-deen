@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     default: "Daily Deen",
     template: "%s | Daily Deen",
   },
-  description: "Your personal Islamic companion — prayer times, Quran, habits, journal, and insights. All offline.",
+  description: "Prayer times, Quran, habits, journal, and insights. All offline.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "Daily Deen",
-    description: "Your personal Islamic companion — prayer times, Quran, habits, journal, and insights.",
+    description: "Prayer times, Quran, habits, journal, and insights.",
     type: "website",
     locale: "en_US",
     siteName: "Daily Deen",
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary",
     title: "Daily Deen",
-    description: "Your personal Islamic companion — prayer times, Quran, habits, journal, and insights.",
+    description: "Prayer times, Quran, habits, journal, and insights.",
   },
 };
 

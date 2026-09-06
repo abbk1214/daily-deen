@@ -11,7 +11,6 @@ export type {
   Prayer, Habit, HabitLog, JournalEntry, PrayerStatus, PrayerLog,
   QuranBookmark, QuranProgress, KhatmahGoal, KhatmahProgress,
   ReadingSessionLog, QuranSettings, Goal, GoalCheckIn,
-  MoodEntry, WaterEntry, SleepEntry, ExerciseEntry,
   DailyQuote, TaraweehLog, PrayerAdjustments, AppSettings,
   DatabaseExport, TasbeehCount,
 } from './types'

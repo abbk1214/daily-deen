@@ -1,7 +1,7 @@
 {
   "name": "Daily Deen",
   "short_name": "Daily Deen",
-  "description": "Your personal Islamic companion — prayer times, Quran, habits, journal, and insights.",
+  "description": "Prayer times, Quran, habits, journal, and insights.",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",

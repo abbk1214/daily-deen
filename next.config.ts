@@ -101,20 +101,6 @@ const withPWA = withPWAInit({
         },
       },
       {
-        urlPattern: /^https:\/\/api\.open-meteo\.com\/.*/i,
-        handler: "NetworkFirst",
-        options: {
-          cacheName: "weather-api",
-          expiration: {
-            maxEntries: 20,
-            maxAgeSeconds: 60 * 60,
-          },
-          cacheableResponse: {
-            statuses: [0, 200],
-          },
-        },
-      },
-      {
         urlPattern: /^https:\/\/zenquotes\.io\/.*/i,
         handler: "NetworkFirst",
         options: {

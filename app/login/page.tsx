@@ -86,7 +86,7 @@ export default function LoginPage() {
             Daily Deen
           </h1>
           <p className="text-muted-foreground" style={{ fontSize: "var(--text-body-sm)" }}>
-            Your personal Islamic companion
+            Prayer times, Quran, habits, journal
           </p>
         </div>
 

@@ -16,16 +16,12 @@ import { getLastReadSurah } from "@/lib/db";
 import { SURAH_LIST } from "@/lib/quran/data";
 import { AdhkarTracker } from "@/components/adhkar-tracker";
 import { DashboardSkeleton } from "@/components/skeleton";
-import { WeatherWidget } from "@/components/weather-widget";
 import { DailyQuote } from "@/components/daily-quote";
 import { PrayerCheckIn } from "@/components/prayer-checkin";
 import { StreakCard } from "@/components/dashboard/streak-card";
 import { TodayHabits } from "@/components/dashboard/today-habits";
 import { JournalPrompt } from "@/components/dashboard/journal-prompt";
 import { WeeklySummary } from "@/components/dashboard/weekly-summary";
-import { HealthSummary } from "@/components/dashboard/health-summary";
-import { CompanionCard } from "@/components/companion/companion-card";
-import { PWAInstallPrompt } from "@/components/pwa-install-prompt";
 
 const AFFIRMATIONS = [
   { text: "And He found you lost and guided.", source: "Quran 93:7" },
@@ -260,11 +256,6 @@ export function Dashboard() {
           <WeeklySummary />
         </section>
 
-        {/* Health Summary — today's wellness at a glance */}
-        <section aria-label="Health summary" className="dd-reveal">
-          <HealthSummary />
-        </section>
-
         {/* Streak — visible progress */}
         <section aria-label="Prayer streak" className="dd-reveal">
           <StreakCard loading={loading} refreshKey={streakRefreshKey} />
@@ -295,14 +286,8 @@ export function Dashboard() {
           <AdhkarTracker />
         </section>
 
-        {/* Deen Guide — spiritual companion */}
-        <section aria-label="Deen Guide" className="dd-reveal">
-          <CompanionCard />
-        </section>
-
         {/* Weather + Quote — ambient context */}
         <section aria-label="Weather and inspiration" className="dd-reveal flex flex-col" style={{ gap: "var(--space-3)" }}>
-          <WeatherWidget />
           <DailyQuote />
         </section>
 
@@ -351,21 +336,19 @@ export function Dashboard() {
           </p>
         </aside>
 
-        {/* Explore more — progressive disclosure */}
+        {/* View History — progressive disclosure */}
         <Link
-          href="/wellness"
-          aria-label="Explore all wellness trackers"
+          href="/history"
+          aria-label="View prayer history"
           className="dd-reveal flex items-center justify-center gap-2 rounded-2xl border border-border bg-card transition-colors hover:bg-secondary"
           style={{ padding: "var(--space-4)", boxShadow: "var(--shadow-xs)" }}
         >
           <span className="text-muted-foreground" style={{ fontSize: "var(--text-body-sm)", fontWeight: 500 }}>
-            Explore all trackers
+            View History
           </span>
           <ArrowRight size={16} className="text-muted-foreground" />
         </Link>
       </main>
-
-      <PWAInstallPrompt />
     </>
   );
 }

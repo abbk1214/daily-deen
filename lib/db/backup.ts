@@ -28,7 +28,7 @@ function validateImportData(data: unknown): data is DatabaseExport {
 
 export async function exportDatabase(): Promise<DatabaseExport> {
   const db = getDb()
-  const [prayers, habits, habitLogs, journal, settings, prayerLogs, quranBookmarks, quranProgress, khatmahGoals, khatmahProgress, readingSessionLogs, goals, goalCheckIns, moodEntries, waterEntries, sleepEntries, exerciseEntries, dailyQuotes] = await Promise.all([
+  const [prayers, habits, habitLogs, journal, settings, prayerLogs, quranBookmarks, quranProgress, khatmahGoals, khatmahProgress, readingSessionLogs, goals, goalCheckIns, dailyQuotes] = await Promise.all([
     db.prayers.toArray(),
     db.habits.toArray(),
     db.habitLogs.toArray(),
@@ -42,14 +42,10 @@ export async function exportDatabase(): Promise<DatabaseExport> {
     db.readingSessionLogs.toArray(),
     db.goals.toArray(),
     db.goalCheckIns.toArray(),
-    db.moodEntries.toArray(),
-    db.waterEntries.toArray(),
-    db.sleepEntries.toArray(),
-    db.exerciseEntries.toArray(),
     db.dailyQuotes.toArray(),
   ])
   return {
-    version: 10,
+    version: 12,
     exportedAt: new Date().toISOString(),
     prayers,
     habits,
@@ -64,10 +60,6 @@ export async function exportDatabase(): Promise<DatabaseExport> {
     readingSessionLogs,
     goals,
     goalCheckIns,
-    moodEntries,
-    waterEntries,
-    sleepEntries,
-    exerciseEntries,
     dailyQuotes,
   }
 }
@@ -79,7 +71,7 @@ export async function importDatabase(data: DatabaseExport): Promise<void> {
   const db = getDb()
   await db.transaction(
     'rw',
-    [db.prayers, db.habits, db.habitLogs, db.journal, db.settings, db.prayerLogs, db.quranBookmarks, db.quranProgress, db.khatmahGoals, db.khatmahProgress, db.readingSessionLogs, db.goals, db.goalCheckIns, db.moodEntries, db.waterEntries, db.sleepEntries, db.exerciseEntries, db.dailyQuotes],
+    [db.prayers, db.habits, db.habitLogs, db.journal, db.settings, db.prayerLogs, db.quranBookmarks, db.quranProgress, db.khatmahGoals, db.khatmahProgress, db.readingSessionLogs, db.goals, db.goalCheckIns, db.dailyQuotes],
     async () => {
       await Promise.all([
         db.prayers.clear(),
@@ -95,10 +87,6 @@ export async function importDatabase(data: DatabaseExport): Promise<void> {
         db.readingSessionLogs.clear(),
         db.goals.clear(),
         db.goalCheckIns.clear(),
-        db.moodEntries.clear(),
-        db.waterEntries.clear(),
-        db.sleepEntries.clear(),
-        db.exerciseEntries.clear(),
         db.dailyQuotes.clear(),
       ])
       await Promise.all([
@@ -115,10 +103,6 @@ export async function importDatabase(data: DatabaseExport): Promise<void> {
         data.readingSessionLogs?.length ? db.readingSessionLogs.bulkAdd(data.readingSessionLogs) : Promise.resolve(),
         data.goals?.length ? db.goals.bulkAdd(data.goals) : Promise.resolve(),
         data.goalCheckIns?.length ? db.goalCheckIns.bulkAdd(data.goalCheckIns) : Promise.resolve(),
-        data.moodEntries?.length ? db.moodEntries.bulkAdd(data.moodEntries) : Promise.resolve(),
-        data.waterEntries?.length ? db.waterEntries.bulkAdd(data.waterEntries) : Promise.resolve(),
-        data.sleepEntries?.length ? db.sleepEntries.bulkAdd(data.sleepEntries) : Promise.resolve(),
-        data.exerciseEntries?.length ? db.exerciseEntries.bulkAdd(data.exerciseEntries) : Promise.resolve(),
         data.dailyQuotes?.length ? db.dailyQuotes.bulkAdd(data.dailyQuotes) : Promise.resolve(),
       ])
     },
@@ -129,7 +113,7 @@ export async function clearAllData(): Promise<void> {
   const db = getDb()
   await db.transaction(
     'rw',
-    [db.prayers, db.habits, db.habitLogs, db.journal, db.settings, db.prayerLogs, db.quranBookmarks, db.quranProgress, db.khatmahGoals, db.khatmahProgress, db.readingSessionLogs, db.goals, db.goalCheckIns, db.moodEntries, db.waterEntries, db.sleepEntries, db.exerciseEntries, db.dailyQuotes],
+    [db.prayers, db.habits, db.habitLogs, db.journal, db.settings, db.prayerLogs, db.quranBookmarks, db.quranProgress, db.khatmahGoals, db.khatmahProgress, db.readingSessionLogs, db.goals, db.goalCheckIns, db.dailyQuotes],
     async () => {
       await Promise.all([
         db.prayers.clear(),
@@ -145,10 +129,6 @@ export async function clearAllData(): Promise<void> {
         db.readingSessionLogs.clear(),
         db.goals.clear(),
         db.goalCheckIns.clear(),
-        db.moodEntries.clear(),
-        db.waterEntries.clear(),
-        db.sleepEntries.clear(),
-        db.exerciseEntries.clear(),
         db.dailyQuotes.clear(),
       ])
       await db.settings.put({ ...DEFAULT_SETTINGS, id: 1 })

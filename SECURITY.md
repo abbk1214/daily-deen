@@ -2,14 +2,14 @@
 
 ## Architecture
 
-Daily Deen is a Progressive Web App built with Next.js 16. Local data is stored in IndexedDB via Dexie.js. Authentication and optional cloud sync use Supabase. The AI companion API route runs server-side with environment variables.
+Daily Deen is a Progressive Web App built with Next.js 16. Local data is stored in IndexedDB via Dexie.js. Authentication and optional cloud sync use Supabase.
 
 ## Authentication
 
 - **Magic link authentication** via Supabase Auth.
 - Sessions are managed via secure HTTP-only cookies.
 - The `proxy.ts` file refreshes Supabase sessions on every request.
-- Unauthenticated users can use all local features; authentication enables cloud sync and the AI companion.
+- Unauthenticated users can use all local features; authentication enables cloud sync.
 
 ## Data Privacy
 
@@ -21,18 +21,8 @@ Daily Deen is a Progressive Web App built with Next.js 16. Local data is stored 
 
 ## API Keys
 
-- AI companion API keys (OpenAI, Anthropic) are stored as server-side environment variables.
+- API keys are stored as server-side environment variables.
 - API keys are **never** exposed to the client.
-- The `/api/companion` route proxies requests using server-side keys.
-
-## API Security
-
-- **Authentication required.** The companion API route requires a valid Supabase session.
-- **Rate limiting.** In-memory rate limiting (15 requests per minute per user).
-- **Input validation.** Message length and count limits enforced server-side.
-- **Model whitelisting.** Only approved AI models can be used.
-- **Message role sanitization.** Server-side validation of message roles.
-- **System prompt isolation.** Server-side system prompt cannot be overridden by the client.
 
 ## Content Security Policy
 
@@ -55,7 +45,7 @@ Daily Deen is a Progressive Web App built with Next.js 16. Local data is stored 
 ## Known Limitations
 
 - **In-memory rate limiting** resets on serverless cold starts. For production, consider Redis or an external rate-limiting service.
-- **localStorage is not encrypted.** Conversation history is stored in plaintext. For production, consider Web Crypto API encryption.
+- **localStorage is not encrypted.** For production, consider Web Crypto API encryption.
 - **Feature flags are client-side.** Premium feature gating must be enforced server-side.
 
 ## Reporting Security Issues

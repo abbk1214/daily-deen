@@ -13,10 +13,6 @@ interface WeeklyStats {
   habitsTotal: number
   quranPages: number
   journalEntries: number
-  avgMood: number | null
-  avgWater: number
-  totalExerciseMin: number
-  avgSleepHours: number | null
 }
 
 export const WeeklySummary = memo(function WeeklySummary() {
@@ -65,34 +61,6 @@ export const WeeklySummary = memo(function WeeklySummary() {
           .between(weekStart, today, true, true)
           .toArray()
 
-        // Health data
-        const [moodEntries, waterEntries, sleepEntries, exerciseEntries] = await Promise.all([
-          db.moodEntries.where("date").between(weekStart, today, true, true).toArray(),
-          db.waterEntries.where("date").between(weekStart, today, true, true).toArray(),
-          db.sleepEntries.where("date").between(weekStart, today, true, true).toArray(),
-          db.exerciseEntries.where("date").between(weekStart, today, true, true).toArray(),
-        ])
-
-        // Mood: map text to number for averaging
-        const moodValues: Record<string, number> = { Great: 5, Good: 4, Okay: 3, Low: 2, Bad: 1 }
-        const moodNums = moodEntries.map((e) => moodValues[e.mood]).filter((n) => n !== undefined)
-        const avgMood = moodNums.length > 0
-          ? moodNums.reduce((a, b) => a + b, 0) / moodNums.length
-          : null
-
-        // Water
-        const totalWaterMl = waterEntries.reduce((sum, e) => sum + e.amount, 0)
-        const avgWater = Math.round(totalWaterMl / 7 / 100) / 10 // liters per day
-
-        // Exercise
-        const totalExerciseMin = exerciseEntries.reduce((sum, e) => sum + e.duration, 0)
-
-        // Sleep
-        const sleepDurations = sleepEntries.map((e) => e.duration)
-        const avgSleepHours = sleepDurations.length > 0
-          ? Math.round(sleepDurations.reduce((a, b) => a + b, 0) / sleepDurations.length / 60 * 10) / 10
-          : null
-
         setStats({
           prayersCompleted,
           prayersTotal,
@@ -100,10 +68,6 @@ export const WeeklySummary = memo(function WeeklySummary() {
           habitsTotal,
           quranPages,
           journalEntries: journal.length,
-          avgMood,
-          avgWater,
-          totalExerciseMin,
-          avgSleepHours,
         })
       } catch {
         // Silently degrade
@@ -141,26 +105,6 @@ export const WeeklySummary = memo(function WeeklySummary() {
       value: `${stats.journalEntries}/7`,
       percent: Math.round((stats.journalEntries / 7) * 100),
     },
-    {
-      label: "Water",
-      value: `${stats.avgWater}L/day`,
-      percent: Math.min(100, Math.round((stats.avgWater / 2) * 100)),
-    },
-    {
-      label: "Exercise",
-      value: `${stats.totalExerciseMin}min`,
-      percent: Math.min(100, Math.round((stats.totalExerciseMin / 210) * 100)), // 30min/day target
-    },
-    ...(stats.avgMood !== null ? [{
-      label: "Mood",
-      value: `${stats.avgMood.toFixed(1)}/5`,
-      percent: Math.round((stats.avgMood / 5) * 100),
-    }] : []),
-    ...(stats.avgSleepHours !== null ? [{
-      label: "Sleep",
-      value: `${stats.avgSleepHours}h`,
-      percent: Math.min(100, Math.round((stats.avgSleepHours / 8) * 100)),
-    }] : []),
   ]
 
   return (

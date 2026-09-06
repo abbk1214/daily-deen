@@ -188,52 +188,6 @@ export interface GoalCheckIn {
    Life Tracking types
    ────────────────────────────────────────────── */
 
-export interface MoodEntry {
-  id?: number
-  date: string
-  time: string
-  mood: string
-  emoji: string
-  energy: number
-  tags: string[]
-  note: string
-  createdAt: number
-}
-
-export interface WaterEntry {
-  id?: number
-  date: string
-  amount: number
-  timestamp: number
-}
-
-export interface SleepEntry {
-  id?: number
-  date: string
-  bedtime: string
-  wakeTime: string
-  duration: number
-  quality: number
-  notes: string
-  tags: string[]
-  createdAt: number
-}
-
-export interface ExerciseEntry {
-  id?: number
-  date: string
-  type: string
-  name: string
-  duration: number
-  sets?: number
-  reps?: number
-  weight?: number
-  distance?: number
-  calories?: number
-  notes: string
-  createdAt: number
-}
-
 export interface TaraweehLog {
   id?: number
   date: string
@@ -277,9 +231,6 @@ export interface AppSettings {
   theme: string
   paperTexture: boolean
   textSize: string
-  waterTarget: number
-  exerciseTarget: number
-  walkingTarget: number
   prayerAdjustments: PrayerAdjustments
   compassShowDegrees: boolean
   compassAutoCalibration: boolean
@@ -321,9 +272,6 @@ export const DEFAULT_SETTINGS: AppSettings = {
   theme: "system",
   paperTexture: false,
   textSize: "default",
-  waterTarget: 8,
-  exerciseTarget: 30,
-  walkingTarget: 8000,
   prayerAdjustments: { ...DEFAULT_ADJUSTMENTS },
   compassShowDegrees: true,
   compassAutoCalibration: true,
@@ -333,7 +281,6 @@ export const DEFAULT_SETTINGS: AppSettings = {
     'greeting',
     'dayArc',
     'nextPrayer',
-    'weather',
     'streak',
     'completion',
     'habits',
@@ -368,10 +315,6 @@ export interface DatabaseExport {
   readingSessionLogs?: ReadingSessionLog[]
   goals?: Goal[]
   goalCheckIns?: GoalCheckIn[]
-  moodEntries?: MoodEntry[]
-  waterEntries?: WaterEntry[]
-  sleepEntries?: SleepEntry[]
-  exerciseEntries?: ExerciseEntry[]
   dailyQuotes?: DailyQuote[]
   tasbeehCounts?: TasbeehCount[]
 }
