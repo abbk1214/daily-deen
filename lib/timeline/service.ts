@@ -293,97 +293,6 @@ async function detectHabitMilestones(): Promise<TimelineEvent[]> {
   return events
 }
 
-async function detectWaterMilestones(): Promise<TimelineEvent[]> {
-  const events: TimelineEvent[] = []
-  const logs = await db.waterEntries.orderBy('date').toArray()
-  if (logs.length === 0) return events
-
-  const byDate = new Map<string, number>()
-  for (const log of logs) {
-    byDate.set(log.date, (byDate.get(log.date) ?? 0) + log.amount)
-  }
-
-  let bestDay = ''
-  let bestAmount = 0
-  for (const [date, amount] of byDate) {
-    if (amount > bestAmount) {
-      bestAmount = amount
-      bestDay = date
-    }
-  }
-
-  if (bestAmount > 0) {
-    events.push({
-      id: `water-best-${bestDay}`,
-      date: bestDay,
-      type: 'personal_record',
-      title: `Best water day: ${bestAmount} glasses`,
-      description: 'Your highest single-day water intake.',
-      icon: 'droplets',
-      color: 'dusk-teal',
-      metadata: { amount: bestAmount },
-    })
-  }
-
-  return events
-}
-
-async function detectExerciseEntries(): Promise<TimelineEvent[]> {
-  const events: TimelineEvent[] = []
-  const entries = await db.exerciseEntries.orderBy('date').toArray()
-  if (entries.length === 0) return events
-
-  if (entries.length === 1) {
-    events.push({
-      id: `exercise-first-${entries[0].date}`,
-      date: entries[0].date,
-      type: 'first_time',
-      title: 'First exercise logged',
-      description: `You logged "${entries[0].name}".`,
-      icon: 'dumbbell',
-      color: 'lantern-gold',
-    })
-  }
-
-  const totalDuration = entries.reduce((sum, e) => sum + e.duration, 0)
-  if (totalDuration >= 600) {
-    events.push({
-      id: `exercise-total-${entries[entries.length - 1].date}`,
-      date: entries[entries.length - 1].date,
-      type: 'exercise_entry',
-      title: `${Math.round(totalDuration / 60)} hours of exercise`,
-      description: 'Total exercise time logged.',
-      icon: 'dumbbell',
-      color: 'lantern-gold',
-      metadata: { totalMinutes: totalDuration },
-    })
-  }
-
-  return events
-}
-
-async function detectSleepMilestones(): Promise<TimelineEvent[]> {
-  const events: TimelineEvent[] = []
-  const entries = await db.sleepEntries.orderBy('date').toArray()
-  if (entries.length === 0) return events
-
-  const avgQuality = entries.reduce((sum, e) => sum + e.quality, 0) / entries.length
-  if (entries.length >= 7 && avgQuality >= 4) {
-    events.push({
-      id: `sleep-quality-${entries[entries.length - 1].date}`,
-      date: entries[entries.length - 1].date,
-      type: 'sleep_milestone',
-      title: `Great sleep quality: ${avgQuality.toFixed(1)}/5`,
-      description: `Your average sleep quality over ${entries.length} days.`,
-      icon: 'moon',
-      color: 'dusk-teal',
-      metadata: { avgQuality, days: entries.length },
-    })
-  }
-
-  return events
-}
-
 async function detectKhatmahCompletions(): Promise<TimelineEvent[]> {
   const events: TimelineEvent[] = []
   const goals = await db.khatmahGoals.where('isActive').equals(1).toArray()
@@ -463,9 +372,6 @@ export async function getTimeline(
     detectQuranMilestones(),
     detectJournalMemories(),
     detectHabitMilestones(),
-    detectWaterMilestones(),
-    detectExerciseEntries(),
-    detectSleepMilestones(),
     detectKhatmahCompletions(),
   ])
 

@@ -58,150 +58,6 @@ async function detectPrayerPatterns(): Promise<Insight[]> {
   return insights
 }
 
-async function detectMoodExerciseCorrelation(): Promise<Insight[]> {
-  const insights: Insight[] = []
-
-  const [moods, exercises] = await Promise.all([
-    db.moodEntries.orderBy('date').toArray(),
-    db.exerciseEntries.orderBy('date').toArray(),
-  ])
-
-  if (moods.length < 7 || exercises.length < 3) return insights
-
-  const exerciseDays = new Set(exercises.map((e) => e.date))
-  const moodOnExercise: number[] = []
-  const moodWithout: number[] = []
-
-  for (const m of moods) {
-    const moodValue = m.energy || 3
-    if (exerciseDays.has(m.date)) {
-      moodOnExercise.push(moodValue)
-    } else {
-      moodWithout.push(moodValue)
-    }
-  }
-
-  if (moodOnExercise.length < 3 || moodWithout.length < 3) return insights
-
-  const avgExercise = moodOnExercise.reduce((a, b) => a + b, 0) / moodOnExercise.length
-  const avgNoExercise = moodWithout.reduce((a, b) => a + b, 0) / moodWithout.length
-
-  if (avgExercise > avgNoExercise + 0.3) {
-    insights.push({
-      id: 'mood-exercise-correlation',
-      type: 'correlation',
-      title: 'Exercise improves your mood',
-      description: `Your mood averages ${avgExercise.toFixed(1)}/5 on exercise days vs ${avgNoExercise.toFixed(1)}/5 on non-exercise days.`,
-      icon: 'dumbbell',
-      color: 'lantern-gold',
-      priority: 'high',
-      metadata: {
-        factor1: 'exercise',
-        factor2: 'mood',
-        strength: Math.abs(avgExercise - avgNoExercise),
-        direction: 'positive',
-        sampleSize: moodOnExercise.length + moodWithout.length,
-      },
-    })
-  }
-
-  return insights
-}
-
-async function detectQuranTimingPattern(): Promise<Insight[]> {
-  const insights: Insight[] = []
-  const sessions = await db.readingSessionLogs.orderBy('date').toArray()
-  if (sessions.length < 10) return insights
-
-  const hourCounts = new Array(24).fill(0)
-  for (const s of sessions) {
-    const hour = new Date(s.startTime).getHours()
-    hourCounts[hour]++
-  }
-
-  let peakHour = 0
-  let peakCount = 0
-  for (let i = 0; i < 24; i++) {
-    if (hourCounts[i] > peakCount) {
-      peakCount = hourCounts[i]
-      peakHour = i
-    }
-  }
-
-  if (peakCount > 3) {
-    const timeLabel = peakHour < 12 ? `${peakHour} AM` : peakHour === 12 ? '12 PM' : `${peakHour - 12} PM`
-    insights.push({
-      id: 'quran-timing',
-      type: 'pattern',
-      title: `You read Quran most at ${timeLabel}`,
-      description: `Most of your reading sessions happen around ${timeLabel}. This is your natural Quran time.`,
-      icon: 'book-open',
-      color: 'dusk-teal',
-      priority: 'medium',
-      metadata: {
-        pattern: `Peak Quran reading: ${timeLabel}`,
-        frequency: 'daily',
-        confidence: peakCount / sessions.length,
-      },
-    })
-  }
-
-  return insights
-}
-
-async function detectWaterPattern(): Promise<Insight[]> {
-  const insights: Insight[] = []
-  const logs = await db.waterEntries.orderBy('date').toArray()
-  if (logs.length < 14) return insights
-
-  const byDate = new Map<string, number>()
-  for (const log of logs) {
-    byDate.set(log.date, (byDate.get(log.date) ?? 0) + log.amount)
-  }
-
-  const dayAvgs = new Array(7).fill(0)
-  const dayCounts = new Array(7).fill(0)
-
-  for (const [date, amount] of byDate) {
-    const dow = dayOfWeek(date)
-    dayAvgs[dow] += amount
-    dayCounts[dow]++
-  }
-
-  let worstDay = 0
-  let worstAvg = Infinity
-  for (let i = 0; i < 7; i++) {
-    if (dayCounts[i] > 0) {
-      const avg = dayAvgs[i] / dayCounts[i]
-      if (avg < worstAvg) {
-        worstAvg = avg
-        worstDay = i
-      }
-    }
-  }
-
-  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-
-  if (worstAvg < 6) {
-    insights.push({
-      id: 'water-pattern',
-      type: 'anomaly',
-      title: `Water intake drops on ${dayNames[worstDay]}s`,
-      description: `You average ${worstAvg.toFixed(1)} glasses on ${dayNames[worstDay]}s. Try setting a reminder.`,
-      icon: 'droplets',
-      color: 'dusk-teal',
-      priority: 'medium',
-      metadata: {
-        pattern: `Low water day: ${dayNames[worstDay]}`,
-        frequency: 'weekly',
-        confidence: 0.7,
-      },
-    })
-  }
-
-  return insights
-}
-
 async function detectJournalPrayerCorrelation(): Promise<Insight[]> {
   const insights: Insight[] = []
 
@@ -311,12 +167,11 @@ async function generateWeeklyReport(): Promise<ReportInsight | null> {
   const today = getToday()
   const weekStart = daysAgo(6)
 
-  const [prayers, habits, journal, khatmah, water] = await Promise.all([
+  const [prayers, habits, journal, khatmah] = await Promise.all([
     db.prayers.where('date').between(weekStart, today, true, true).toArray(),
     db.habitLogs.where('date').between(weekStart, today, true, true).toArray(),
     db.journal.where('date').between(weekStart, today, true, true).toArray(),
     db.khatmahProgress.where('date').between(weekStart, today, true, true).toArray(),
-    db.waterEntries.where('date').between(weekStart, today, true, true).toArray(),
   ])
 
   let prayersCompleted = 0
@@ -353,7 +208,6 @@ async function generateWeeklyReport(): Promise<ReportInsight | null> {
         habitsCompleted,
         journalEntries: journal.length,
         quranPages: khatmah.reduce((sum, k) => sum + k.pagesRead, 0),
-        waterGlasses: water.reduce((sum, w) => sum + w.amount, 0),
       },
     },
   }
@@ -413,18 +267,12 @@ function prioritizeInsights(insights: Insight[]): Insight[] {
 export async function getInsights(): Promise<InsightsData> {
   const [
     prayerPatterns,
-    moodExercise,
-    quranTiming,
-    waterPattern,
     journalPrayer,
     streaks,
     weeklyReport,
     monthlyReport,
   ] = await Promise.all([
     detectPrayerPatterns(),
-    detectMoodExerciseCorrelation(),
-    detectQuranTimingPattern(),
-    detectWaterPattern(),
     detectJournalPrayerCorrelation(),
     detectStreakInsights(),
     generateWeeklyReport(),
@@ -433,9 +281,6 @@ export async function getInsights(): Promise<InsightsData> {
 
   const allInsights: Insight[] = [
     ...prayerPatterns,
-    ...moodExercise,
-    ...quranTiming,
-    ...waterPattern,
     ...journalPrayer,
     ...streaks,
   ]
