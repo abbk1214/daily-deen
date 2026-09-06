@@ -10,6 +10,26 @@
   "id": "/",
   "scope": "/",
   "categories": ["lifestyle", "education"],
+  "shortcuts": [
+    {
+      "name": "Mark Prayers",
+      "short_name": "Prayers",
+      "url": "/",
+      "description": "Quick access to prayer check-in"
+    },
+    {
+      "name": "Read Quran",
+      "short_name": "Quran",
+      "url": "/quran",
+      "description": "Continue reading the Quran"
+    },
+    {
+      "name": "Dhikr",
+      "short_name": "Dhikr",
+      "url": "/dhikr",
+      "description": "Track your daily dhikr"
+    }
+  ],
   "icons": [
     {
       "src": "/icons/icon-192x192.png",
