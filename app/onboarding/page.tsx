@@ -5,7 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { saveSettings } from "@/lib/db";
 
-type Screen = "welcome" | "location" | "goals";
+type Screen = "welcome" | "location";
 
 const ILLUSTRATIONS = {
   welcome: (
@@ -42,22 +42,6 @@ const ILLUSTRATIONS = {
       <line x1="40" y1="40" x2="12" y2="40" />
     </svg>
   ),
-  goals: (
-    <svg
-      viewBox="0 0 80 80"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      role="img"
-      aria-label="Three ascending bars suggesting growth and progress"
-      className="text-muted-foreground w-20 h-20 sm:w-[100px] sm:h-[100px] lg:w-[120px] lg:h-[120px]"
-    >
-      <line x1="26" y1="56" x2="26" y2="32" />
-      <line x1="37" y1="56" x2="37" y2="16" />
-      <line x1="48" y1="56" x2="48" y2="0" />
-    </svg>
-  ),
 };
 
 export default function OnboardingPage() {
@@ -66,7 +50,6 @@ export default function OnboardingPage() {
   const [transitioning, setTransitioning] = useState(false);
   const [locationStatus, setLocationStatus] = useState<"idle" | "loading" | "error" | "denied">("idle");
   const [locationError, setLocationError] = useState("");
-  const [goals, setGoals] = useState({ water: 8, exercise: 30, walking: 8000 });
   const [announcement, setAnnouncement] = useState("");
   const mountedRef = useRef(true);
   const transitionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -91,23 +74,18 @@ export default function OnboardingPage() {
       if (!mountedRef.current) return;
       setScreen(next);
       setTransitioning(false);
-      const stepNum = next === "welcome" ? 1 : next === "location" ? 2 : 3;
+      const stepNum = next === "welcome" ? 1 : 2;
       const headings: Record<Screen, string> = {
         welcome: "Welcome to Daily Deen",
         location: "Where are you?",
-        goals: "Set your daily goals",
       };
-      announce(`Step ${stepNum} of 3: ${headings[next]}`);
+      announce(`Step ${stepNum} of 2: ${headings[next]}`);
     }, 200);
   }, [announce]);
 
-  const completeOnboarding = useCallback(async (goalsOverride?: typeof goals) => {
-    const g = goalsOverride ?? goals;
+  const completeOnboarding = useCallback(async () => {
     try {
       await saveSettings({
-        waterTarget: g.water,
-        exerciseTarget: g.exercise,
-        walkingTarget: g.walking,
         onboardingComplete: true,
       });
     } catch (err) {
@@ -115,7 +93,7 @@ export default function OnboardingPage() {
     }
     announce("Onboarding complete. Welcome to Daily Deen.");
     router.push("/");
-  }, [router, goals, announce]);
+  }, [router, announce]);
 
   const handleEnableLocation = useCallback(async () => {
     if (!navigator.geolocation) {
@@ -145,7 +123,7 @@ export default function OnboardingPage() {
 
       announce("Location access granted");
       setLocationStatus("idle");
-      transitionTo("goals");
+      completeOnboarding();
     } catch (err) {
       if (!mountedRef.current) return;
       const msg = err instanceof GeolocationPositionError
@@ -161,15 +139,11 @@ export default function OnboardingPage() {
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === "Escape" && screen !== "welcome") {
-      if (screen === "goals") {
-        transitionTo("location");
-      } else {
-        transitionTo("welcome");
-      }
+      transitionTo("welcome");
     }
   }, [screen, transitionTo]);
 
-  const screenIndex = screen === "welcome" ? 0 : screen === "location" ? 1 : 2;
+  const screenIndex = screen === "welcome" ? 0 : 1;
   const canGoBack = screen !== "welcome";
   const showSkip = screen !== "welcome";
 
@@ -200,9 +174,7 @@ export default function OnboardingPage() {
       >
         {screen === "welcome"
           ? "Welcome to Daily Deen"
-          : screen === "location"
-            ? "Where are you?"
-            : "Set your daily goals"}
+          : "Where are you?"}
       </h1>
 
       {/* Description */}
@@ -218,69 +190,8 @@ export default function OnboardingPage() {
       >
         {screen === "welcome"
           ? "Prayer, reflection, and growth. Built for those who seek consistency in their deen."
-          : screen === "location"
-            ? "We use your location to calculate accurate prayer times for your area. Your location is never shared."
-            : "Choose targets that feel right for you. You can always adjust these later in Settings."}
+          : "We use your location to calculate accurate prayer times for your area. Your location is never shared."}
       </p>
-
-      {/* Screen-specific content */}
-      {screen === "goals" && (
-        <div
-          className="flex flex-col gap-4 w-full animate-[fadeIn_200ms_var(--ease-out)_150ms_forwards] opacity-0"
-          style={{ maxWidth: "280px", marginBottom: "var(--space-8)" }}
-          key="goals-content"
-        >
-          {([
-            { key: "water" as const, label: "Water", unit: "cups", min: 1, max: 20, step: 1 },
-            { key: "exercise" as const, label: "Exercise", unit: "min", min: 5, max: 180, step: 5 },
-            { key: "walking" as const, label: "Walking", unit: "steps", min: 1000, max: 30000, step: 500 },
-          ]).map((item) => (
-            <div key={item.key} className="flex items-center justify-between">
-              <span className="text-foreground" style={{ fontSize: "var(--text-body-sm)", fontWeight: 500 }}>
-                {item.label}
-              </span>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  aria-label={`Decrease ${item.label}`}
-                  onClick={() => setGoals((p) => ({ ...p, [item.key]: Math.max(item.min, p[item.key] - item.step) }))}
-                  disabled={goals[item.key] <= item.min}
-                  className="flex items-center justify-center rounded transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)] hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:text-border"
-                  style={{ width: "32px", height: "32px", fontSize: "14px", fontFamily: "var(--font-mono)", color: "var(--muted-foreground)" }}
-                >
-                  −
-                </button>
-                <input
-                  type="number"
-                  value={goals[item.key]}
-                  onChange={(e) => {
-                    const v = Number(e.target.value);
-                    if (!isNaN(v)) setGoals((p) => ({ ...p, [item.key]: Math.max(item.min, Math.min(item.max, v)) }));
-                  }}
-                  min={item.min}
-                  max={item.max}
-                  aria-label={`${item.label} target (${item.unit})`}
-                  className="rounded-lg border border-input bg-background px-3 text-foreground text-center outline-none transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)] focus:border-ring focus:shadow-[var(--focus-ring)]"
-                  style={{ height: "44px", width: "80px", fontSize: "var(--text-body)", fontFamily: "var(--font-mono)" }}
-                />
-                <button
-                  type="button"
-                  aria-label={`Increase ${item.label}`}
-                  onClick={() => setGoals((p) => ({ ...p, [item.key]: Math.min(item.max, p[item.key] + item.step) }))}
-                  disabled={goals[item.key] >= item.max}
-                  className="flex items-center justify-center rounded transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)] hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:text-border"
-                  style={{ width: "32px", height: "32px", fontSize: "14px", fontFamily: "var(--font-mono)", color: "var(--muted-foreground)" }}
-                >
-                  +
-                </button>
-                <span className="text-muted-foreground" style={{ fontSize: "var(--text-body-sm)", minWidth: "40px" }}>
-                  {item.unit}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
 
       {/* Location error message */}
       {screen === "location" && (locationStatus === "error" || locationStatus === "denied") && (
@@ -297,8 +208,6 @@ export default function OnboardingPage() {
             transitionTo("location");
           } else if (screen === "location") {
             handleEnableLocation();
-          } else {
-            completeOnboarding();
           }
         }}
         disabled={locationStatus === "loading"}
@@ -314,9 +223,7 @@ export default function OnboardingPage() {
       >
         {screen === "welcome"
           ? "Get started"
-          : screen === "location"
-            ? locationStatus === "loading" ? "Setting up..." : "Enable location"
-            : "Start your day"}
+          : locationStatus === "loading" ? "Setting up..." : "Enable location"}
       </button>
 
       {/* Secondary CTA */}
@@ -328,8 +235,6 @@ export default function OnboardingPage() {
           } else if (screen === "location") {
             setLocationStatus("idle");
             setLocationError("");
-            transitionTo("goals");
-          } else {
             completeOnboarding();
           }
         }}
@@ -346,9 +251,7 @@ export default function OnboardingPage() {
       >
         {screen === "welcome"
           ? "I already know my way"
-          : screen === "location"
-            ? "Enter city manually"
-            : "Use defaults"}
+          : "Enter city manually"}
       </button>
     </>
   );
@@ -375,11 +278,7 @@ export default function OnboardingPage() {
             type="button"
             aria-label="Go back"
             onClick={() => {
-              if (screen === "goals") {
-                transitionTo("location");
-              } else {
-                transitionTo("welcome");
-              }
+              transitionTo("welcome");
             }}
             className="flex h-11 w-11 items-center justify-center rounded-md text-foreground transition-colors hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           >
