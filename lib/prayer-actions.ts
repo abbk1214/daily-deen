@@ -1,4 +1,3 @@
-import db from './db'
 import { markCompleted, markMissed, getDay } from './prayer/history-service'
 import { getToday } from './utils'
 

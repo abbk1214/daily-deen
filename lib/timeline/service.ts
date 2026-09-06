@@ -16,7 +16,7 @@ let timelineCache: { data: TimelineData; ts: number } | null = null
 let statsCache: { data: TimelineStats; ts: number } | null = null
 const CACHE_TTL = 60_000
 
-function invalidateTimelineCache(): void {
+function _invalidateTimelineCache(): void {
   timelineCache = null
   statsCache = null
 }
