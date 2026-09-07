@@ -8,7 +8,7 @@ import {
 import { getTodaysPrayerStatus } from "@/lib/prayer-actions";
 import { useHabits } from "@/hooks/use-habits";
 import { usePrayerTimes } from "@/hooks/use-prayer-times";
-import { getToday, formatTimeFromMinutes } from "@/lib/utils";
+import { getToday } from "@/lib/utils";
 import type { PrayerTimes } from "@/lib/prayer";
 
 type PrayerName = 'fajr' | 'dhuhr' | 'asr' | 'maghrib' | 'isha'

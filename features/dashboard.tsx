@@ -290,8 +290,8 @@ export function Dashboard() {
           <AdhkarTracker />
         </section>
 
-        {/* Weather + Quote — ambient context */}
-        <section aria-label="Weather and inspiration" className="dd-reveal flex flex-col" style={{ gap: "var(--space-3)" }}>
+        {/* Daily Quote — ambient context */}
+        <section aria-label="Inspiration" className="dd-reveal flex flex-col" style={{ gap: "var(--space-3)" }}>
           <DailyQuote />
         </section>
 
