@@ -213,15 +213,6 @@ export async function fetchTranslation(
   return translations;
 }
 
-export function getAudioUrl(_surahNumber: number, _ayahNumber: number, _reciterId: string, globalNumber: number): string {
-  return `https://cdn.islamic.network/quran/audio/128/${_reciterId}/${globalNumber}.mp3`;
-}
-
-export function getSurahAudioUrl(surahNumber: number, reciterId: string): string {
-  const surah = String(surahNumber).padStart(3, "0");
-  return `https://cdn.islamic.network/quran/audio/128/${reciterId}/${surah}.mp3`;
-}
-
 export function getTotalPages(): number {
   return 604;
 }

@@ -12,7 +12,6 @@ import type { Ayah, AyahTranslation } from "@/lib/quran/types";
 import { RECITERS, TRANSLATIONS } from "@/lib/quran/types";
 import { WordByWord } from "@/components/word-by-word";
 import { useQuranAudio } from "@/hooks/use-quran-audio";
-import { AudioPlayerBar } from "@/components/quran/audio-player-bar";
 
 export default function SurahPage() {
   const params = useParams();
@@ -42,7 +41,8 @@ export default function SurahPage() {
       const currentAyahs = ayahsRef.current;
       const endedAyah = currentAyahs.find((a) => a.number === ayahGlobalNumber);
       if (endedAyah && currentSurah && endedAyah.numberInSurah < currentSurah.numberOfAyahs) {
-        audio.playAyah(currentAyahs[endedAyah.numberInSurah].number);
+        const nextAyah = currentAyahs.find((a) => a.numberInSurah === endedAyah.numberInSurah + 1);
+        if (nextAyah) audio.playAyah(nextAyah.number);
       }
     }, []),
   });

@@ -35,6 +35,32 @@ export const NextPrayerCard = memo(function NextPrayerCard({
   prayerStatus,
   loading,
 }: NextPrayerCardProps) {
+  const progress = useMemo(() => {
+    if (!computedTimes || !nextPrayer) return 0
+
+    const nowMinutes = Math.floor(Date.now() / 60000) % 1440
+
+    let lastPrayerTime = 0
+    for (const key of PRAYER_KEYS) {
+      const time = computedTimes[key]
+      if (time <= nowMinutes) {
+        lastPrayerTime = time
+      }
+    }
+
+    const nextPrayerTime = computedTimes[nextPrayer.name.toLowerCase() as PrayerName] || 0
+
+    const totalDuration = nextPrayerTime > lastPrayerTime
+      ? nextPrayerTime - lastPrayerTime
+      : (1440 - lastPrayerTime) + nextPrayerTime
+
+    const elapsed = nowMinutes > lastPrayerTime
+      ? nowMinutes - lastPrayerTime
+      : (1440 - lastPrayerTime) + nowMinutes
+
+    return Math.min(100, Math.round((elapsed / totalDuration) * 100))
+  }, [computedTimes, nextPrayer])
+
   if (loading) {
     return (
       <div className="rounded-2xl border border-border bg-card p-5 animate-pulse">
@@ -50,37 +76,6 @@ export const NextPrayerCard = memo(function NextPrayerCard({
   }
 
   if (!nextPrayer || !computedTimes) return null
-
-  // Calculate progress from last prayer to next prayer
-  const progress = useMemo(() => {
-    if (!computedTimes || !nextPrayer) return 0
-
-    const nowMinutes = Math.floor(Date.now() / 60000) % 1440
-    const PRAYER_KEYS = ["fajr", "dhuhr", "asr", "maghrib", "isha"] as const
-
-    // Find the last prayer time
-    let lastPrayerTime = 0
-    for (const key of PRAYER_KEYS) {
-      const time = computedTimes[key]
-      if (time <= nowMinutes) {
-        lastPrayerTime = time
-      }
-    }
-
-    // Find the next prayer time
-    const nextPrayerTime = computedTimes[nextPrayer.name.toLowerCase() as PrayerName] || 0
-
-    // Calculate total duration and elapsed
-    const totalDuration = nextPrayerTime > lastPrayerTime
-      ? nextPrayerTime - lastPrayerTime
-      : (1440 - lastPrayerTime) + nextPrayerTime
-
-    const elapsed = nowMinutes > lastPrayerTime
-      ? nowMinutes - lastPrayerTime
-      : (1440 - lastPrayerTime) + nowMinutes
-
-    return Math.min(100, Math.round((elapsed / totalDuration) * 100))
-  }, [computedTimes, nextPrayer])
 
   return (
     <div

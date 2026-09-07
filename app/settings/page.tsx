@@ -13,7 +13,6 @@ import {
   Moon,
   Sun,
   Smartphone,
-  Calculator,
 } from "lucide-react";
 import Link from "next/link";
 import { useSettings } from "@/hooks/use-settings";

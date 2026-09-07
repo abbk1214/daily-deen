@@ -4,7 +4,7 @@ import { getCSP } from "./lib/security/csp";
 
 const withPWA = withPWAInit({
   dest: "public",
-  register: false,
+  register: true,
   reloadOnOnline: true,
   cacheOnFrontEndNav: false,
   aggressiveFrontEndNavCaching: false,
@@ -12,8 +12,8 @@ const withPWA = withPWAInit({
     document: "/offline",
   },
   workboxOptions: {
-    skipWaiting: false,
-    clientsClaim: false,
+    skipWaiting: true,
+    clientsClaim: true,
     runtimeCaching: [
       {
         urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,

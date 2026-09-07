@@ -39,9 +39,8 @@ export type Reciter = {
 
 export const RECITERS: Reciter[] = [
   { id: "ar.alafasy", name: "Mishary Rashid Alafasy", language: "ar", baseUrl: "https://cdn.islamic.network/quran/audio/128/ar.alafasy" },
-  { id: "ar.minshawi", name: "Mohamed Siddiq El-Minshawi", language: "ar", baseUrl: "https://cdn.islamic.network/quran/audio/192/ar.minshawi" },
+  { id: "ar.minshawi", name: "Mohamed Siddiq El-Minshawi", language: "ar", baseUrl: "https://cdn.islamic.network/quran/audio/128/ar.minshawi" },
   { id: "ar.husary", name: "Mahmoud Khalil Al-Husary", language: "ar", baseUrl: "https://cdn.islamic.network/quran/audio/128/ar.husary" },
-  { id: "ar.ayyoub", name: "Muhammad Ayyoub", language: "ar", baseUrl: "https://cdn.islamic.network/quran/audio/128/ar.ayyoub" },
 ];
 
 export const TRANSLATIONS = [
