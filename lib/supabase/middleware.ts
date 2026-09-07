@@ -31,7 +31,11 @@ export async function updateSession(request: NextRequest) {
     },
   )
 
-  await supabase.auth.getUser()
+  try {
+    await supabase.auth.getUser()
+  } catch {
+    // Supabase unreachable — continue without session refresh
+  }
 
   return supabaseResponse
 }

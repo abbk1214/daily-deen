@@ -48,6 +48,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(sess)
       setUser(sess?.user ?? null)
       setLoading(false)
+    }).catch(() => {
+      setLoading(false)
     })
 
     return () => subscription.unsubscribe()

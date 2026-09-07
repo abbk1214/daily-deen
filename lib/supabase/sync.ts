@@ -5,7 +5,13 @@ const supabase = createClient()
 
 /** Sync all local IndexedDB data to Supabase */
 export async function syncAllToCloud(): Promise<{ synced: number; errors: string[] }> {
-  const { data: { user } } = await supabase.auth.getUser()
+  let user
+  try {
+    const { data: { user: u } } = await supabase.auth.getUser()
+    user = u
+  } catch {
+    return { synced: 0, errors: ["Cloud unavailable"] }
+  }
   if (!user) return { synced: 0, errors: ["Not authenticated"] }
 
   const errors: string[] = []
@@ -146,7 +152,13 @@ export async function syncAllToCloud(): Promise<{ synced: number; errors: string
 
 /** Pull cloud data into local IndexedDB */
 export async function syncFromCloud(): Promise<{ pulled: number; errors: string[] }> {
-  const { data: { user } } = await supabase.auth.getUser()
+  let user
+  try {
+    const { data: { user: u } } = await supabase.auth.getUser()
+    user = u
+  } catch {
+    return { pulled: 0, errors: ["Cloud unavailable"] }
+  }
   if (!user) return { pulled: 0, errors: ["Not authenticated"] }
 
   const errors: string[] = []
